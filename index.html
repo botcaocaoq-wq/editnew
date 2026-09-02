@@ -47,6 +47,7 @@
                 <button id="btn-fx-none" class="active" style="background: #4b5563;">⏹ Giữ ảnh gốc</button>
                 <button id="btn-fx-stretch">💇 Co giãn sợi tóc</button>
                 <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
+                <button id="btn-fx-wavewarp" style="background: #2563eb;">🌊 Wave Warp (Alight)</button>
                 <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
             </div>
 
@@ -70,9 +71,9 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.bgImage = null;
                 
-                this.currentFX = 'none';    // ĐÃ SỬA: Mặc định ban đầu là 'none' để ảnh đứng yên giữ nguyên hình dạng gốc
-                this.isPinMode = false;      // Chế độ chấm điểm neo giữ hình cố định
-                this.pins = [];              // Danh sách lưu tọa độ các điểm neo ghim hình
+                this.currentFX = 'none';    // Mặc định ban đầu luôn là 'none' để ảnh đứng yên
+                this.isPinMode = false;      
+                this.pins = [];              
                 
                 this.time = 0;
                 this.speed = 1;
@@ -83,28 +84,24 @@
             }
 
             initEvents() {
-                // Đọc thông số liên tục từ 2 thanh kéo slider độ biến dạng
                 document.getElementById('slider-speed').addEventListener('input', (e) => this.speed = parseFloat(e.target.value));
                 document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
 
                 const btnPin = document.getElementById('btn-pin-mode');
                 const btnClearPins = document.getElementById('btn-clear-pins');
-                const fxModes = ['none', 'stretch', 'wave', 'bend'];
+                const fxModes = ['none', 'stretch', 'wave', 'wavewarp', 'bend'];
 
-                // Bật/Tắt chế độ chấm điểm ghim cố định vùng ảnh
                 btnPin?.addEventListener('click', () => {
                     this.isPinMode = !this.isPinMode;
                     btnPin.classList.toggle('active', this.isPinMode);
                     btnPin.style.background = this.isPinMode ? '#ca8a04' : '#eab308';
                 });
 
-                // XỬ LÝ NÚT XÓA SẠCH ĐIỂM GHIM 
                 btnClearPins?.addEventListener('click', () => {
                     this.pins = [];
-                    console.log("[Hệ thống] Đã xóa sạch toàn bộ các điểm ghim neo!");
+                    console.log("[Hệ thống] Đã xóa sạch các điểm ghim neo!");
                 });
 
-                // Chuyển đổi qua lại giữa bộ các hiệu ứng biến dạng biến đổi
                 fxModes.forEach(mode => {
                     document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
                         this.isPinMode = false;
@@ -117,12 +114,12 @@
                     });
                 });
 
-                // Xử lý nạp file ảnh từ máy tính của người dùng
+                // Xử lý nạp file ảnh và TỰ ĐỘNG CHỈNH TỶ LỆ CANVAS CHỐNG MÉO HÌNH
                 const btnUpload = document.getElementById('btn-upload');
                 const fileInput = document.getElementById('image-upload');
                 btnUpload?.addEventListener('click', () => fileInput.click());
                 fileInput?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files;
                     if (!file) return;
                     
                     const reader = new FileReader();
@@ -130,8 +127,26 @@
                         const img = new Image();
                         img.onload = () => { 
                             this.bgImage = img; 
-                            this.pins = []; // Reset xóa hết các điểm ghim của ảnh cũ
-                            // Tự động trả về chế độ giữ ảnh gốc đứng yên khi mới up ảnh lên
+                            this.pins = []; 
+                            
+                            // THUẬT TOÁN TỐI ƯU CÂN BẰNG TỶ LỆ THEO ẢNH GỐC
+                            const maxBoundingWidth = 800;
+                            const maxBoundingHeight = 450;
+                            let newWidth = img.width;
+                            let newHeight = img.height;
+
+                            // Co giãn canvas thu nhỏ thông minh bảo toàn tỉ lệ thực tế (Aspect Ratio)
+                            if (img.width > maxBoundingWidth || img.height > maxBoundingHeight) {
+                                const ratioX = maxBoundingWidth / img.width;
+                                const ratioY = maxBoundingHeight / img.height;
+                                const scale = Math.min(ratioX, ratioY);
+                                newWidth = img.width * scale;
+                                newHeight = img.height * scale;
+                            }
+
+                            this.canvas.width = newWidth;
+                            this.canvas.height = newHeight;
+
                             this.currentFX = 'none';
                             fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
                             document.getElementById('btn-fx-none')?.classList.add('active');
@@ -141,25 +156,21 @@
                     reader.readAsDataURL(file);
                 });
 
-                // Nhấn chuột lên canvas để chấm ghim điểm cố định giữ hình không cho rung lắc
                 this.canvas.addEventListener('mousedown', (e) => {
                     const rect = this.canvas.getBoundingClientRect();
                     const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
 
                     if (this.isPinMode) {
                         this.pins.push(mousePos); 
-                        console.log("[Hệ thống] Đã ghim điểm neo giữ hình tại tọa độ:", mousePos);
                     }
                 });
             }
 
-            // Vòng lặp cập nhật chuyển động liên tục thời gian thực (Real-time render)
             animate() {
                 this.time += 0.05 * this.speed;
                 this.renderFX();
                 requestAnimationFrame(() => this.animate());
             }
-            // Toán học ma trận bóc tách cấu trúc pixel hình ảnh
             renderFX() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -169,10 +180,8 @@
                     return;
                 }
 
-                // Nếu đang ở chế độ 'none' (Giữ ảnh gốc), vẽ trực tiếp ảnh gốc đứng yên và dừng quét ma trận cho nhẹ máy
                 if (this.currentFX === 'none') {
                     this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
-                    // Vẫn vẽ các điểm ghim neo lên bề mặt để người dùng quan sát
                     this.pins.forEach(pin => {
                         this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
                         this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
@@ -181,40 +190,42 @@
                     return;
                 }
 
-                // Vẽ ảnh gốc tạm thời ra làm lớp đệm tính toán pixel màu
                 this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
                 const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
                 const outputData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
 
-                // Quét qua hàng triệu mảng pixel màu trên bề mặt canvas
                 for (let y = 0; y < this.canvas.height; y++) {
                     for (let x = 0; x < this.canvas.width; x++) {
                         
                         let srcX = x;
                         let srcY = y;
 
-                        // Kiểm tra khoảng cách toán học Pitago đến các điểm ghim cố định (Pins)
                         let pinInfluence = 1;
                         this.pins.forEach(pin => {
                             const dist = Math.hypot(x - pin.x, y - pin.y);
                             if (dist < 80) {
-                                pinInfluence *= (dist / 80); // Càng sát điểm ghim thì độ méo của hiệu ứng càng giảm hẳn về 0
+                                pinInfluence *= (dist / 80); 
                             }
                         });
 
-                        // Áp dụng thuật toán lượng giác bẻ cong ma trận điểm ảnh hình ảnh
+                        // ÁP DỤNG CÁC THUẬT TOÁN BIẾN DẠNG LƯỢNG GIÁC PIXEL
                         if (this.currentFX === 'stretch') {
                             srcX += Math.sin(y * 0.02 + this.time) * this.amount * 0.3 * pinInfluence;
                         } else if (this.currentFX === 'wave') {
                             srcY += Math.sin(x * 0.05 + this.time) * this.amount * 0.4 * pinInfluence;
-                        } else if (this.currentFX === 'bend') {
+                        } 
+                        else if (this.currentFX === 'wavewarp') {
+                            // THUẬT TOÁN WAVE WARP CHUẨN ALIGHT MOTION (BIẾN DẠNG ĐA CHIỀU XOẮN SÓNG ĐỒNG THỜI X & Y)
+                            srcX += Math.sin(y * 0.04 + this.time) * this.amount * 0.25 * pinInfluence;
+                            srcY += Math.cos(x * 0.04 + this.time) * this.amount * 0.25 * pinInfluence;
+                        }
+                        else if (this.currentFX === 'bend') {
                             const distFromCenter = Math.hypot(x - this.canvas.width/2, y - this.canvas.height/2);
                             const force = Math.cos(distFromCenter * 0.01 - this.time) * this.amount * 0.2;
                             srcX += (x - this.canvas.width/2) * 0.01 * force * pinInfluence;
                             srcY += (y - this.canvas.height/2) * 0.01 * force * pinInfluence;
                         }
 
-                        // Khóa cố định tọa độ quét để không văng lệch ra khỏi mép khung canvas
                         srcX = Math.max(0, Math.min(this.canvas.width - 1, Math.round(srcX)));
                         srcY = Math.max(0, Math.min(this.canvas.height - 1, Math.round(srcY)));
 
@@ -230,7 +241,6 @@
 
                 this.ctx.putImageData(outputData, 0, 0);
 
-                // Vẽ các điểm Ghim neo màu vàng phát sáng định vị lên trên bề mặt ảnh
                 this.pins.forEach(pin => {
                     this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
                     this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
@@ -238,7 +248,6 @@
                 });
             }
 
-            // HÀM CHỤP LẠI KHUNG HÌNH VÀ ĐÓNG GÓI XUẤT FILE ẢNH ĐỘNG GIF ĐỂ TẢI VỀ
             exportToGIF() {
                 if (!this.bgImage) return alert("Vui lòng tải một bức ảnh lên trước khi xuất file!");
                 if (this.currentFX === 'none') return alert("Vui lòng bật 1 hiệu ứng chuyển động bất kỳ trước khi xuất GIF!");
@@ -256,7 +265,7 @@
                         setTimeout(captureLoop, 60); 
                     } else {
                         gifshot.createGIF({
-                            images: frames, interval: 0.06, numFrames: 20, gifWidth: 400, gifHeight: 225
+                            images: frames, interval: 0.06, numFrames: 20, gifWidth: this.canvas.width/2, gifHeight: this.canvas.height/2
                         }, (obj) => {
                             if (!obj.error) {
                                 const link = document.createElement('a'); link.href = obj.image;
