@@ -1,14 +1,359 @@
-    <script src="src/TransformGizmo.js"></script>
-    <script src="src/TimelineManager.js"></script>
-    <script src="src/RiggingEngine.js"></script>
-    
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>editnew - Web Video Rigging App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+
+        <!-- 1. MÀN HÌNH PREVIEW -->
+        <div id="preview-window">
+            <canvas id="videoCanvas" width="800" height="450"></canvas>
+        </div>
+
+        <!-- 2. THANH CÔNG CỤ TOOLS -->
+        <div id="toolbar">
+            <div class="upload-section">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                <button id="btn-upload">📁 Tải ảnh lên</button>
+            </div>
+            
+            <div class="divider"></div>
+
+            <div class="tools-section">
+                <button id="btn-translate" class="active">✋ Di chuyển</button>
+                <button id="btn-rotate">🔄 Xoay</button>
+                <button id="btn-scale">🔎 Phóng to</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="keyframe-section">
+                <button id="btn-keyframe">🔴 Thêm Keyframe</button>
+            </div>
+        </div>
+
+        <!-- 3. THANH TIMELINE -->
+        <div id="timeline-container">
+            <div id="timeline-header">
+                <button id="btn-play">▶ Play</button>
+                <span id="time-display">0.00s / 10.00s</span>
+            </div>
+            <div id="timeline-track">
+                <div id="playhead"></div> 
+            </div>
+        </div>
+
+    </div>
+
     <script>
-        // CẦU NỐI KẾT NỐI 3 FILE SCRIPT ĐỘC LẬP LÀM MỘT
+        // =========================================================================
+        // LOGIC 1: BỘ 3 CÔNG CỤ GIZMO (DI CHUYỂN, XOAY, PHÓNG TO)
+        // =========================================================================
+        class TransformGizmo {
+            constructor(core) {
+                this.core = core;
+                this.currentMode = 'translate';
+                this.selectedBone = null;
+                this.isDragging = false;
+                this.startMousePos = { x: 0, y: 0 };
+                this.initButtonEvents();
+            }
+
+            initButtonEvents() {
+                const modes = ['translate', 'rotate', 'scale'];
+                modes.forEach(mode => {
+                    const btn = document.getElementById(`btn-${mode}`);
+                    if (btn) {
+                        btn.addEventListener('click', () => {
+                            modes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
+                            btn.classList.add('active');
+                            this.currentMode = mode;
+                        });
+                    }
+                });
+            }
+
+            handleMouseDown(mousePos, bone) {
+                if (!bone) return;
+                this.selectedBone = bone;
+                this.isDragging = true;
+                this.startMousePos = { ...mousePos };
+            }
+
+            handleMouseMove(currentMousePos) {
+                if (!this.isDragging || !this.selectedBone) return;
+
+                const deltaX = currentMousePos.x - this.startMousePos.x;
+                const deltaY = currentMousePos.y - this.startMousePos.y;
+
+                if (this.currentMode === 'translate') {
+                    this.selectedBone.position.x += deltaX;
+                    this.selectedBone.position.y += deltaY;
+                } 
+                else if (this.currentMode === 'rotate') {
+                    const angle = Math.atan2(
+                        currentMousePos.y - this.selectedBone.position.y, 
+                        currentMousePos.x - this.selectedBone.position.x
+                    );
+                    this.selectedBone.rotation = angle;
+                } 
+                else if (this.currentMode === 'scale') {
+                    const scaleFactor = 1 + (deltaX * 0.005);
+                    this.selectedBone.scale.x = Math.max(0.1, this.selectedBone.scale.x * scaleFactor);
+                    this.selectedBone.scale.y = Math.max(0.1, this.selectedBone.scale.y * scaleFactor);
+                }
+
+                this.startMousePos = { ...currentMousePos };
+            }
+
+            handleMouseUp() {
+                this.isDragging = false;
+            }
+        }
+
+        // =========================================================================
+        // LOGIC 2: ĐỒNG HỒ ĐẾM GIỜ VÀ LƯU KEYFRAME TIMELINE
+        // =========================================================================
+        class TimelineManager {
+            constructor(core) {
+                this.core = core;
+                this.currentTime = 0;
+                this.maxTime = 10;
+                this.isPlaying = false;
+                this.keyframes = [];
+                this.animationFrameId = null;
+                this.initTimelineEvents();
+            }
+
+            initTimelineEvents() {
+                const btnPlay = document.getElementById('btn-play');
+                const btnKeyframe = document.getElementById('btn-keyframe');
+                const track = document.getElementById('timeline-track');
+
+                btnPlay?.addEventListener('click', () => this.togglePlay());
+
+                btnKeyframe?.addEventListener('click', () => {
+                    if (this.core.gizmo.selectedBone) {
+                        this.addKeyframe(this.core.gizmo.selectedBone);
+                    } else {
+                        alert("Vui lòng click chọn 1 cục xương màu đỏ trên màn hình trước!");
+                    }
+                });
+
+                track?.addEventListener('click', (e) => {
+                    const rect = track.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    this.seek((clickX / rect.width) * this.maxTime);
+                });
+            }
+
+            togglePlay() {
+                this.isPlaying = !this.isPlaying;
+                const btnPlay = document.getElementById('btn-play');
+                if (btnPlay) btnPlay.innerText = this.isPlaying ? '⏸ Pause' : '▶ Play';
+
+                if (this.isPlaying) {
+                    this.lastTime = performance.now();
+                    this.runClock();
+                } else {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+            }
+
+            runClock() {
+                if (!this.isPlaying) return;
+                const now = performance.now();
+                const deltaTime = (now - this.lastTime) / 1000;
+                this.lastTime = now;
+
+                this.seek(this.currentTime + deltaTime);
+
+                if (this.currentTime >= this.maxTime) {
+                    this.seek(0);
+                }
+                this.animationFrameId = requestAnimationFrame(() => this.runClock());
+            }
+
+            seek(time) {
+                this.currentTime = Math.max(0, Math.min(this.maxTime, time));
+                const playhead = document.getElementById('playhead');
+                const timeDisplay = document.getElementById('time-display');
+                
+                if (playhead) playhead.style.left = `${(this.currentTime / this.maxTime) * 100}%`;
+                if (timeDisplay) timeDisplay.innerText = `${this.currentTime.toFixed(2)}s / ${this.maxTime.toFixed(2)}s`;
+
+                this.core.applyKeyframesAtTime(this.currentTime);
+            }
+
+            addKeyframe(bone) {
+                const roundedTime = parseFloat(this.currentTime.toFixed(2));
+                this.keyframes = this.keyframes.filter(k => !(k.time === roundedTime && k.boneId === bone.id));
+
+                const newKf = {
+                    time: roundedTime,
+                    boneId: bone.id,
+                    position: { ...bone.position },
+                    rotation: bone.rotation,
+                    scale: { ...bone.scale }
+                };
+                this.keyframes.push(newKf);
+                this.keyframes.sort((a, b) => a.time - b.time);
+                console.log("Đã ghi nhớ Keyframe chuyển động!", newKf);
+            }
+        }
+        // =========================================================================
+        // LOGIC 3: NẠP ẢNH NỀN VÀ RENDER VẼ XƯƠNG CANVAS
+        // =========================================================================
+        class RiggingEngine {
+            constructor(core) {
+                this.core = core;
+                this.canvas = document.getElementById('videoCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.bones = [];
+                this.bgImage = null;
+                
+                this.initUploadEvent();
+                this.initCanvasEvents();
+                this.drawAll();
+            }
+
+            initUploadEvent() {
+                const btnUpload = document.getElementById('btn-upload');
+                const fileInput = document.getElementById('image-upload');
+
+                btnUpload?.addEventListener('click', () => fileInput.click());
+
+                fileInput?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            this.bgImage = img;
+                            this.drawAll();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            initCanvasEvents() {
+                this.canvas.addEventListener('mousedown', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+                    let clickedBone = this.checkClickBone(mousePos);
+
+                    if (clickedBone) {
+                        this.core.gizmo.handleMouseDown(mousePos, clickedBone);
+                    } else {
+                        const newBone = {
+                            id: Date.now(),
+                            name: `Khớp_${this.bones.length + 1}`,
+                            position: { x: mousePos.x, y: mousePos.y },
+                            rotation: 0,
+                            scale: { x: 1, y: 1 }
+                        };
+                        this.bones.push(newBone);
+                        this.core.gizmo.selectedBone = newBone;
+                    }
+                    this.drawAll();
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+                    if (this.core.gizmo.isDragging) {
+                        this.core.gizmo.handleMouseMove(mousePos);
+                        this.drawAll();
+                    }
+                });
+
+                window.addEventListener('mouseup', () => {
+                    this.core.gizmo.handleMouseUp();
+                });
+            }
+
+            checkClickBone(mousePos) {
+                for (let bone of this.bones) {
+                    const distance = Math.hypot(mousePos.x - bone.position.x, mousePos.y - bone.position.y);
+                    if (distance < 15) return bone;
+                }
+                return null;
+            }
+
+            drawAll() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.bgImage) {
+                    this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
+                } else {
+                    this.ctx.fillStyle = '#18181b';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                // Vẽ lưới caro ô vuông đồ họa nền
+                this.ctx.strokeStyle = '#27272a';
+                this.ctx.lineWidth = 0.5;
+                for(let x=0; x<this.canvas.width; x+=30) {
+                    this.ctx.beginPath(); this.ctx.moveTo(x,0); this.ctx.lineTo(x,this.canvas.height); this.ctx.stroke();
+                }
+                for(let y=0; y<this.canvas.height; y+=30) {
+                    this.ctx.beginPath(); this.ctx.moveTo(0,y); this.ctx.lineTo(this.canvas.width,y); this.ctx.stroke();
+                }
+
+                this.bones.forEach(bone => {
+                    this.ctx.save();
+                    this.ctx.translate(bone.position.x, bone.position.y);
+                    this.ctx.rotate(bone.rotation);
+                    this.ctx.scale(bone.scale.x, bone.scale.y);
+
+                    const isSelected = (this.core.gizmo.selectedBone?.id === bone.id);
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 0);
+                    this.ctx.lineTo(12, -5);
+                    this.ctx.lineTo(45, 0);
+                    this.ctx.lineTo(12, 5);
+                    this.ctx.closePath();
+                    this.ctx.fillStyle = isSelected ? 'rgba(0, 122, 204, 0.4)' : 'rgba(239, 68, 68, 0.3)';
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = isSelected ? '#007acc' : '#ef4444';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, 7, 0, Math.PI * 2);
+                    this.ctx.fillStyle = isSelected ? '#00ebff' : '#fbbf24';
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#ffffff';
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.stroke();
+
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = '11px sans-serif';
+                    this.ctx.fillText(bone.name, 12, -8);
+
+                    this.ctx.restore();
+                });
+            }
+        }
+
+        // =========================================================================
+        // BỘ NÃO TỔNG KHỞI CHẠY ĐỒNG BỘ ỨNG DỤNG
+        // =========================================================================
         class AppCore {
             constructor() {
-                this.gizmo = new TransformGizmo();
-                this.timeline = new TimelineManager();
-                this.rigEngine = new RiggingEngine();
+                this.gizmo = new TransformGizmo(this);
+                this.timeline = new TimelineManager(this);
+                this.rigEngine = new RiggingEngine(this);
             }
 
             applyKeyframesAtTime(time) {
@@ -28,8 +373,10 @@
             }
         }
 
-        // Khởi chạy hệ thống đồng bộ toàn cục
-        window.appEngine = new AppCore();
+        // Khởi chạy khi tải xong trang web
+        window.onload = () => {
+            window.appEngine = new AppCore();
+        };
     </script>
 </body>
 </html>
