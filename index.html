@@ -13,8 +13,9 @@
             <canvas id="videoCanvas" width="800" height="450"></canvas>
         </div>
 
-        <!-- 2. THANH CÔNG CỤ ĐIỀU KHIỂN & UPLOAD -->
+        <!-- 2. THANH CÔNG CỤ TOOLS CHUYÊN NGHIỆP -->
         <div id="toolbar">
+            <!-- NHÓM UPLOAD -->
             <div class="upload-section">
                 <input type="file" id="image-upload" accept="image/*" style="display: none;">
                 <button id="btn-upload">📁 Tải ảnh lên</button>
@@ -22,23 +23,34 @@
             
             <div class="divider"></div>
 
-            <div class="tools-section">
-                <button id="btn-translate" class="active">✋ Di chuyển</button>
-                <button id="btn-rotate">🔄 Xoay</button>
-                <button id="btn-scale">🔎 Phóng to</button>
+            <!-- NHÓM CHẾ ĐỘ CẤU HÌNH RIG (SETUP MODE) -->
+            <div class="rig-setup-section">
+                <button id="btn-mode-rig" class="active" style="background: #eab308; border-color: #ca8a04; color: black; font-weight: bold;">Bone Chế độ Gắn Rig</button>
+                <button id="btn-create-mesh" style="background: #8b5cf6; border-color: #7c3aed;">Tạo lưới Đa lớp</button>
+                <button id="btn-bind-rig" style="background: #06b6d4; border-color: #0891b2;">Kết hợp Rig (Bind)</button>
             </div>
 
             <div class="divider"></div>
 
+            <!-- NHÓM BỘ CÔNG CỤ HOẠT HÌNH (ANIMATION TOOLS) -->
+            <div class="tools-section">
+                <button id="btn-translate">Di chuyển Ảnh/Lưới</button>
+                <button id="btn-rotate">Xoay Ảnh/Lưới</button>
+                <button id="btn-scale">Phóng to Ảnh/Lưới</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- NHÓM KEYFRAME -->
             <div class="keyframe-section">
-                <button id="btn-keyframe">🔴 Thêm Keyframe</button>
+                <button id="btn-keyframe">Thêm Keyframe</button>
             </div>
         </div>
 
         <!-- 3. HỆ THỐNG TIMELINE DÒNG THỜI GIAN -->
         <div id="timeline-container">
             <div id="timeline-header">
-                <button id="btn-play">▶ Play</button>
+                <button id="btn-play">Play</button>
                 <span id="time-display">0.00s / 10.00s</span>
             </div>
             <div id="timeline-track">
@@ -50,25 +62,46 @@
 
     <script>
         // =========================================================================
-        // LOGIC 1: BỘ 3 CÔNG CỤ GIZMO (DI CHUYỂN, XOAY, PHÓNG TO)
+        // LOGIC 1: BỘ CÔNG CỤ TƯƠNG TÁC (GIZMO & MODES)
         // =========================================================================
         class TransformGizmo {
             constructor(core) {
                 this.core = core;
-                this.currentMode = 'translate';
+                this.currentMode = 'none';
                 this.selectedBone = null;
                 this.isDragging = false;
                 this.startMousePos = { x: 0, y: 0 };
+                this.isRigMode = true;
+                
                 this.initButtonEvents();
             }
 
             initButtonEvents() {
-                const modes = ['translate', 'rotate', 'scale'];
-                modes.forEach(mode => {
+                const btnRigMode = document.getElementById('btn-mode-rig');
+                const animModes = ['translate', 'rotate', 'scale'];
+
+                btnRigMode?.addEventListener('click', () => {
+                    this.isRigMode = !this.isRigMode;
+                    if (this.isRigMode) {
+                        btnRigMode.classList.add('active');
+                        btnRigMode.style.background = '#eab308';
+                        this.currentMode = 'none';
+                        animModes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
+                    } else {
+                        btnRigMode.classList.remove('active');
+                        btnRigMode.style.background = '#2d2d3d';
+                    }
+                });
+
+                animModes.forEach(mode => {
                     const btn = document.getElementById(`btn-${mode}`);
                     if (btn) {
                         btn.addEventListener('click', () => {
-                            modes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
+                            this.isRigMode = false;
+                            btnRigMode.classList.remove('active');
+                            btnRigMode.style.background = '#2d2d3d';
+
+                            animModes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
                             btn.classList.add('active');
                             this.currentMode = mode;
                         });
@@ -89,21 +122,26 @@
                 const deltaX = currentMousePos.x - this.startMousePos.x;
                 const deltaY = currentMousePos.y - this.startMousePos.y;
 
-                if (this.currentMode === 'translate') {
+                if (this.isRigMode) {
                     this.selectedBone.position.x += deltaX;
                     this.selectedBone.position.y += deltaY;
-                } 
-                else if (this.currentMode === 'rotate') {
-                    const angle = Math.atan2(
-                        currentMousePos.y - this.selectedBone.position.y, 
-                        currentMousePos.x - this.selectedBone.position.x
-                    );
-                    this.selectedBone.rotation = angle;
-                } 
-                else if (this.currentMode === 'scale') {
-                    const scaleFactor = 1 + (deltaX * 0.005);
-                    this.selectedBone.scale.x = Math.max(0.1, this.selectedBone.scale.x * scaleFactor);
-                    this.selectedBone.scale.y = Math.max(0.1, this.selectedBone.scale.y * scaleFactor);
+                } else {
+                    if (this.currentMode === 'translate') {
+                        this.selectedBone.position.x += deltaX;
+                        this.selectedBone.position.y += deltaY;
+                    } 
+                    else if (this.currentMode === 'rotate') {
+                        const angle = Math.atan2(
+                            currentMousePos.y - this.selectedBone.position.y, 
+                            currentMousePos.x - this.startMousePos.x
+                        );
+                        this.selectedBone.rotation = angle;
+                    } 
+                    else if (this.currentMode === 'scale') {
+                        const scaleFactor = 1 + (deltaX * 0.005);
+                        this.selectedBone.scale.x = Math.max(0.1, this.selectedBone.scale.x * scaleFactor);
+                        this.selectedBone.scale.y = Math.max(0.1, this.selectedBone.scale.y * scaleFactor);
+                    }
                 }
 
                 this.startMousePos = { ...currentMousePos };
@@ -139,7 +177,7 @@
                     if (this.core.gizmo.selectedBone) {
                         this.addKeyframe(this.core.gizmo.selectedBone);
                     } else {
-                        alert("Vui lòng click chọn 1 cục xương màu đỏ trên màn hình trước!");
+                        alert("Vui lòng click chọn 1 cục xương trên màn hình trước khi tạo Keyframe!");
                     }
                 });
 
@@ -153,7 +191,7 @@
             togglePlay() {
                 this.isPlaying = !this.isPlaying;
                 const btnPlay = document.getElementById('btn-play');
-                if (btnPlay) btnPlay.innerText = this.isPlaying ? '⏸ Pause' : '▶ Play';
+                if (btnPlay) btnPlay.innerText = this.isPlaying ? 'Pause' : 'Play';
 
                 if (this.isPlaying) {
                     this.lastTime = performance.now();
@@ -204,8 +242,9 @@
                 console.log("Đã ghi nhớ Keyframe chuyển động!", newKf);
             }
         }
+
         // =========================================================================
-        // LOGIC 3: NẠP ẢNH NỀN VÀ RENDER VẼ XƯƠNG CANVAS
+        // LOGIC 3: TẠO LƯỚI ĐA LỚP, KẾT HỢP RIG VÀ VẼ CANVAS
         // =========================================================================
         class RiggingEngine {
             constructor(core) {
@@ -215,9 +254,40 @@
                 this.bones = [];
                 this.bgImage = null;
                 
+                this.isMeshCreated = false;
+                this.isRigBound = false;
+                
                 this.initUploadEvent();
                 this.initCanvasEvents();
+                this.initAdvancedButtons();
                 this.drawAll();
+            }
+
+            initAdvancedButtons() {
+                const btnMesh = document.getElementById('btn-create-mesh');
+                const btnBind = document.getElementById('btn-bind-rig');
+
+                btnMesh?.addEventListener('click', () => {
+                    if (!this.bgImage) {
+                        alert("Vui lòng tải một bức ảnh lên trước khi tạo lưới!");
+                        return;
+                    }
+                    this.isMeshCreated = !this.isMeshCreated;
+                    btnMesh.style.background = this.isMeshCreated ? '#6d28d9' : '#8b5cf6';
+                    btnMesh.innerText = this.isMeshCreated ? 'Đã tạo lưới Đa lớp' : 'Tạo lưới Đa lớp';
+                    this.drawAll();
+                });
+
+                btnBind?.addEventListener('click', () => {
+                    if (this.bones.length === 0) {
+                        alert("Vui lòng tạo ít nhất 1 khớp xương để kết hợp với lưới ảnh!");
+                        return;
+                    }
+                    this.isRigBound = !this.isRigBound;
+                    btnBind.style.background = this.isRigBound ? '#0e7490' : '#06b6d4';
+                    btnBind.innerText = this.isRigBound ? 'Đã kết hợp Rig' : 'Kết hợp Rig (Bind)';
+                    alert(this.isRigBound ? "Kết hợp hệ thống xương vào lưới đa lớp thành công!" : "Đã hủy kết hợp Rig.");
+                });
             }
 
             initUploadEvent() {
@@ -253,15 +323,17 @@
                     if (clickedBone) {
                         this.core.gizmo.handleMouseDown(mousePos, clickedBone);
                     } else {
-                        const newBone = {
-                            id: Date.now(),
-                            name: `Khớp_${this.bones.length + 1}`,
-                            position: { x: mousePos.x, y: mousePos.y },
-                            rotation: 0,
-                            scale: { x: 1, y: 1 }
-                        };
-                        this.bones.push(newBone);
-                        this.core.gizmo.selectedBone = newBone;
+                        if (this.core.gizmo.isRigMode) {
+                            const newBone = {
+                                id: Date.now(),
+                                name: `Khớp_${this.bones.length + 1}`,
+                                position: { x: mousePos.x, y: mousePos.y },
+                                rotation: 0,
+                                scale: { x: 1, y: 1 }
+                            };
+                            this.bones.push(newBone);
+                            this.core.gizmo.selectedBone = newBone;
+                        }
                     }
                     this.drawAll();
                 });
@@ -299,14 +371,29 @@
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
 
-                // Vẽ lưới ô vuông đồ họa nền
-                this.ctx.strokeStyle = '#27272a';
-                this.ctx.lineWidth = 0.5;
-                for(let x=0; x<this.canvas.width; x+=30) {
-                    this.ctx.beginPath(); this.ctx.moveTo(x,0); this.ctx.lineTo(x,this.canvas.height); this.ctx.stroke();
-                }
-                for(let y=0; y<this.canvas.height; y+=30) {
-                    this.ctx.beginPath(); this.ctx.moveTo(0,y); this.ctx.lineTo(this.canvas.width,y); this.ctx.stroke();
+                if (this.isMeshCreated) {
+                    this.ctx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
+                    this.ctx.lineWidth = 1;
+                    const size = 40;
+                    for (let x = 0; x < this.canvas.width; x += size) {
+                        for (let y = 0; y < this.canvas.height; y += size) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x, y); this.ctx.lineTo(x + size, y);
+                            this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x + size, y); this.ctx.lineTo(x + size, y + size);
+                            this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
+                        }
+                    }
+                } else {
+                    this.ctx.strokeStyle = '#27272a';
+                    this.ctx.lineWidth = 0.5;
+                    for(let x=0; x<this.canvas.width; x+=30) {
+                        this.ctx.beginPath(); this.ctx.moveTo(x,0); this.ctx.lineTo(x,this.canvas.height); this.ctx.stroke();
+                    }
+                    for(let y=0; y<this.canvas.height; y+=30) {
+                        this.ctx.beginPath(); this.ctx.moveTo(0,y); this.ctx.lineTo(this.canvas.width,y); this.ctx.stroke();
+                    }
                 }
 
                 this.bones.forEach(bone => {
@@ -346,9 +433,6 @@
             }
         }
 
-        // =========================================================================
-        // BỘ NÃO TỔNG ĐIỀU PHỐI ĐỒNG BỘ ỨNG DỤNG
-        // =========================================================================
         class AppCore {
             constructor() {
                 this.gizmo = new TransformGizmo(this);
@@ -373,7 +457,6 @@
             }
         }
 
-        // Kích hoạt khi trang web sẵn sàng
         window.onload = () => {
             window.appEngine = new AppCore();
         };

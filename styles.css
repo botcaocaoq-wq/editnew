@@ -1,61 +1,65 @@
 /* =========================================================================
-   1. CÀI ĐẶT CHUNG TOÀN APP (RESET & CORE STYLES)
+   1. CÀI ĐẶT CHUNG TOÀN ỨNG DỤNG (RESET & BODY)
    ========================================================================= */
 body {
     margin: 0;
     padding: 0;
-    background-color: #121214; /* Màu nền tối chủ đạo */
-    color: #e4e4e7;            /* Màu chữ trắng xám nhẹ để không chói mắt */
+    background-color: #121214; /* Nền tối Dark Mode chủ đạo */
+    color: #e4e4e7;            /* Màu chữ trắng xám nhẹ chống mỏi mắt */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    user-select: none;         /* Chống người dùng bôi đen chữ lung tung khi kéo thả */
+    user-select: none;         /* Không cho bôi đen chữ khi đang kéo thả chuột */
     overflow: hidden;          /* Khóa cuộn trang web */
 }
 
-/* Bộ khung chứa toàn bộ app xếp theo chiều dọc (Màn hình -> Toolbar -> Timeline) */
+/* Khung tổng chứa toàn bộ giao diện app */
 #app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Full chiều cao màn hình máy tính */
+    height: 100vh;             /* Chiếm trọn chiều cao màn hình */
 }
 
-
 /* =========================================================================
-   2. PHẦN 1: MÀN HÌNH PREVIEW (HIỂN THỊ CHÍNH)
+   2. KHU VỰC 1: MÀN HÌNH PREVIEW EDIT CHÍNH
    ========================================================================= */
 #preview-window {
-    flex: 1;               /* Chiếm toàn bộ không gian còn trống ở phía trên */
+    flex: 1;                   /* Tự động chiếm toàn bộ không gian phía trên */
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #09090b;   /* Nền đen tuyền để làm nổi bật khung ảnh edit */
+    background: #09090b;       /* Nền đen tuyền bao quanh khung ảnh edit */
     padding: 20px;
 }
 
-/* Thẻ Canvas vẽ ảnh và xương */
+/* Khung Vẽ Đồ Họa Canvas */
 #videoCanvas {
     background: #18181b;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Tạo bóng đổ cho khung canvas */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Tạo bóng đổ sâu cho canvas */
     border: 1px solid #2d2d3d;
     border-radius: 6px;
-    cursor: crosshair;     /* Đổi trỏ chuột thành hình chữ thập để dễ chấm xương */
+    cursor: crosshair;         /* Đổi chuột thành hình chữ thập để dễ chấm xương */
 }
-
-
 /* =========================================================================
-   3. PHẦN 2: THANH CÔNG CỤ ĐIỀU KHIỂN & UPLOAD (TOOLBAR)
+   3. KHU VỰC 2: THANH MENU CÔNG CỤ (TOOLBAR)
    ========================================================================= */
 #toolbar {
     display: flex;
     align-items: center;
-    justify-content: center; /* Đẩy các nhóm nút ra giữa thanh toolbar */
-    gap: 15px;
-    background: #1e1e24;     /* Màu xám sáng hơn nền một chút */
+    justify-content: center;   /* Căn giữa toàn bộ các nhóm nút bấm */
+    gap: 12px;
+    background: #1e1e24;       /* Thanh toolbar màu xám sáng */
     padding: 10px 20px;
     border-top: 1px solid #2d2d3d;
     border-bottom: 1px solid #2d2d3d;
+    flex-wrap: wrap;           /* Tự động xuống hàng nếu màn hình bị thu nhỏ */
 }
 
-/* Định dạng chung cho tất cả nút bấm trong Toolbar */
+/* Các phân khu nút bấm con nằm thẳng hàng ngang */
+.rig-setup-section, .tools-section, .upload-section, .keyframe-section {
+    display: flex;
+    gap: 8px;
+}
+
+/* Thiết kế định dạng nút bấm chung */
 button {
     background: #2d2d3d;
     color: #e4e4e7;
@@ -65,42 +69,30 @@ button {
     font-weight: 500;
     cursor: pointer;
     border-radius: 6px;
-    transition: all 0.15s ease; /* Tạo hiệu ứng mượt khi di chuột qua */
+    transition: all 0.15s ease; /* Tạo hiệu ứng chuyển màu mượt khi rê chuột */
 }
 
-/* Hiệu ứng khi rê chuột vào nút */
+/* Khi di chuột vào nút */
 button:hover {
     background: #3f3f46;
     border-color: #52525b;
 }
 
-/* Trạng thái nút đang được kích hoạt (Ví dụ: Đang chọn mode Di chuyển) */
+/* Khi một nút công cụ bất kỳ được bấm kích hoạt (Active) */
 button.active {
-    background: #007acc; /* Màu xanh đặc trưng của các phần mềm đồ họa */
-    color: #ffffff;
-    border-color: #0098ff;
-    box-shadow: 0 0 8px rgba(0, 122, 204, 0.4);
+    box-shadow: 0 0 10px rgba(0, 122, 204, 0.5);
+    border-color: #0098ff !important;
 }
 
-/* Thiết kế riêng cho nút Tải ảnh lên */
-#btn-upload {
-    background: #16a34a; /* Màu xanh lá bắt mắt */
-    border-color: #22c55e;
-}
-#btn-upload:hover {
-    background: #15803d;
-}
+/* Định dạng riêng cho nút Tải ảnh lên */
+#btn-upload { background: #16a34a; border-color: #22c55e; }
+#btn-upload:hover { background: #15803d; }
 
-/* Thiết kế riêng cho nút Thêm Keyframe */
-#btn-keyframe {
-    background: #dc2626; /* Màu đỏ đặc trưng của nút record/keyframe */
-    border-color: #ef4444;
-}
-#btn-keyframe:hover {
-    background: #b91c1c;
-}
+/* Định dạng riêng cho nút Thêm Keyframe đỏ */
+#btn-keyframe { background: #dc2626; border-color: #ef4444; }
+#btn-keyframe:hover { background: #b91c1c; }
 
-/* Vạch kẻ dọc chia đôi các phân khu công cụ */
+/* Vạch kẻ dọc chia tách các nhóm công cụ */
 .divider {
     width: 1px;
     height: 24px;
@@ -108,34 +100,27 @@ button.active {
     margin: 0 5px;
 }
 
-
 /* =========================================================================
-   4. PHẦN 3: HỆ THỐNG TIMELINE (DÒNG THỜI GIAN)
+   4. KHU VỰC 3: HỆ THỐNG TIMELINE DÒNG THỜI GIAN
    ========================================================================= */
 #timeline-container {
-    height: 120px;       /* Cố định chiều cao vùng timeline bên dưới */
+    height: 120px;             /* Cố định chiều cao vùng dòng thời gian bên dưới */
     background: #111115;
     padding: 15px 25px;
     box-sizing: border-box;
 }
 
-/* Khu vực hàng trên của Timeline (Nút Play và Giờ) */
+/* Hàng trên của Timeline (Nút Play và Bộ đếm) */
 #timeline-header {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Đẩy nút Play sang trái, bộ đếm giờ sang phải */
+    justify-content: space-between;
     margin-bottom: 10px;
 }
 
-/* Thiết kế riêng cho nút Play/Pause */
-#btn-play {
-    padding: 5px 15px;
-    background: #3f3f46;
-}
-
-/* Ô hiển thị thông số thời gian số chạy */
+/* Khung hiển thị đồng hồ số điện tử chạy giây */
 #time-display {
-    font-family: "Courier New", Courier, monospace; /* Dùng font chữ điện tử */
+    font-family: "Courier New", Courier, monospace;
     font-size: 14px;
     color: #a1a1aa;
     background: #1e1e24;
@@ -144,26 +129,26 @@ button.active {
     border: 1px solid #2d2d3d;
 }
 
-/* Rãnh trượt thời gian chính */
+/* Rãnh chạy thời gian chính */
 #timeline-track {
     height: 30px;
     background: #1e1e24;
     position: relative;
     border-radius: 6px;
     border: 1px solid #2d2d3d;
-    cursor: pointer; /* Đổi chuột thành hình bàn tay/bấm khi chỉ vào thanh timeline */
+    cursor: pointer;
 }
 
-/* Thanh kim dọc màu đỏ chạy thời gian */
+/* Thanh kim dọc màu đỏ biểu thị giây hiện tại */
 #playhead {
     width: 2px;
     height: 100%;
     background: #ff4757;
     position: absolute;
-    left: 0%; /* Code JS sẽ đổi phần trăm này để kim chạy */
+    left: 0%;
 }
 
-/* Tạo cục núm bọc đầu thanh kim đỏ cho giống phần mềm chuyên nghiệp */
+/* Đầu núm bọc trên đỉnh kim trượt đỏ */
 #playhead::after {
     content: '';
     position: absolute;
