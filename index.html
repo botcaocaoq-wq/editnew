@@ -8,12 +8,12 @@
 <body>
     <div id="app-container">
 
-        <!-- 1. MÀN HÌNH PREVIEW -->
+        <!-- 1. MÀN HÌNH PREVIEW CHÍNH -->
         <div id="preview-window">
             <canvas id="videoCanvas" width="800" height="450"></canvas>
         </div>
 
-        <!-- 2. THANH CÔNG CỤ TOOLS -->
+        <!-- 2. THANH CÔNG CỤ ĐIỀU KHIỂN & UPLOAD -->
         <div id="toolbar">
             <div class="upload-section">
                 <input type="file" id="image-upload" accept="image/*" style="display: none;">
@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        <!-- 3. THANH TIMELINE -->
+        <!-- 3. HỆ THỐNG TIMELINE DÒNG THỜI GIAN -->
         <div id="timeline-container">
             <div id="timeline-header">
                 <button id="btn-play">▶ Play</button>
@@ -227,7 +227,7 @@
                 btnUpload?.addEventListener('click', () => fileInput.click());
 
                 fileInput?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files;
                     if (!file) return;
 
                     const reader = new FileReader();
@@ -299,7 +299,7 @@
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
 
-                // Vẽ lưới caro ô vuông đồ họa nền
+                // Vẽ lưới ô vuông đồ họa nền
                 this.ctx.strokeStyle = '#27272a';
                 this.ctx.lineWidth = 0.5;
                 for(let x=0; x<this.canvas.width; x+=30) {
@@ -347,7 +347,7 @@
         }
 
         // =========================================================================
-        // BỘ NÃO TỔNG KHỞI CHẠY ĐỒNG BỘ ỨNG DỤNG
+        // BỘ NÃO TỔNG ĐIỀU PHỐI ĐỒNG BỘ ỨNG DỤNG
         // =========================================================================
         class AppCore {
             constructor() {
@@ -373,7 +373,7 @@
             }
         }
 
-        // Khởi chạy khi tải xong trang web
+        // Kích hoạt khi trang web sẵn sàng
         window.onload = () => {
             window.appEngine = new AppCore();
         };
