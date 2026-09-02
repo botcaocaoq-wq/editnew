@@ -2,20 +2,34 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>editnew - Web Video Rigging App</title>
+    <title>editnew - Real-Time Glitch & Motion FX</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Nhúng thư viện tự động nén chuỗi khung hình thành file GIF -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
     <div id="app-container">
 
-        <!-- 1. MÀN HÌNH PREVIEW CHÍNH -->
+        <!-- 1. MÀN HÌNH HIỂN THỊ ĐỒ HỌA CHÍNH (PREVIEW) -->
         <div id="preview-window">
             <canvas id="videoCanvas" width="800" height="450"></canvas>
         </div>
 
-        <!-- 2. THANH CÔNG CỤ TOOLS CHUYÊN NGHIỆP -->
+        <!-- 2. THANH TRƯỢT ĐIỀU CHỈNH THÔNG SỐ (BÊN TRÊN THANH CÔNG CỤ) -->
+        <div id="fx-controls-panel">
+            <div class="slider-group">
+                <label>⚡ Tốc độ (Speed):</label>
+                <input type="range" id="slider-speed" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="slider-group">
+                <label>💥 Cường độ (Amount):</label>
+                <input type="range" id="slider-amount" min="1" max="100" step="1" value="30">
+            </div>
+        </div>
+
+        <!-- 3. THANH MENU CÔNG CỤ CHỨC NĂNG (TOOLBAR) -->
         <div id="toolbar">
-            <!-- NHÓM UPLOAD -->
+            <!-- PHÂN KHU UPLOAD FILE -->
             <div class="upload-section">
                 <input type="file" id="image-upload" accept="image/*" style="display: none;">
                 <button id="btn-upload">📁 Tải ảnh lên</button>
@@ -23,38 +37,19 @@
             
             <div class="divider"></div>
 
-            <!-- NHÓM CHẾ ĐỘ CẤU HÌNH RIG (SETUP MODE) -->
-            <div class="rig-setup-section">
-                <button id="btn-mode-rig" class="active" style="background: #eab308; border-color: #ca8a04; color: black; font-weight: bold;">Bone Chế độ Gắn Rig</button>
-                <button id="btn-create-mesh" style="background: #8b5cf6; border-color: #7c3aed;">Tạo lưới Đa lớp</button>
-                <button id="btn-bind-rig" style="background: #06b6d4; border-color: #0891b2;">Kết hợp Rig (Bind)</button>
+            <!-- PHÂN KHU CHỌN HIỆU ỨNG VÀ ĐIỂM NEO GIỮ HÌNH -->
+            <div class="fx-section">
+                <button id="btn-pin-mode" style="background: #eab308; color: black; font-weight: bold;">📍 Ghim điểm neo</button>
+                <button id="btn-fx-stretch" class="active">💇 Co giãn sợi tóc</button>
+                <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
+                <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
             </div>
 
             <div class="divider"></div>
 
-            <!-- NHÓM BỘ CÔNG CỤ HOẠT HÌNH (ANIMATION TOOLS) -->
-            <div class="tools-section">
-                <button id="btn-translate">Di chuyển Ảnh/Lưới</button>
-                <button id="btn-rotate">Xoay Ảnh/Lưới</button>
-                <button id="btn-scale">Phóng to Ảnh/Lưới</button>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- NHÓM KEYFRAME -->
-            <div class="keyframe-section">
-                <button id="btn-keyframe">Thêm Keyframe</button>
-            </div>
-        </div>
-
-        <!-- 3. HỆ THỐNG TIMELINE DÒNG THỜI GIAN -->
-        <div id="timeline-container">
-            <div id="timeline-header">
-                <button id="btn-play">Play</button>
-                <span id="time-display">0.00s / 10.00s</span>
-            </div>
-            <div id="timeline-track">
-                <div id="playhead"></div> 
+            <!-- PHÂN KHU XUẤT FILE ĐẦU RA -->
+            <div class="export-section">
+                <button id="btn-export-gif" style="background: #10b981; border-color: #059669; font-weight: bold;">💾 Xuất file GIF</button>
             </div>
         </div>
 
@@ -62,401 +57,201 @@
 
     <script>
         // =========================================================================
-        // LOGIC 1: BỘ CÔNG CỤ TƯƠNG TÁC (GIZMO & MODES)
+        // LOGIC 1: BỘ LỌC ĐIỀU PHỐI BIẾN DẠNG HÌNH ẢNH THỜI GIAN THỰC
         // =========================================================================
-        class TransformGizmo {
-            constructor(core) {
-                this.core = core;
-                this.currentMode = 'none';
-                this.selectedBone = null;
-                this.isDragging = false;
-                this.startMousePos = { x: 0, y: 0 };
-                this.isRigMode = true;
-                
-                this.initButtonEvents();
-            }
-
-            initButtonEvents() {
-                const btnRigMode = document.getElementById('btn-mode-rig');
-                const animModes = ['translate', 'rotate', 'scale'];
-
-                btnRigMode?.addEventListener('click', () => {
-                    this.isRigMode = !this.isRigMode;
-                    if (this.isRigMode) {
-                        btnRigMode.classList.add('active');
-                        btnRigMode.style.background = '#eab308';
-                        this.currentMode = 'none';
-                        animModes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
-                    } else {
-                        btnRigMode.classList.remove('active');
-                        btnRigMode.style.background = '#2d2d3d';
-                    }
-                });
-
-                animModes.forEach(mode => {
-                    const btn = document.getElementById(`btn-${mode}`);
-                    if (btn) {
-                        btn.addEventListener('click', () => {
-                            this.isRigMode = false;
-                            btnRigMode.classList.remove('active');
-                            btnRigMode.style.background = '#2d2d3d';
-
-                            animModes.forEach(m => document.getElementById(`btn-${m}`)?.classList.remove('active'));
-                            btn.classList.add('active');
-                            this.currentMode = mode;
-                        });
-                    }
-                });
-            }
-
-            handleMouseDown(mousePos, bone) {
-                if (!bone) return;
-                this.selectedBone = bone;
-                this.isDragging = true;
-                this.startMousePos = { ...mousePos };
-            }
-
-            handleMouseMove(currentMousePos) {
-                if (!this.isDragging || !this.selectedBone) return;
-
-                const deltaX = currentMousePos.x - this.startMousePos.x;
-                const deltaY = currentMousePos.y - this.startMousePos.y;
-
-                if (this.isRigMode) {
-                    this.selectedBone.position.x += deltaX;
-                    this.selectedBone.position.y += deltaY;
-                } else {
-                    if (this.currentMode === 'translate') {
-                        this.selectedBone.position.x += deltaX;
-                        this.selectedBone.position.y += deltaY;
-                    } 
-                    else if (this.currentMode === 'rotate') {
-                        const angle = Math.atan2(
-                            currentMousePos.y - this.selectedBone.position.y, 
-                            currentMousePos.x - this.startMousePos.x
-                        );
-                        this.selectedBone.rotation = angle;
-                    } 
-                    else if (this.currentMode === 'scale') {
-                        const scaleFactor = 1 + (deltaX * 0.005);
-                        this.selectedBone.scale.x = Math.max(0.1, this.selectedBone.scale.x * scaleFactor);
-                        this.selectedBone.scale.y = Math.max(0.1, this.selectedBone.scale.y * scaleFactor);
-                    }
-                }
-
-                this.startMousePos = { ...currentMousePos };
-            }
-
-            handleMouseUp() {
-                this.isDragging = false;
-            }
-        }
-
-        // =========================================================================
-        // LOGIC 2: ĐỒNG HỒ ĐẾM GIỜ VÀ LƯU KEYFRAME TIMELINE
-        // =========================================================================
-        class TimelineManager {
-            constructor(core) {
-                this.core = core;
-                this.currentTime = 0;
-                this.maxTime = 10;
-                this.isPlaying = false;
-                this.keyframes = [];
-                this.animationFrameId = null;
-                this.initTimelineEvents();
-            }
-
-            initTimelineEvents() {
-                const btnPlay = document.getElementById('btn-play');
-                const btnKeyframe = document.getElementById('btn-keyframe');
-                const track = document.getElementById('timeline-track');
-
-                btnPlay?.addEventListener('click', () => this.togglePlay());
-
-                btnKeyframe?.addEventListener('click', () => {
-                    if (this.core.gizmo.selectedBone) {
-                        this.addKeyframe(this.core.gizmo.selectedBone);
-                    } else {
-                        alert("Vui lòng click chọn 1 cục xương trên màn hình trước khi tạo Keyframe!");
-                    }
-                });
-
-                track?.addEventListener('click', (e) => {
-                    const rect = track.getBoundingClientRect();
-                    const clickX = e.clientX - rect.left;
-                    this.seek((clickX / rect.width) * this.maxTime);
-                });
-            }
-
-            togglePlay() {
-                this.isPlaying = !this.isPlaying;
-                const btnPlay = document.getElementById('btn-play');
-                if (btnPlay) btnPlay.innerText = this.isPlaying ? 'Pause' : 'Play';
-
-                if (this.isPlaying) {
-                    this.lastTime = performance.now();
-                    this.runClock();
-                } else {
-                    cancelAnimationFrame(this.animationFrameId);
-                }
-            }
-
-            runClock() {
-                if (!this.isPlaying) return;
-                const now = performance.now();
-                const deltaTime = (now - this.lastTime) / 1000;
-                this.lastTime = now;
-
-                this.seek(this.currentTime + deltaTime);
-
-                if (this.currentTime >= this.maxTime) {
-                    this.seek(0);
-                }
-                this.animationFrameId = requestAnimationFrame(() => this.runClock());
-            }
-
-            seek(time) {
-                this.currentTime = Math.max(0, Math.min(this.maxTime, time));
-                const playhead = document.getElementById('playhead');
-                const timeDisplay = document.getElementById('time-display');
-                
-                if (playhead) playhead.style.left = `${(this.currentTime / this.maxTime) * 100}%`;
-                if (timeDisplay) timeDisplay.innerText = `${this.currentTime.toFixed(2)}s / ${this.maxTime.toFixed(2)}s`;
-
-                this.core.applyKeyframesAtTime(this.currentTime);
-            }
-
-            addKeyframe(bone) {
-                const roundedTime = parseFloat(this.currentTime.toFixed(2));
-                this.keyframes = this.keyframes.filter(k => !(k.time === roundedTime && k.boneId === bone.id));
-
-                const newKf = {
-                    time: roundedTime,
-                    boneId: bone.id,
-                    position: { ...bone.position },
-                    rotation: bone.rotation,
-                    scale: { ...bone.scale }
-                };
-                this.keyframes.push(newKf);
-                this.keyframes.sort((a, b) => a.time - b.time);
-                console.log("Đã ghi nhớ Keyframe chuyển động!", newKf);
-            }
-        }
-
-        // =========================================================================
-          // =========================================================================
-        // LOGIC 3: TẠO LƯỚI ĐA LỚP, XỬ LÝ LÁT CẮT SLICE VÀ VẼ CANVAS
-        // =========================================================================
-        class RiggingEngine {
-            constructor(core) {
-                this.core = core;
+        class MotionFXEngine {
+            constructor() {
                 this.canvas = document.getElementById('videoCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.bones = [];
                 this.bgImage = null;
                 
-                this.isMeshCreated = false; 
-                this.isRigBound = false;    
-                this.slices = []; // Mảng lưu trữ các đường cắt Slice của người dùng
-                this.sliceEndPos = null;
+                this.currentFX = 'stretch'; // Tên hiệu ứng chạy mặc định ban đầu
+                this.isPinMode = false;      // Chế độ chấm điểm neo giữ hình cố định
+                this.pins = [];              // Danh sách lưu tọa độ các điểm neo ghim hình
+                
+                this.time = 0;
+                this.speed = 1;
+                this.amount = 30;
 
-                this.initUploadEvent();
-                this.initCanvasEvents();
-                this.initAdvancedButtons();
-                this.drawAll();
+                this.initEvents();
+                this.animate();
             }
 
-            initAdvancedButtons() {
-                const btnMesh = document.getElementById('btn-create-mesh');
-                const btnBind = document.getElementById('btn-bind-rig');
+            initEvents() {
+                // Đọc thông số liên tục từ 2 thanh kéo slider độ biến dạng
+                document.getElementById('slider-speed').addEventListener('input', (e) => this.speed = parseFloat(e.target.value));
+                document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
 
-                btnMesh?.addEventListener('click', () => {
-                    if (!this.bgImage) {
-                        alert("Vui lòng tải ảnh lên trước!");
-                        return;
-                    }
-                    this.isMeshCreated = !this.isMeshCreated;
-                    btnMesh.style.background = this.isMeshCreated ? '#6d28d9' : '#8b5cf6';
-                    btnMesh.innerText = this.isMeshCreated ? '✅ Đã tạo lưới Đa lớp' : '🕸️ Tạo lưới Đa lớp';
-                    this.drawAll();
+                const btnPin = document.getElementById('btn-pin-mode');
+                const fxModes = ['stretch', 'wave', 'bend'];
+
+                // Bật/Tắt chế độ chấm điểm ghim cố định vùng ảnh
+                btnPin?.addEventListener('click', () => {
+                    this.isPinMode = !this.isPinMode;
+                    btnPin.classList.toggle('active', this.isPinMode);
+                    btnPin.style.background = this.isPinMode ? '#ca8a04' : '#eab308';
                 });
 
-                btnBind?.addEventListener('click', () => {
-                    if (this.bones.length === 0) {
-                        alert("Vui lòng tạo xương để kết hợp!");
-                        return;
-                    }
-                    this.isRigBound = !this.isRigBound;
-                    btnBind.style.background = this.isRigBound ? '#0e7490' : '#06b6d4';
-                    btnBind.innerText = this.isRigBound ? '🔒 Đã kết hợp Rig' : '🔗 Kết hợp Rig';
-                    alert(this.isRigBound ? "Đã khóa liên kết xương vào các mảnh lưới đã Slice thành công!" : "Hủy liên kết.");
-                });
-            }
+                // Chuyển đổi qua lại giữa bộ 3 hiệu ứng biến dạng biến đổi
+                fxModes.forEach(mode => {
+                    document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
+                        this.isPinMode = false;
+                        btnPin.classList.remove('active');
+                        btnPin.style.background = '#eab308';
 
-            initUploadEvent() {
+                        fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFX = mode;
+                    });
+                });
+
+                // Xử lý nạp file ảnh từ máy tính của người dùng
                 const btnUpload = document.getElementById('btn-upload');
                 const fileInput = document.getElementById('image-upload');
                 btnUpload?.addEventListener('click', () => fileInput.click());
                 fileInput?.addEventListener('change', (e) => {
-                    // SỬA LỖI ĐỂ NHẬN DIỆN ĐÚNG 1 FILE ẢNH ĐẦU TIÊN
-                    const file = e.target.files[0];
+                    const file = e.target.files[0]; // Lấy chuẩn xác 1 file ảnh gốc đầu tiên
                     if (!file) return;
                     
                     const reader = new FileReader();
-                    reader.onload = (event) => {
+                    reader.onload = (ev) => {
                         const img = new Image();
                         img.onload = () => { 
                             this.bgImage = img; 
-                            this.drawAll(); 
+                            this.pins = []; // Reset xóa hết các điểm ghim của ảnh cũ
                         };
-                        img.src = event.target.result;
+                        img.src = ev.target.result;
                     };
                     reader.readAsDataURL(file);
                 });
-            }
 
-            initCanvasEvents() {
+                // Nhấn chuột lên canvas để chấm ghim điểm cố định giữ hình không cho rung lắc
                 this.canvas.addEventListener('mousedown', (e) => {
                     const rect = this.canvas.getBoundingClientRect();
                     const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
 
-                    if (this.core.gizmo.isSliceMode) {
-                        this.core.gizmo.handleMouseDown(mousePos, null);
-                        return;
+                    if (this.isPinMode) {
+                        this.pins.push(mousePos); 
+                        console.log("[Hệ thống] Đã ghim điểm neo giữ hình tại tọa độ:", mousePos);
                     }
-
-                    let clickedBone = this.checkClickBone(mousePos);
-                    if (clickedBone) {
-                        this.core.gizmo.handleMouseDown(mousePos, clickedBone);
-                    } else if (this.core.gizmo.isRigMode) {
-                        const newBone = {
-                            id: Date.now(),
-                            name: `Khớp_${this.bones.length + 1}`,
-                            position: { x: mousePos.x, y: mousePos.y },
-                            rotation: 0,
-                            scale: { x: 1, y: 1 }
-                        };
-                        this.bones.push(newBone);
-                        this.core.gizmo.selectedBone = newBone;
-                    }
-                    this.drawAll();
-                });
-
-                this.canvas.addEventListener('mousemove', (e) => {
-                    const rect = this.canvas.getBoundingClientRect();
-                    const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-
-                    if (this.core.gizmo.isDragging) {
-                        this.core.gizmo.handleMouseMove(mousePos);
-                        this.drawAll();
-                    }
-                });
-
-                window.addEventListener('mouseup', () => {
-                    if (this.core.gizmo.isSliceMode && this.core.gizmo.isDragging && this.sliceEndPos) {
-                        this.slices.push({
-                            start: { ...this.core.gizmo.startMousePos },
-                            end: { ...this.sliceEndPos }
-                        });
-                        console.log("[Slice] Đã tạo đường phân cắt mảnh ảnh mới!");
-                        this.sliceEndPos = null;
-                    }
-                    this.core.gizmo.handleMouseUp();
-                    this.drawAll();
                 });
             }
 
-            checkClickBone(mousePos) {
-                for (let bone of this.bones) {
-                    const distance = Math.hypot(mousePos.x - bone.position.x, mousePos.y - bone.position.y);
-                    if (distance < 15) return bone;
-                }
-                return null;
+            // Vòng lặp cập nhật chuyển động liên tục thời gian thực (Real-time render)
+            animate() {
+                this.time += 0.05 * this.speed;
+                this.renderFX();
+                requestAnimationFrame(() => this.animate());
             }
-
-            drawAll() {
+            // Toán học ma trận bóc tách cấu trúc pixel hình ảnh
+            renderFX() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                if (this.bgImage) {
-                    this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
-                } else {
+                if (!this.bgImage) {
                     this.ctx.fillStyle = '#18181b';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    return;
                 }
 
-                if (this.isMeshCreated) {
-                    this.ctx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
-                    this.ctx.lineWidth = 1;
-                    const size = 40;
-                    for (let x = 0; x < this.canvas.width; x += size) {
-                        for (let y = 0; y < this.canvas.height; y += size) {
-                            this.ctx.beginPath(); this.ctx.moveTo(x, y); this.ctx.lineTo(x + size, y); this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
-                            this.ctx.beginPath(); this.ctx.moveTo(x + size, y); this.ctx.lineTo(x + size, y + size); this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
+                // Vẽ ảnh gốc tạm thời ra làm lớp đệm tính toán pixel màu
+                this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
+                const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                const outputData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+
+                // Quét qua hàng triệu mảng pixel màu trên bề mặt canvas
+                for (let y = 0; y < this.canvas.height; y++) {
+                    for (let x = 0; x < this.canvas.width; x++) {
+                        
+                        let srcX = x;
+                        let srcY = y;
+
+                        // Kiểm tra khoảng cách toán học Pitago đến các điểm ghim cố định (Pins)
+                        let pinInfluence = 1;
+                        this.pins.forEach(pin => {
+                            const dist = Math.hypot(x - pin.x, y - pin.y);
+                            if (dist < 80) {
+                                pinInfluence *= (dist / 80); // Càng sát điểm ghim thì độ méo của hiệu ứng càng giảm hẳn về 0
+                            }
+                        });
+
+                        // Áp dụng thuật toán lượng giác bẻ cong ma trận điểm ảnh hình ảnh
+                        if (this.currentFX === 'stretch') {
+                            // 1. Hiệu ứng co giãn sợi tóc kéo dãn chảy dài hình
+                            srcX += Math.sin(y * 0.02 + this.time) * this.amount * 0.3 * pinInfluence;
+                        } else if (this.currentFX === 'wave') {
+                            // 2. Hiệu ứng uốn gợn sóng biến dạng dập dềnh cuộn
+                            srcY += Math.sin(x * 0.05 + this.time) * this.amount * 0.4 * pinInfluence;
+                        } else if (this.currentFX === 'bend') {
+                            // 3. Hiệu ứng uốn cong phồng lồi mắt cá mềm mại
+                            const distFromCenter = Math.hypot(x - this.canvas.width/2, y - this.canvas.height/2);
+                            const force = Math.cos(distFromCenter * 0.01 - this.time) * this.amount * 0.2;
+                            srcX += (x - this.canvas.width/2) * 0.01 * force * pinInfluence;
+                            srcY += (y - this.canvas.height/2) * 0.01 * force * pinInfluence;
                         }
+
+                        // Khóa cố định tọa độ quét để không văng lệch ra khỏi mép khung canvas
+                        srcX = Math.max(0, Math.min(this.canvas.width - 1, Math.round(srcX)));
+                        srcY = Math.max(0, Math.min(this.canvas.height - 1, Math.round(srcY)));
+
+                        // Sao chép ma trận kênh màu RGB sang khung canvas render mới
+                        const targetIdx = (y * this.canvas.width + x) * 4;
+                        const srcIdx = (srcY * this.canvas.width + srcX) * 4;
+
+                        outputData.data[targetIdx] = imgData.data[srcIdx];
+                        outputData.data[targetIdx+1] = imgData.data[srcIdx+1];
+                        outputData.data[targetIdx+2] = imgData.data[srcIdx+2];
+                        outputData.data[targetIdx+3] = 255; 
                     }
                 }
 
-                this.slices.forEach(slice => {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(slice.start.x, slice.start.y);
-                    this.ctx.lineTo(slice.end.x, slice.end.y);
-                    this.ctx.strokeStyle = '#f97316';
-                    this.ctx.lineWidth = 3;
-                    this.ctx.stroke();
+                // Ghi đè dữ liệu pixel đã uốn cong hoàn chỉnh ra màn hình canvas
+                this.ctx.putImageData(outputData, 0, 0);
+
+                // Vẽ các điểm Ghim neo hình tròn màu vàng phát sáng định vị lên trên bề mặt ảnh
+                this.pins.forEach(pin => {
+                    this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
+                    this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
+                    this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 1.5; this.ctx.stroke();
                 });
+            }
 
-                if (this.core.gizmo.isSliceMode && this.core.gizmo.isDragging && this.sliceEndPos) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.core.gizmo.startMousePos.x, this.core.gizmo.startMousePos.y);
-                    this.ctx.lineTo(this.sliceEndPos.x, this.sliceEndPos.y);
-                    this.ctx.strokeStyle = '#ffffff';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.stroke();
-                }
+            // HÀM CHỤP LẠI KHUNG HÌNH VÀ ĐÓNG GÓI XUẤT FILE ẢNH ĐỘNG GIF ĐỂ TẢI VỀ
+            exportToGIF() {
+                if (!this.bgImage) return alert("Vui lòng tải một bức ảnh lên trước khi xuất file!");
+                const btn = document.getElementById('btn-export-gif');
+                btn.innerText = "⏳ Đang xuất GIF..."; btn.style.background = "#4b5563";
 
-                this.bones.forEach(bone => {
-                    this.ctx.save();
-                    this.ctx.translate(bone.position.x, bone.position.y);
-                    this.ctx.rotate(bone.rotation);
-                    this.ctx.scale(bone.scale.x, bone.scale.y);
-
-                    const isSelected = (this.core.gizmo.selectedBone?.id === bone.id);
-
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, 0);
-                    this.ctx.lineTo(12, -5);
-                    this.ctx.lineTo(45, 0);
-                    this.ctx.lineTo(12, 5);
-                    this.ctx.closePath();
-                    this.ctx.fillStyle = isSelected ? 'rgba(0, 122, 204, 0.4)' : 'rgba(239, 68, 68, 0.3)';
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = isSelected ? '#007acc' : '#ef4444';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.stroke();
-
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, 7, 0, Math.PI * 2);
-                    this.ctx.fillStyle = isSelected ? '#00ebff' : '#fbbf24';
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = '#ffffff';
-                    this.ctx.lineWidth = 1.5;
-                    this.ctx.stroke();
-
-                    this.ctx.restore();
-                });
+                const frames = [];
+                let count = 0;
+                
+                // Thu âm chụp liên tục 20 khung hình chuyển động lặp vòng để ghép thành file GIF
+                const captureLoop = () => {
+                    if (count < 20) {
+                        frames.push(this.canvas.toDataURL());
+                        count++;
+                        setTimeout(captureLoop, 60); 
+                    } else {
+                        // Kích hoạt thư viện nén chuỗi ảnh chụp thành file GIF đầu ra hoàn chỉnh
+                        gifshot.createGIF({
+                            images: frames, interval: 0.06, numFrames: 20, gifWidth: 400, gifHeight: 225
+                        }, (obj) => {
+                            if (!obj.error) {
+                                const link = document.createElement('a'); link.href = obj.image;
+                                link.download = 'editnew_animation.gif'; link.click(); // Kích hoạt lệnh tải tự động file về máy tính
+                            }
+                            btn.innerText = "💾 Xuất file GIF"; btn.style.background = "#10b981";
+                        });
+                    }
+                };
+                captureLoop();
             }
         }
 
-        // =========================================================================
-        // BỘ NÃO TỔNG ĐIỀU PHỐI ĐỒNG BỘ ỨNG DỤNG
-        // =========================================================================
-        class AppCore {
-            constructor() {
-                this.gizmo = new TransformGizmo(this);
-                this.timeline = new TimelineManager(this);
-                this.rigEngine = new RiggingEngine(this);
-            }
-
-            applyKeyframesAtTime(time) {
-                const roundedTime = parseFloat(time.toFixed(2));
-this.rigEngine.bones.forEach(bone => {const boneKfs = this.timeline.keyframes.filter(k => k.boneId === bone.id);if (boneKfs.length === 0) return;let matchedKf = boneKfs.find(k => Math.abs(k.time - roundedTime) <= 0.05);if (matchedKf) {bone.position = { ...matchedKf.position };bone.rotation = matchedKf.rotation;bone.scale = { ...matchedKf.scale };}});this.rigEngine.drawAll();}}window.onload = () => {window.appEngine = new AppCore();};
+        // Kích hoạt chạy toàn bộ ứng dụng liên kết
+        window.onload = () => {
+            window.fxApp = new MotionFXEngine();
+            document.getElementById('btn-export-gif').addEventListener('click', () => window.fxApp.exportToGIF());
+        };
+    </script>
+</body>
+</html>

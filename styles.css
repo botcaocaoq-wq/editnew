@@ -5,24 +5,24 @@ body {
     margin: 0;
     padding: 0;
     background-color: #121214; /* Nền tối Dark Mode chủ đạo */
-    color: #e4e4e7;            /* Màu chữ trắng xám nhẹ chống mỏi mắt */
+    color: #e4e4e7;            /* Màu chữ trắng xám nhẹ chống chói mắt */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    user-select: none;         /* Không cho bôi đen chữ khi đang kéo thả chuột */
-    overflow: hidden;          /* Khóa cuộn trang web */
+    user-select: none;         /* Không cho người dùng bôi đen chữ lung tung */
+    overflow: hidden;          /* Khóa thanh cuộn trang web */
 }
 
-/* Khung tổng chứa toàn bộ giao diện app */
+/* Bộ khung chính chứa toàn bộ ứng dụng */
 #app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;             /* Chiếm trọn chiều cao màn hình */
+    height: 100vh;             /* Chiếm full chiều cao màn hình máy tính */
 }
 
 /* =========================================================================
-   2. KHU VỰC 1: MÀN HÌNH PREVIEW EDIT CHÍNH
+   2. MÀN HÌNH PREVIEW EDIT CHÍNH
    ========================================================================= */
 #preview-window {
-    flex: 1;                   /* Tự động chiếm toàn bộ không gian phía trên */
+    flex: 1;                   /* Tự động chiếm toàn bộ không gian trống phía trên */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,30 +36,61 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Tạo bóng đổ sâu cho canvas */
     border: 1px solid #2d2d3d;
     border-radius: 6px;
-    cursor: crosshair;         /* Đổi chuột thành hình chữ thập để dễ chấm xương */
+    cursor: crosshair;         /* Đổi chuột thành hình chữ thập để dễ ghim điểm */
 }
 /* =========================================================================
-   3. KHU VỰC 2: THANH MENU CÔNG CỤ (TOOLBAR)
+   3. BẢNG ĐIỀU CHỈNH THÔNG SỐ HIỆU ỨNG (SLIDERS PANEL)
+   ========================================================================= */
+#fx-controls-panel {
+    background: #18181f;
+    padding: 12px 25px;
+    border-top: 1px solid #2d2d3d;
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* Khoảng cách giữa 2 thanh kéo slider */
+}
+
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.slider-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #a1a1aa;
+    min-width: 130px;
+}
+
+/* Định dạng thanh kéo range slider */
+input[type="range"] {
+    cursor: pointer;
+    width: 180px;
+    accent-color: #007acc; /* Đổi núm trượt sang màu xanh đồ họa */
+}
+
+/* =========================================================================
+   4. THANH CÔNG CỤ CHỨC NĂNG CHÍNH (TOOLBAR)
    ========================================================================= */
 #toolbar {
     display: flex;
     align-items: center;
-    justify-content: center;   /* Căn giữa toàn bộ các nhóm nút bấm */
+    justify-content: center;   /* Căn giữa toàn bộ nút bấm */
     gap: 12px;
-    background: #1e1e24;       /* Thanh toolbar màu xám sáng */
-    padding: 10px 20px;
+    background: #1e1e24;       /* Màu xám sáng hơn cho thanh công cụ */
+    padding: 12px 20px;
     border-top: 1px solid #2d2d3d;
-    border-bottom: 1px solid #2d2d3d;
-    flex-wrap: wrap;           /* Tự động xuống hàng nếu màn hình bị thu nhỏ */
+    flex-wrap: wrap;           /* Tự động xuống hàng nếu màn hình nhỏ */
 }
 
-/* Các phân khu nút bấm con nằm thẳng hàng ngang */
-.rig-setup-section, .tools-section, .upload-section, .keyframe-section {
+/* Các phân khu nút bấm con */
+.upload-section, .fx-section, .export-section {
     display: flex;
     gap: 8px;
 }
 
-/* Thiết kế định dạng nút bấm chung */
+/* Định dạng cấu hình nút bấm chung */
 button {
     background: #2d2d3d;
     color: #e4e4e7;
@@ -69,93 +100,30 @@ button {
     font-weight: 500;
     cursor: pointer;
     border-radius: 6px;
-    transition: all 0.15s ease; /* Tạo hiệu ứng chuyển màu mượt khi rê chuột */
+    transition: all 0.15s ease;
 }
 
-/* Khi di chuột vào nút */
 button:hover {
     background: #3f3f46;
     border-color: #52525b;
 }
 
-/* Khi một nút công cụ bất kỳ được bấm kích hoạt (Active) */
+/* Khi một nút hiệu ứng đang được bật kích hoạt */
 button.active {
-    box-shadow: 0 0 10px rgba(0, 122, 204, 0.5);
+    background: #007acc !important;
+    color: #ffffff;
     border-color: #0098ff !important;
+    box-shadow: 0 0 10px rgba(0, 122, 204, 0.5);
 }
 
-/* Định dạng riêng cho nút Tải ảnh lên */
+/* Định dạng nút Tải ảnh lên */
 #btn-upload { background: #16a34a; border-color: #22c55e; }
 #btn-upload:hover { background: #15803d; }
 
-/* Định dạng riêng cho nút Thêm Keyframe đỏ */
-#btn-keyframe { background: #dc2626; border-color: #ef4444; }
-#btn-keyframe:hover { background: #b91c1c; }
-
-/* Vạch kẻ dọc chia tách các nhóm công cụ */
+/* Vạch kẻ dọc chia tách các nhóm nút */
 .divider {
     width: 1px;
     height: 24px;
     background: #3f3f46;
     margin: 0 5px;
-}
-
-/* =========================================================================
-   4. KHU VỰC 3: HỆ THỐNG TIMELINE DÒNG THỜI GIAN
-   ========================================================================= */
-#timeline-container {
-    height: 120px;             /* Cố định chiều cao vùng dòng thời gian bên dưới */
-    background: #111115;
-    padding: 15px 25px;
-    box-sizing: border-box;
-}
-
-/* Hàng trên của Timeline (Nút Play và Bộ đếm) */
-#timeline-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-/* Khung hiển thị đồng hồ số điện tử chạy giây */
-#time-display {
-    font-family: "Courier New", Courier, monospace;
-    font-size: 14px;
-    color: #a1a1aa;
-    background: #1e1e24;
-    padding: 4px 12px;
-    border-radius: 4px;
-    border: 1px solid #2d2d3d;
-}
-
-/* Rãnh chạy thời gian chính */
-#timeline-track {
-    height: 30px;
-    background: #1e1e24;
-    position: relative;
-    border-radius: 6px;
-    border: 1px solid #2d2d3d;
-    cursor: pointer;
-}
-
-/* Thanh kim dọc màu đỏ biểu thị giây hiện tại */
-#playhead {
-    width: 2px;
-    height: 100%;
-    background: #ff4757;
-    position: absolute;
-    left: 0%;
-}
-
-/* Đầu núm bọc trên đỉnh kim trượt đỏ */
-#playhead::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -5px;
-    width: 12px;
-    height: 8px;
-    background: #ff4757;
-    border-radius: 2px;
 }
