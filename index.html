@@ -244,7 +244,8 @@
         }
 
         // =========================================================================
-        // LOGIC 3: TẠO LƯỚI ĐA LỚP, KẾT HỢP RIG VÀ VẼ CANVAS
+          // =========================================================================
+        // LOGIC 3: TẠO LƯỚI ĐA LỚP, XỬ LÝ LÁT CẮT SLICE VÀ VẼ CANVAS
         // =========================================================================
         class RiggingEngine {
             constructor(core) {
@@ -254,9 +255,11 @@
                 this.bones = [];
                 this.bgImage = null;
                 
-                this.isMeshCreated = false;
-                this.isRigBound = false;
-                
+                this.isMeshCreated = false; 
+                this.isRigBound = false;    
+                this.slices = []; // Mảng lưu trữ các đường cắt Slice của người dùng
+                this.sliceEndPos = null;
+
                 this.initUploadEvent();
                 this.initCanvasEvents();
                 this.initAdvancedButtons();
@@ -269,43 +272,42 @@
 
                 btnMesh?.addEventListener('click', () => {
                     if (!this.bgImage) {
-                        alert("Vui lòng tải một bức ảnh lên trước khi tạo lưới!");
+                        alert("Vui lòng tải ảnh lên trước!");
                         return;
                     }
                     this.isMeshCreated = !this.isMeshCreated;
                     btnMesh.style.background = this.isMeshCreated ? '#6d28d9' : '#8b5cf6';
-                    btnMesh.innerText = this.isMeshCreated ? 'Đã tạo lưới Đa lớp' : 'Tạo lưới Đa lớp';
+                    btnMesh.innerText = this.isMeshCreated ? '✅ Đã tạo lưới Đa lớp' : '🕸️ Tạo lưới Đa lớp';
                     this.drawAll();
                 });
 
                 btnBind?.addEventListener('click', () => {
                     if (this.bones.length === 0) {
-                        alert("Vui lòng tạo ít nhất 1 khớp xương để kết hợp với lưới ảnh!");
+                        alert("Vui lòng tạo xương để kết hợp!");
                         return;
                     }
                     this.isRigBound = !this.isRigBound;
                     btnBind.style.background = this.isRigBound ? '#0e7490' : '#06b6d4';
-                    btnBind.innerText = this.isRigBound ? 'Đã kết hợp Rig' : 'Kết hợp Rig (Bind)';
-                    alert(this.isRigBound ? "Kết hợp hệ thống xương vào lưới đa lớp thành công!" : "Đã hủy kết hợp Rig.");
+                    btnBind.innerText = this.isRigBound ? '🔒 Đã kết hợp Rig' : '🔗 Kết hợp Rig';
+                    alert(this.isRigBound ? "Đã khóa liên kết xương vào các mảnh lưới đã Slice thành công!" : "Hủy liên kết.");
                 });
             }
 
             initUploadEvent() {
                 const btnUpload = document.getElementById('btn-upload');
                 const fileInput = document.getElementById('image-upload');
-
                 btnUpload?.addEventListener('click', () => fileInput.click());
-
                 fileInput?.addEventListener('change', (e) => {
-                    const file = e.target.files;
+                    // SỬA LỖI ĐỂ NHẬN DIỆN ĐÚNG 1 FILE ẢNH ĐẦU TIÊN
+                    const file = e.target.files[0];
                     if (!file) return;
-
+                    
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const img = new Image();
-                        img.onload = () => {
-                            this.bgImage = img;
-                            this.drawAll();
+                        img.onload = () => { 
+                            this.bgImage = img; 
+                            this.drawAll(); 
                         };
                         img.src = event.target.result;
                     };
@@ -318,22 +320,24 @@
                     const rect = this.canvas.getBoundingClientRect();
                     const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
 
-                    let clickedBone = this.checkClickBone(mousePos);
+                    if (this.core.gizmo.isSliceMode) {
+                        this.core.gizmo.handleMouseDown(mousePos, null);
+                        return;
+                    }
 
+                    let clickedBone = this.checkClickBone(mousePos);
                     if (clickedBone) {
                         this.core.gizmo.handleMouseDown(mousePos, clickedBone);
-                    } else {
-                        if (this.core.gizmo.isRigMode) {
-                            const newBone = {
-                                id: Date.now(),
-                                name: `Khớp_${this.bones.length + 1}`,
-                                position: { x: mousePos.x, y: mousePos.y },
-                                rotation: 0,
-                                scale: { x: 1, y: 1 }
-                            };
-                            this.bones.push(newBone);
-                            this.core.gizmo.selectedBone = newBone;
-                        }
+                    } else if (this.core.gizmo.isRigMode) {
+                        const newBone = {
+                            id: Date.now(),
+                            name: `Khớp_${this.bones.length + 1}`,
+                            position: { x: mousePos.x, y: mousePos.y },
+                            rotation: 0,
+                            scale: { x: 1, y: 1 }
+                        };
+                        this.bones.push(newBone);
+                        this.core.gizmo.selectedBone = newBone;
                     }
                     this.drawAll();
                 });
@@ -349,7 +353,16 @@
                 });
 
                 window.addEventListener('mouseup', () => {
+                    if (this.core.gizmo.isSliceMode && this.core.gizmo.isDragging && this.sliceEndPos) {
+                        this.slices.push({
+                            start: { ...this.core.gizmo.startMousePos },
+                            end: { ...this.sliceEndPos }
+                        });
+                        console.log("[Slice] Đã tạo đường phân cắt mảnh ảnh mới!");
+                        this.sliceEndPos = null;
+                    }
                     this.core.gizmo.handleMouseUp();
+                    this.drawAll();
                 });
             }
 
@@ -372,28 +385,33 @@
                 }
 
                 if (this.isMeshCreated) {
-                    this.ctx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
+                    this.ctx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
                     this.ctx.lineWidth = 1;
                     const size = 40;
                     for (let x = 0; x < this.canvas.width; x += size) {
                         for (let y = 0; y < this.canvas.height; y += size) {
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(x, y); this.ctx.lineTo(x + size, y);
-                            this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(x + size, y); this.ctx.lineTo(x + size, y + size);
-                            this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
+                            this.ctx.beginPath(); this.ctx.moveTo(x, y); this.ctx.lineTo(x + size, y); this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
+                            this.ctx.beginPath(); this.ctx.moveTo(x + size, y); this.ctx.lineTo(x + size, y + size); this.ctx.lineTo(x, y + size); this.ctx.closePath(); this.ctx.stroke();
                         }
                     }
-                } else {
-                    this.ctx.strokeStyle = '#27272a';
-                    this.ctx.lineWidth = 0.5;
-                    for(let x=0; x<this.canvas.width; x+=30) {
-                        this.ctx.beginPath(); this.ctx.moveTo(x,0); this.ctx.lineTo(x,this.canvas.height); this.ctx.stroke();
-                    }
-                    for(let y=0; y<this.canvas.height; y+=30) {
-                        this.ctx.beginPath(); this.ctx.moveTo(0,y); this.ctx.lineTo(this.canvas.width,y); this.ctx.stroke();
-                    }
+                }
+
+                this.slices.forEach(slice => {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(slice.start.x, slice.start.y);
+                    this.ctx.lineTo(slice.end.x, slice.end.y);
+                    this.ctx.strokeStyle = '#f97316';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.stroke();
+                });
+
+                if (this.core.gizmo.isSliceMode && this.core.gizmo.isDragging && this.sliceEndPos) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.core.gizmo.startMousePos.x, this.core.gizmo.startMousePos.y);
+                    this.ctx.lineTo(this.sliceEndPos.x, this.sliceEndPos.y);
+                    this.ctx.strokeStyle = '#ffffff';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
                 }
 
                 this.bones.forEach(bone => {
@@ -424,15 +442,14 @@
                     this.ctx.lineWidth = 1.5;
                     this.ctx.stroke();
 
-                    this.ctx.fillStyle = '#ffffff';
-                    this.ctx.font = '11px sans-serif';
-                    this.ctx.fillText(bone.name, 12, -8);
-
                     this.ctx.restore();
                 });
             }
         }
 
+        // =========================================================================
+        // BỘ NÃO TỔNG ĐIỀU PHỐI ĐỒNG BỘ ỨNG DỤNG
+        // =========================================================================
         class AppCore {
             constructor() {
                 this.gizmo = new TransformGizmo(this);
@@ -442,24 +459,4 @@
 
             applyKeyframesAtTime(time) {
                 const roundedTime = parseFloat(time.toFixed(2));
-                this.rigEngine.bones.forEach(bone => {
-                    const boneKfs = this.timeline.keyframes.filter(k => k.boneId === bone.id);
-                    if (boneKfs.length === 0) return;
-
-                    let matchedKf = boneKfs.find(k => Math.abs(k.time - roundedTime) <= 0.05);
-                    if (matchedKf) {
-                        bone.position = { ...matchedKf.position };
-                        bone.rotation = matchedKf.rotation;
-                        bone.scale = { ...matchedKf.scale };
-                    }
-                });
-                this.rigEngine.drawAll();
-            }
-        }
-
-        window.onload = () => {
-            window.appEngine = new AppCore();
-        };
-    </script>
-</body>
-</html>
+this.rigEngine.bones.forEach(bone => {const boneKfs = this.timeline.keyframes.filter(k => k.boneId === bone.id);if (boneKfs.length === 0) return;let matchedKf = boneKfs.find(k => Math.abs(k.time - roundedTime) <= 0.05);if (matchedKf) {bone.position = { ...matchedKf.position };bone.rotation = matchedKf.rotation;bone.scale = { ...matchedKf.scale };}});this.rigEngine.drawAll();}}window.onload = () => {window.appEngine = new AppCore();};
