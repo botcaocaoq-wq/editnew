@@ -15,7 +15,7 @@
             <canvas id="videoCanvas" width="800" height="450"></canvas>
         </div>
 
-        <!-- 2. THANH TRƯỢT ĐIỀU CHỈNH THÔNG SỐ (BÊN TRÊN THANH CÔNG CỤ) -->
+        <!-- 2. THANH TRƯỢT ĐIỀU CHỈNH THÔNG SỐ -->
         <div id="fx-controls-panel">
             <div class="slider-group">
                 <label>⚡ Tốc độ (Speed):</label>
@@ -40,7 +40,12 @@
             <!-- PHÂN KHU CHỌN HIỆU ỨNG VÀ ĐIỂM NEO GIỮ HÌNH -->
             <div class="fx-section">
                 <button id="btn-pin-mode" style="background: #eab308; color: black; font-weight: bold;">📍 Ghim điểm neo</button>
-                <button id="btn-fx-stretch" class="active">💇 Co giãn sợi tóc</button>
+                <button id="btn-clear-pins" style="background: #ef4444; border-color: #dc2626; font-weight: bold;">❌ Xóa điểm ghim</button>
+                
+                <div class="divider"></div>
+                
+                <button id="btn-fx-none" class="active" style="background: #4b5563;">⏹ Giữ ảnh gốc</button>
+                <button id="btn-fx-stretch">💇 Co giãn sợi tóc</button>
                 <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
                 <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
             </div>
@@ -65,7 +70,7 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.bgImage = null;
                 
-                this.currentFX = 'stretch'; // Tên hiệu ứng chạy mặc định ban đầu
+                this.currentFX = 'none';    // ĐÃ SỬA: Mặc định ban đầu là 'none' để ảnh đứng yên giữ nguyên hình dạng gốc
                 this.isPinMode = false;      // Chế độ chấm điểm neo giữ hình cố định
                 this.pins = [];              // Danh sách lưu tọa độ các điểm neo ghim hình
                 
@@ -83,7 +88,8 @@
                 document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
 
                 const btnPin = document.getElementById('btn-pin-mode');
-                const fxModes = ['stretch', 'wave', 'bend'];
+                const btnClearPins = document.getElementById('btn-clear-pins');
+                const fxModes = ['none', 'stretch', 'wave', 'bend'];
 
                 // Bật/Tắt chế độ chấm điểm ghim cố định vùng ảnh
                 btnPin?.addEventListener('click', () => {
@@ -92,7 +98,13 @@
                     btnPin.style.background = this.isPinMode ? '#ca8a04' : '#eab308';
                 });
 
-                // Chuyển đổi qua lại giữa bộ 3 hiệu ứng biến dạng biến đổi
+                // XỬ LÝ NÚT XÓA SẠCH ĐIỂM GHIM 
+                btnClearPins?.addEventListener('click', () => {
+                    this.pins = [];
+                    console.log("[Hệ thống] Đã xóa sạch toàn bộ các điểm ghim neo!");
+                });
+
+                // Chuyển đổi qua lại giữa bộ các hiệu ứng biến dạng biến đổi
                 fxModes.forEach(mode => {
                     document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
                         this.isPinMode = false;
@@ -110,7 +122,7 @@
                 const fileInput = document.getElementById('image-upload');
                 btnUpload?.addEventListener('click', () => fileInput.click());
                 fileInput?.addEventListener('change', (e) => {
-                    const file = e.target.files[0]; // Lấy chuẩn xác 1 file ảnh gốc đầu tiên
+                    const file = e.target.files[0];
                     if (!file) return;
                     
                     const reader = new FileReader();
@@ -119,6 +131,10 @@
                         img.onload = () => { 
                             this.bgImage = img; 
                             this.pins = []; // Reset xóa hết các điểm ghim của ảnh cũ
+                            // Tự động trả về chế độ giữ ảnh gốc đứng yên khi mới up ảnh lên
+                            this.currentFX = 'none';
+                            fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
+                            document.getElementById('btn-fx-none')?.classList.add('active');
                         };
                         img.src = ev.target.result;
                     };
@@ -153,6 +169,18 @@
                     return;
                 }
 
+                // Nếu đang ở chế độ 'none' (Giữ ảnh gốc), vẽ trực tiếp ảnh gốc đứng yên và dừng quét ma trận cho nhẹ máy
+                if (this.currentFX === 'none') {
+                    this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
+                    // Vẫn vẽ các điểm ghim neo lên bề mặt để người dùng quan sát
+                    this.pins.forEach(pin => {
+                        this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
+                        this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
+                        this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 1.5; this.ctx.stroke();
+                    });
+                    return;
+                }
+
                 // Vẽ ảnh gốc tạm thời ra làm lớp đệm tính toán pixel màu
                 this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
                 const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -176,13 +204,10 @@
 
                         // Áp dụng thuật toán lượng giác bẻ cong ma trận điểm ảnh hình ảnh
                         if (this.currentFX === 'stretch') {
-                            // 1. Hiệu ứng co giãn sợi tóc kéo dãn chảy dài hình
                             srcX += Math.sin(y * 0.02 + this.time) * this.amount * 0.3 * pinInfluence;
                         } else if (this.currentFX === 'wave') {
-                            // 2. Hiệu ứng uốn gợn sóng biến dạng dập dềnh cuộn
                             srcY += Math.sin(x * 0.05 + this.time) * this.amount * 0.4 * pinInfluence;
                         } else if (this.currentFX === 'bend') {
-                            // 3. Hiệu ứng uốn cong phồng lồi mắt cá mềm mại
                             const distFromCenter = Math.hypot(x - this.canvas.width/2, y - this.canvas.height/2);
                             const force = Math.cos(distFromCenter * 0.01 - this.time) * this.amount * 0.2;
                             srcX += (x - this.canvas.width/2) * 0.01 * force * pinInfluence;
@@ -193,7 +218,6 @@
                         srcX = Math.max(0, Math.min(this.canvas.width - 1, Math.round(srcX)));
                         srcY = Math.max(0, Math.min(this.canvas.height - 1, Math.round(srcY)));
 
-                        // Sao chép ma trận kênh màu RGB sang khung canvas render mới
                         const targetIdx = (y * this.canvas.width + x) * 4;
                         const srcIdx = (srcY * this.canvas.width + srcX) * 4;
 
@@ -204,10 +228,9 @@
                     }
                 }
 
-                // Ghi đè dữ liệu pixel đã uốn cong hoàn chỉnh ra màn hình canvas
                 this.ctx.putImageData(outputData, 0, 0);
 
-                // Vẽ các điểm Ghim neo hình tròn màu vàng phát sáng định vị lên trên bề mặt ảnh
+                // Vẽ các điểm Ghim neo màu vàng phát sáng định vị lên trên bề mặt ảnh
                 this.pins.forEach(pin => {
                     this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
                     this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
@@ -218,26 +241,26 @@
             // HÀM CHỤP LẠI KHUNG HÌNH VÀ ĐÓNG GÓI XUẤT FILE ẢNH ĐỘNG GIF ĐỂ TẢI VỀ
             exportToGIF() {
                 if (!this.bgImage) return alert("Vui lòng tải một bức ảnh lên trước khi xuất file!");
+                if (this.currentFX === 'none') return alert("Vui lòng bật 1 hiệu ứng chuyển động bất kỳ trước khi xuất GIF!");
+                
                 const btn = document.getElementById('btn-export-gif');
                 btn.innerText = "⏳ Đang xuất GIF..."; btn.style.background = "#4b5563";
 
                 const frames = [];
                 let count = 0;
                 
-                // Thu âm chụp liên tục 20 khung hình chuyển động lặp vòng để ghép thành file GIF
                 const captureLoop = () => {
                     if (count < 20) {
                         frames.push(this.canvas.toDataURL());
                         count++;
                         setTimeout(captureLoop, 60); 
                     } else {
-                        // Kích hoạt thư viện nén chuỗi ảnh chụp thành file GIF đầu ra hoàn chỉnh
                         gifshot.createGIF({
                             images: frames, interval: 0.06, numFrames: 20, gifWidth: 400, gifHeight: 225
                         }, (obj) => {
                             if (!obj.error) {
                                 const link = document.createElement('a'); link.href = obj.image;
-                                link.download = 'editnew_animation.gif'; link.click(); // Kích hoạt lệnh tải tự động file về máy tính
+                                link.download = 'editnew_animation.gif'; link.click(); 
                             }
                             btn.innerText = "💾 Xuất file GIF"; btn.style.background = "#10b981";
                         });
@@ -247,7 +270,6 @@
             }
         }
 
-        // Kích hoạt chạy toàn bộ ứng dụng liên kết
         window.onload = () => {
             window.fxApp = new MotionFXEngine();
             document.getElementById('btn-export-gif').addEventListener('click', () => window.fxApp.exportToGIF());
