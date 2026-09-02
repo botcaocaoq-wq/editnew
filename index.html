@@ -1,288 +1,213 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>editnew - Real-Time Glitch & Motion FX</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Nhúng thư viện tự động nén chuỗi khung hình thành file GIF -->
-    <script src="https://cloudflare.com"></script>
-</head>
-<body>
-    <div id="app-container">
+// =========================================================================
+// LOGIC 1: BỘ LỌC ĐIỀU PHỐI BIẾN DẠNG HÌNH ẢNH THỜI GIAN THỰC
+// =========================================================================
+class MotionFXEngine {
+    constructor() {
+        this.canvas = document.getElementById('videoCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.bgImage = null;
+        
+        this.currentFX = 'none';    // Mặc định ban đầu luôn là 'none' để ảnh đứng yên
+        this.isPinMode = false;      
+        this.pins = [];              
+        
+        this.time = 0;
+        this.speed = 1;
+        this.amount = 30;
 
-        <!-- 1. MÀN HÌNH HIỂN THỊ ĐỒ HỌA CHÍNH (PREVIEW) -->
-        <div id="preview-window">
-            <canvas id="videoCanvas" width="800" height="450"></canvas>
-        </div>
+        this.initEvents();
+        this.animate();
+    }
 
-        <!-- 2. THANH TRƯỢT ĐIỀU CHỈNH THÔNG SỐ -->
-        <div id="fx-controls-panel">
-            <div class="slider-group">
-                <label>⚡ Tốc độ (Speed):</label>
-                <input type="range" id="slider-speed" min="0.1" max="5" step="0.1" value="1">
-            </div>
-            <div class="slider-group">
-                <label>💥 Cường độ (Amount):</label>
-                <input type="range" id="slider-amount" min="1" max="100" step="1" value="30">
-            </div>
-        </div>
+    initEvents() {
+        document.getElementById('slider-speed').addEventListener('input', (e) => this.speed = parseFloat(e.target.value));
+        document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
 
-        <!-- 3. THANH MENU CÔNG CỤ CHỨC NĂNG (TOOLBAR) -->
-        <div id="toolbar">
-            <!-- PHÂN KHU UPLOAD FILE -->
-            <div class="upload-section">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;">
-                <button id="btn-upload">📁 Tải ảnh lên</button>
-            </div>
+        const btnPin = document.getElementById('btn-pin-mode');
+        const btnClearPins = document.getElementById('btn-clear-pins');
+        const fxModes = ['none', 'stretch', 'wave', 'wavewarp', 'bend'];
+
+        btnPin?.addEventListener('click', () => {
+            this.isPinMode = !this.isPinMode;
+            btnPin.classList.toggle('active', this.isPinMode);
+            btnPin.style.background = this.isPinMode ? '#ca8a04' : '#eab308';
+        });
+
+        btnClearPins?.addEventListener('click', () => {
+            this.pins = [];
+            console.log("[Hệ thống] Đã xóa sạch các điểm ghim neo!");
+        });
+
+        fxModes.forEach(mode => {
+            document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
+                this.isPinMode = false;
+                btnPin.classList.remove('active');
+                btnPin.style.background = '#eab308';
+
+                fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentFX = mode;
+            });
+        });
+
+        // FIXED: Sửa lỗi lấy danh sách file ảnh bị lỗi hiển thị
+        const btnUpload = document.getElementById('btn-upload');
+        const fileInput = document.getElementById('image-upload');
+        btnUpload?.addEventListener('click', () => fileInput.click());
+        
+        fileInput?.addEventListener('change', (e) => {
+            const files = e.target.files; // Sửa từ 'file' thành 'files'
+            if (!files || files.length === 0) return; // Kiểm tra danh sách file hợp lệ
             
-            <div class="divider"></div>
-
-            <!-- PHÂN KHU CHỌN HIỆU ỨNG VÀ ĐIỂM NEO GIỮ HÌNH -->
-            <div class="fx-section">
-                <button id="btn-pin-mode" style="background: #eab308; color: black; font-weight: bold;">📍 Ghim điểm neo</button>
-                <button id="btn-clear-pins" style="background: #ef4444; border-color: #dc2626; font-weight: bold;">❌ Xóa điểm ghim</button>
-                
-                <div class="divider"></div>
-                
-                <button id="btn-fx-none" class="active" style="background: #4b5563;">⏹ Giữ ảnh gốc</button>
-                <button id="btn-fx-stretch">💇 Co giãn sợi tóc</button>
-                <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
-                <button id="btn-fx-wavewarp" style="background: #2563eb;">🌊 Wave Warp (Alight)</button>
-                <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- PHÂN KHU XUẤT FILE ĐẦU RA -->
-            <div class="export-section">
-                <button id="btn-export-gif" style="background: #10b981; border-color: #059669; font-weight: bold;">💾 Xuất file GIF</button>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // =========================================================================
-        // LOGIC 1: BỘ LỌC ĐIỀU PHỐI BIẾN DẠNG HÌNH ẢNH THỜI GIAN THỰC
-        // =========================================================================
-        class MotionFXEngine {
-            constructor() {
-                this.canvas = document.getElementById('videoCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.bgImage = null;
-                
-                this.currentFX = 'none';    // Mặc định ban đầu luôn là 'none' để ảnh đứng yên
-                this.isPinMode = false;      
-                this.pins = [];              
-                
-                this.time = 0;
-                this.speed = 1;
-                this.amount = 30;
-
-                this.initEvents();
-                this.animate();
-            }
-
-            initEvents() {
-                document.getElementById('slider-speed').addEventListener('input', (e) => this.speed = parseFloat(e.target.value));
-                document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
-
-                const btnPin = document.getElementById('btn-pin-mode');
-                const btnClearPins = document.getElementById('btn-clear-pins');
-                const fxModes = ['none', 'stretch', 'wave', 'wavewarp', 'bend'];
-
-                btnPin?.addEventListener('click', () => {
-                    this.isPinMode = !this.isPinMode;
-                    btnPin.classList.toggle('active', this.isPinMode);
-                    btnPin.style.background = this.isPinMode ? '#ca8a04' : '#eab308';
-                });
-
-                btnClearPins?.addEventListener('click', () => {
-                    this.pins = [];
-                    console.log("[Hệ thống] Đã xóa sạch các điểm ghim neo!");
-                });
-
-                fxModes.forEach(mode => {
-                    document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
-                        this.isPinMode = false;
-                        btnPin.classList.remove('active');
-                        btnPin.style.background = '#eab308';
-
-                        fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
-                        e.target.classList.add('active');
-                        this.currentFX = mode;
-                    });
-                });
-
-                // Xử lý nạp file ảnh và TỰ ĐỘNG CHỈNH TỶ LỆ CANVAS CHỐNG MÉO HÌNH
-                const btnUpload = document.getElementById('btn-upload');
-                const fileInput = document.getElementById('image-upload');
-                btnUpload?.addEventListener('click', () => fileInput.click());
-                fileInput?.addEventListener('change', (e) => {
-                    const file = e.target.files;
-                    if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => { 
+                    this.bgImage = img; 
+                    this.pins = []; 
                     
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const img = new Image();
-                        img.onload = () => { 
-                            this.bgImage = img; 
-                            this.pins = []; 
-                            
-                            // THUẬT TOÁN TỐI ƯU CÂN BẰNG TỶ LỆ THEO ẢNH GỐC
-                            const maxBoundingWidth = 800;
-                            const maxBoundingHeight = 450;
-                            let newWidth = img.width;
-                            let newHeight = img.height;
+                    // THUẬT TOÁN TỐI ƯU CÂN BẰNG TỶ LỆ THEO ẢNH GỐC
+                    const maxBoundingWidth = 800;
+                    const maxBoundingHeight = 450;
+                    let newWidth = img.width;
+                    let newHeight = img.height;
 
-                            // Co giãn canvas thu nhỏ thông minh bảo toàn tỉ lệ thực tế (Aspect Ratio)
-                            if (img.width > maxBoundingWidth || img.height > maxBoundingHeight) {
-                                const ratioX = maxBoundingWidth / img.width;
-                                const ratioY = maxBoundingHeight / img.height;
-                                const scale = Math.min(ratioX, ratioY);
-                                newWidth = img.width * scale;
-                                newHeight = img.height * scale;
-                            }
-
-                            this.canvas.width = newWidth;
-                            this.canvas.height = newHeight;
-
-                            this.currentFX = 'none';
-                            fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
-                            document.getElementById('btn-fx-none')?.classList.add('active');
-                        };
-                        img.src = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-
-                this.canvas.addEventListener('mousedown', (e) => {
-                    const rect = this.canvas.getBoundingClientRect();
-                    const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-
-                    if (this.isPinMode) {
-                        this.pins.push(mousePos); 
+                    // Co giãn canvas thu nhỏ thông minh bảo toàn tỉ lệ thực tế (Aspect Ratio)
+                    if (img.width > maxBoundingWidth || img.height > maxBoundingHeight) {
+                        const ratioX = maxBoundingWidth / img.width;
+                        const ratioY = maxBoundingHeight / img.height;
+                        const scale = Math.min(ratioX, ratioY);
+                        newWidth = img.width * scale;
+                        newHeight = img.height * scale;
                     }
-                });
-            }
 
-            animate() {
-                this.time += 0.05 * this.speed;
-                this.renderFX();
-                requestAnimationFrame(() => this.animate());
-            }
-            renderFX() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.canvas.width = newWidth;
+                    this.canvas.height = newHeight;
 
-                if (!this.bgImage) {
-                    this.ctx.fillStyle = '#18181b';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                    return;
-                }
-
-                if (this.currentFX === 'none') {
-                    this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
-                    this.pins.forEach(pin => {
-                        this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
-                        this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
-                        this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 1.5; this.ctx.stroke();
-                    });
-                    return;
-                }
-
-                this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
-                const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-                const outputData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
-
-                for (let y = 0; y < this.canvas.height; y++) {
-                    for (let x = 0; x < this.canvas.width; x++) {
-                        
-                        let srcX = x;
-                        let srcY = y;
-
-                        let pinInfluence = 1;
-                        this.pins.forEach(pin => {
-                            const dist = Math.hypot(x - pin.x, y - pin.y);
-                            if (dist < 80) {
-                                pinInfluence *= (dist / 80); 
-                            }
-                        });
-
-                        // ÁP DỤNG CÁC THUẬT TOÁN BIẾN DẠNG LƯỢNG GIÁC PIXEL
-                        if (this.currentFX === 'stretch') {
-                            srcX += Math.sin(y * 0.02 + this.time) * this.amount * 0.3 * pinInfluence;
-                        } else if (this.currentFX === 'wave') {
-                            srcY += Math.sin(x * 0.05 + this.time) * this.amount * 0.4 * pinInfluence;
-                        } 
-                        else if (this.currentFX === 'wavewarp') {
-                            // THUẬT TOÁN WAVE WARP CHUẨN ALIGHT MOTION (BIẾN DẠNG ĐA CHIỀU XOẮN SÓNG ĐỒNG THỜI X & Y)
-                            srcX += Math.sin(y * 0.04 + this.time) * this.amount * 0.25 * pinInfluence;
-                            srcY += Math.cos(x * 0.04 + this.time) * this.amount * 0.25 * pinInfluence;
-                        }
-                        else if (this.currentFX === 'bend') {
-                            const distFromCenter = Math.hypot(x - this.canvas.width/2, y - this.canvas.height/2);
-                            const force = Math.cos(distFromCenter * 0.01 - this.time) * this.amount * 0.2;
-                            srcX += (x - this.canvas.width/2) * 0.01 * force * pinInfluence;
-                            srcY += (y - this.canvas.height/2) * 0.01 * force * pinInfluence;
-                        }
-
-                        srcX = Math.max(0, Math.min(this.canvas.width - 1, Math.round(srcX)));
-                        srcY = Math.max(0, Math.min(this.canvas.height - 1, Math.round(srcY)));
-
-                        const targetIdx = (y * this.canvas.width + x) * 4;
-                        const srcIdx = (srcY * this.canvas.width + srcX) * 4;
-
-                        outputData.data[targetIdx] = imgData.data[srcIdx];
-                        outputData.data[targetIdx+1] = imgData.data[srcIdx+1];
-                        outputData.data[targetIdx+2] = imgData.data[srcIdx+2];
-                        outputData.data[targetIdx+3] = 255; 
-                    }
-                }
-
-                this.ctx.putImageData(outputData, 0, 0);
-
-                this.pins.forEach(pin => {
-                    this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, Math.PI * 2);
-                    this.ctx.fillStyle = '#fbbf24'; this.ctx.fill();
-                    this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 1.5; this.ctx.stroke();
-                });
-            }
-
-            exportToGIF() {
-                if (!this.bgImage) return alert("Vui lòng tải một bức ảnh lên trước khi xuất file!");
-                if (this.currentFX === 'none') return alert("Vui lòng bật 1 hiệu ứng chuyển động bất kỳ trước khi xuất GIF!");
-                
-                const btn = document.getElementById('btn-export-gif');
-                btn.innerText = "⏳ Đang xuất GIF..."; btn.style.background = "#4b5563";
-
-                const frames = [];
-                let count = 0;
-                
-                const captureLoop = () => {
-                    if (count < 20) {
-                        frames.push(this.canvas.toDataURL());
-                        count++;
-                        setTimeout(captureLoop, 60); 
-                    } else {
-                        gifshot.createGIF({
-                            images: frames, interval: 0.06, numFrames: 20, gifWidth: this.canvas.width/2, gifHeight: this.canvas.height/2
-                        }, (obj) => {
-                            if (!obj.error) {
-                                const link = document.createElement('a'); link.href = obj.image;
-                                link.download = 'editnew_animation.gif'; link.click(); 
-                            }
-                            btn.innerText = "💾 Xuất file GIF"; btn.style.background = "#10b981";
-                        });
-                    }
+                    this.currentFX = 'none';
+                    fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
+                    document.getElementById('btn-fx-none')?.classList.add('active');
                 };
-                captureLoop();
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(files[0]); // Nạp file đầu tiên được chọn
+        });
+
+        this.canvas.addEventListener('mousedown', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+            if (this.isPinMode) {
+                this.pins.push(mousePos); 
+            }
+        });
+    }
+
+    animate() {
+        this.time += 0.05 * this.speed;
+        this.renderFX();
+        requestAnimationFrame(() => this.animate());
+    }
+
+    // HOÀN THIỆN: Logic dựng hình và áp dụng bộ lọc biến dạng theo điểm ghim
+    renderFX() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        if (!this.bgImage) {
+            this.ctx.fillStyle = '#18181b';
+            this.ctx.fillRect(0, 0, w, h);
+            return;
+        }
+
+        // Vẽ ảnh gốc lên canvas tạm để lấy dữ liệu pixel nguyên bản
+        this.ctx.drawImage(this.bgImage, 0, 0, w, h);
+        const srcData = this.ctx.getImageData(0, 0, w, h);
+        const dstData = this.ctx.createImageData(w, h);
+
+        const src = srcData.data;
+        const dst = dstData.data;
+
+        // Bán kính ảnh hưởng bảo vệ xung quanh điểm ghim (ví dụ: 40px)
+        const pinRadius = 40; 
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                
+                // 1. Tính toán mức độ ảnh hưởng của các điểm ghim (Pins)
+                let pinFactor = 1.0; 
+                for (let p of this.pins) {
+                    let dx = x - p.x;
+                    let dy = y - p.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < pinRadius) {
+                        let factor = dist / pinRadius; 
+                        if (factor < pinFactor) pinFactor = factor; // Càng gần tâm ghim, pinFactor càng tiến về 0
+                    }
+                }
+
+                // 2. Định hình tọa độ biến dạng mặc định
+                let sampleX = x;
+                let sampleY = y;
+
+                // 3. Áp dụng công thức toán học cho từng loại hiệu ứng
+                if (this.currentFX !== 'none') {
+                    let offsetX = 0;
+                    let offsetY = 0;
+
+                    switch (this.currentFX) {
+                        case 'stretch': // Co giãn sợi tóc (Dịch chuyển dọc theo hình Sin mảnh)
+                            offsetY = Math.sin(x * 0.2 + this.time) * (this.amount * 0.2);
+                            break;
+                        case 'wave': // Uốn gợn sóng tiêu chuẩn
+                            offsetX = Math.sin(y * 0.05 + this.time) * (this.amount * 0.3);
+                            break;
+                        case 'wavewarp': // Wave Warp kiểu Alight Motion (Sóng chéo kết hợp cường độ cao)
+                            offsetX = Math.sin((x + y) * 0.04 + this.time * 1.5) * (this.amount * 0.4);
+                            offsetY = Math.cos((x - y) * 0.04 + this.time * 1.5) * (this.amount * 0.2);
+                            break;
+                        case 'bend': // Uốn cong mềm mại toàn cục
+                            offsetX = Math.sin(y / h * Math.PI + this.time) * (this.amount * 0.5);
+                            break;
+                    }
+
+                    // Áp dụng hệ số ghim (Nếu bị ghim thì độ lệch offset sẽ bằng 0)
+                    sampleX += offsetX * pinFactor;
+                    sampleY += offsetY * pinFactor;
+                }
+
+                // Giới hạn tọa độ lấy mẫu không vượt ra ngoài biên của ảnh
+                sampleX = Math.max(0, Math.min(w - 1, Math.floor(sampleX)));
+                sampleY = Math.max(0, Math.min(h - 1, Math.floor(sampleY)));
+
+                // 4. Sao chép dữ liệu màu RGBA từ vị trí lấy mẫu mới sang ảnh đích
+                const srcIdx = (sampleY * w + sampleX) * 4;
+                const dstIdx = (y * w + x) * 4;
+
+                dst[dstIdx]     = src[srcIdx];     // R
+                dst[dstIdx + 1] = src[srcIdx + 1]; // G
+                dst[dstIdx + 2] = src[srcIdx + 2]; // B
+                dst[dstIdx + 3] = src[srcIdx + 3]; // A
             }
         }
 
-        window.onload = () => {
-            window.fxApp = new MotionFXEngine();
-            document.getElementById('btn-export-gif').addEventListener('click', () => window.fxApp.exportToGIF());
-        };
-    </script>
-</body>
-</html>
+        // Đổ toàn bộ dữ liệu ảnh đã biến đổi ngược lại canvas hiển thị
+        this.ctx.putImageData(dstData, 0, 0);
+
+        // Vẽ các chấm đỏ đại diện cho điểm ghim lên màn hình preview để người dùng dễ quan sát
+        this.pins.forEach(p => {
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+            this.ctx.fillStyle = '#ef4444';
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+        });
+    }
+}
+
+// Khởi chạy ứng dụng sau khi tài liệu đã sẵn sàng
+window.addEventListener('DOMContentLoaded', () => {
+    new MotionFXEngine();
+});
