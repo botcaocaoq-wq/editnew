@@ -156,7 +156,14 @@
             #preview-window { width: 100%; }
             #videoCanvas { width: 100%; height: 100%; }
             #tool-section, .tool-section, #rig-toolbar, #export-panel { flex-wrap: wrap; }
-        } #right-panel { width: 100%; height: 70vh; max-height: 70vh; } #videoCanvas { width: 100%; height: auto; aspect-ratio: 16/9; } }
+        }
+        @media (max-width: 1100px) {
+            #app-container { flex-direction: column; gap: 12px; }
+            #left-panel { width: 100%; min-width: 0; }
+            #right-panel { width: 100%; flex: 0 0 auto; height: 55vh; max-height: 55vh; overflow: hidden; }
+            #fx-home { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+            #preview-window { width: 100%; max-width: 960px; margin: 0 auto; }
+        }
         .control-row {
             display: flex;
             align-items: center;
@@ -248,15 +255,21 @@
         #fx-detail-content::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
         #fx-detail-content .accordion-content{display:flex!important;max-height:none;overflow:visible;padding:0;background:transparent}
 
-/* PATCH 2026-09: preview ổn định + Slash FX */
-#preview-window{width:min(100%,960px);max-width:960px;margin:0 auto;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
-#videoCanvas{width:100%;height:100%;object-fit:contain;image-rendering:auto}
-@media (max-width: 900px){
+/* PATCH 2026-09: preview + panel layout ổn định */
+html,body{min-height:100%;overflow-x:hidden}
+#app-container{min-width:0;align-items:stretch}
+#left-panel{min-width:0}
+#preview-window{width:100%;max-width:960px;margin:0 auto;aspect-ratio:16/9;position:relative;box-sizing:border-box}
+#videoCanvas{width:100%;height:100%;max-width:100%;display:block;object-fit:contain}
+#right-panel{min-width:0;min-height:0;overflow:hidden}
+#fx-home{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden}
+#fx-detail{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
+#fx-detail-content{flex:1 1 auto;min-height:0;overflow:auto}
+#preview-window #mesh-overlay,#preview-window #rig-overlay,#preview-window #grid-overlay{position:absolute;inset:0;width:100%;height:100%}
+@media (max-width:1100px){
   body{padding:10px}
-  #app-container{flex-direction:column;gap:12px}
-  #left-panel{width:100%}
-  #right-panel{width:100%;flex:1 1 auto;height:55vh;max-height:55vh}
-  #preview-window{width:100%;max-width:none}
+  #right-panel{height:55vh;max-height:55vh}
+  #preview-window{max-width:960px}
 }
 .slash-card{background:#171717;border:1px solid #343434;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
 .slash-card button{font-weight:700}
@@ -789,68 +802,114 @@ window.addEventListener('DOMContentLoaded',()=>new MotionFXEngine());
 
 /* ===== Special Slash FX ===== */
 (function(){
-  const oldInit=window.MotionFXEngine;
-  if(!oldInit)return;
-  const proto=oldInit.prototype;
-  const oldRender=proto.renderFrameTo;
-  proto.slashEnabled=false;
-  proto.slashAmount=55;
-  proto.slashSpeed=1;
-  proto.slashBend=28;
-  proto.applySlash=function(ctx,time){
-    if(!this.slashEnabled || !this.bgImage) return;
-    const w=960,h=540, t=(time*this.slashSpeed)%1;
-    const cx=w*(0.12+0.76*t), cy=h*(0.18+0.64*t);
-    const bend=this.slashBend*Math.sin(time*2.4);
-    ctx.save();
-    ctx.globalCompositeOperation='destination-in';
-    ctx.beginPath();
-    ctx.moveTo(cx-250,cy+150);
-    ctx.quadraticCurveTo(cx+bend,cy+25,cx+250,cy-150);
-    ctx.lineWidth=Math.max(18,this.slashAmount*1.35);
-    ctx.lineCap='round'; ctx.stroke();
-    ctx.restore();
-    // Bright slash edge / energy trail
-    ctx.save();
-    ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.35+.25*Math.sin(time*8);
-    ctx.strokeStyle='#fff'; ctx.shadowColor='#fff'; ctx.shadowBlur=12;
-    ctx.lineWidth=2.5;
-    ctx.beginPath();
-    ctx.moveTo(cx-250,cy+150);
-    ctx.quadraticCurveTo(cx+bend,cy+25,cx+250,cy-150);
-    ctx.stroke();
-    ctx.restore();
-  };
-  proto.renderFrameTo=function(ctx,time,isExport){
-    oldRender.call(this,ctx,time,isExport);
-    if(this.slashEnabled){
-      // Re-render as a diagonal animated slash mask using the already rendered frame.
-      const tmp=document.createElement('canvas');tmp.width=960;tmp.height=540;
-      const tc=tmp.getContext('2d');tc.drawImage(ctx.canvas,0,0);
-      ctx.clearRect(0,0,960,540);
-      ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);
-      const t=(time*this.slashSpeed)%1;
-      const cx=960*(0.12+0.76*t),cy=540*(0.18+0.64*t),bend=this.slashBend*Math.sin(time*2.4);
-      ctx.save();ctx.beginPath();ctx.moveTo(cx-260,cy+160);ctx.quadraticCurveTo(cx+bend,cy+20,cx+260,cy-160);ctx.lineWidth=Math.max(20,this.slashAmount*1.5);ctx.lineCap='round';ctx.stroke();ctx.globalCompositeOperation='source-in';ctx.drawImage(tmp,0,0);ctx.restore();
-      ctx.save();ctx.globalCompositeOperation='screen';ctx.strokeStyle='#fff';ctx.shadowColor='#fff';ctx.shadowBlur=14;ctx.globalAlpha=.7;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-260,cy+160);ctx.quadraticCurveTo(cx+bend,cy+20,cx+260,cy-160);ctx.stroke();ctx.restore();
+  // Patch the existing engine without replacing/removing any original effect.
+  const Engine = (typeof MotionFXEngine !== 'undefined') ? MotionFXEngine : null;
+  if(!Engine) return;
+  const proto = Engine.prototype;
+  proto.slashEnabled = false;
+  proto.slashAmount = 55;
+  proto.slashSpeed = 1;
+  proto.slashBend = 28;
+  proto.slashAngle = -18;
+  proto.slashColor = '#ffffff';
+
+  const oldRender = proto.renderFrameTo;
+  proto.renderFrameTo = function(ctx,time,isExport){
+    if(!this.slashEnabled){
+      oldRender.call(this,ctx,time,isExport);
+      return;
     }
+    // Render the normal composition first, then reveal only the moving curved slash.
+    oldRender.call(this,ctx,time,isExport);
+    const tmp=document.createElement('canvas');
+    tmp.width=960; tmp.height=540;
+    const tc=tmp.getContext('2d');
+    tc.drawImage(ctx.canvas,0,0,960,540);
+
+    const t=(time*this.slashSpeed)%1;
+    const cx=960*(0.08+0.84*t);
+    const cy=270 + Math.sin(time*this.slashSpeed*2.2)*65;
+    const bend=this.slashBend*Math.sin(time*2.6);
+    const half=170 + this.slashAmount*1.2;
+    const angle=this.slashAngle*Math.PI/180;
+
+    ctx.save();
+    ctx.clearRect(0,0,960,540);
+    ctx.fillStyle=this.useGreenScreen?'#00ff00':this.bgColor||'#1e1e24';
+    ctx.fillRect(0,0,960,540);
+    ctx.translate(cx,cy);
+    ctx.rotate(angle);
+
+    // Thick curved slash mask.
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-half,80);
+    ctx.quadraticCurveTo(bend,0,half,-80);
+    ctx.lineWidth=Math.max(14,this.slashAmount*1.45);
+    ctx.lineCap='round';
+    ctx.globalCompositeOperation='destination-out';
+    // Build mask on a separate canvas to avoid compositing against the background.
+    ctx.restore();
+
+    const mask=document.createElement('canvas'); mask.width=960; mask.height=540;
+    const mc=mask.getContext('2d');
+    mc.translate(cx,cy); mc.rotate(angle);
+    mc.beginPath();
+    mc.moveTo(-half,80);
+    mc.quadraticCurveTo(bend,0,half,-80);
+    mc.lineWidth=Math.max(16,this.slashAmount*1.5);
+    mc.lineCap='round'; mc.strokeStyle='#fff'; mc.stroke();
+    mc.globalCompositeOperation='source-in';
+    mc.drawImage(tmp,0,0);
+    ctx.drawImage(mask,-cx,-cy,960,540);
+    ctx.restore();
+
+    // Animated energy edge.
+    ctx.save();
+    ctx.translate(cx,cy); ctx.rotate(angle);
+    ctx.globalCompositeOperation='screen';
+    ctx.globalAlpha=.55+.35*Math.sin(time*10);
+    ctx.strokeStyle=this.slashColor; ctx.shadowColor=this.slashColor; ctx.shadowBlur=16;
+    ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-half,80); ctx.quadraticCurveTo(bend,0,half,-80); ctx.stroke();
+    ctx.restore();
   };
-  const makeUI=()=>{
-    const home=document.getElementById('fx-home'); if(!home)return;
-    const item=document.createElement('div');item.className='accordion-item';
-    item.innerHTML=`<div class="accordion-header">🗡️ Special Slash FX <span>▼</span></div><div class="accordion-content"><div class="slash-card"><div class="control-row"><label>Kích hoạt Slash:</label><input type="checkbox" id="chk-slash"></div><div class="slash-row"><label>Độ rộng</label><input id="slash-amount" type="range" min="10" max="100" value="55"><span id="slash-amount-v">55</span></div><div class="slash-row"><label>Tốc độ</label><input id="slash-speed" type="range" min="0.1" max="4" step="0.1" value="1"><span id="slash-speed-v">1</span></div><div class="slash-row"><label>Độ uốn</label><input id="slash-bend" type="range" min="0" max="100" value="28"><span id="slash-bend-v">28</span></div><button id="slash-reset">↺ Reset Slash</button><div class="slash-status">Ảnh sẽ chạy qua một vệt slash cong; bật khi preview/export.</div></div></div>`;
+
+  function makeUI(){
+    const home=document.getElementById('fx-home');
+    if(!home || document.getElementById('special-slash-item')) return;
+    const item=document.createElement('div');
+    item.id='special-slash-item'; item.className='accordion-item';
+    item.innerHTML=`<div class="accordion-header">🗡️ Special Slash FX <span>▼</span></div>
+      <div class="accordion-content">
+        <div class="slash-card">
+          <div class="control-row"><label>Kích hoạt Slash:</label><input type="checkbox" id="chk-slash"></div>
+          <div class="slash-row"><label>Độ rộng</label><input id="slash-amount" type="range" min="10" max="100" value="55"><span id="slash-amount-v">55</span></div>
+          <div class="slash-row"><label>Tốc độ</label><input id="slash-speed" type="range" min="0.1" max="4" step="0.1" value="1"><span id="slash-speed-v">1</span></div>
+          <div class="slash-row"><label>Độ uốn</label><input id="slash-bend" type="range" min="0" max="100" value="28"><span id="slash-bend-v">28</span></div>
+          <div class="slash-row"><label>Góc</label><input id="slash-angle" type="range" min="-45" max="45" value="-18"><span id="slash-angle-v">-18°</span></div>
+          <button id="slash-reset">↺ Reset Slash</button>
+          <div class="slash-status">Ảnh sẽ chạy thành một vệt slash cong có animation. Tắt/bật không ảnh hưởng các effect khác.</div>
+        </div>
+      </div>`;
     home.appendChild(item);
-    const h=item.querySelector('.accordion-header'),c=item.querySelector('.accordion-content');
-    h.onclick=()=>{c.style.display=c.style.display==='flex'?'none':'flex'};
     const q=id=>item.querySelector(id);
-    q('#chk-slash').onchange=e=>{proto.slashEnabled=e.target.checked};
+    item.querySelector('.accordion-header').onclick=()=>{
+      const c=q('.accordion-content'); c.style.display=c.style.display==='flex'?'none':'flex';
+    };
+    q('#chk-slash').onchange=e=>proto.slashEnabled=e.target.checked;
     q('#slash-amount').oninput=e=>{proto.slashAmount=+e.target.value;q('#slash-amount-v').textContent=e.target.value};
     q('#slash-speed').oninput=e=>{proto.slashSpeed=+e.target.value;q('#slash-speed-v').textContent=e.target.value};
     q('#slash-bend').oninput=e=>{proto.slashBend=+e.target.value;q('#slash-bend-v').textContent=e.target.value};
-    q('#slash-reset').onclick=()=>{proto.slashEnabled=false;proto.slashAmount=55;proto.slashSpeed=1;proto.slashBend=28;q('#chk-slash').checked=false;q('#slash-amount').value=55;q('#slash-speed').value=1;q('#slash-bend').value=28;q('#slash-amount-v').textContent=55;q('#slash-speed-v').textContent=1;q('#slash-bend-v').textContent=28};
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',makeUI);else makeUI();
+    q('#slash-angle').oninput=e=>{proto.slashAngle=+e.target.value;q('#slash-angle-v').textContent=e.target.value+'°'};
+    q('#slash-reset').onclick=()=>{
+      proto.slashEnabled=false; proto.slashAmount=55; proto.slashSpeed=1; proto.slashBend=28; proto.slashAngle=-18;
+      q('#chk-slash').checked=false; q('#slash-amount').value=55; q('#slash-speed').value=1; q('#slash-bend').value=28; q('#slash-angle').value=-18;
+      q('#slash-amount-v').textContent='55'; q('#slash-speed-v').textContent='1'; q('#slash-bend-v').textContent='28'; q('#slash-angle-v').textContent='-18°';
+    };
+  }
+  // The script is at the end of body, so the UI can be inserted immediately.
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',makeUI,{once:true}); else makeUI();
 })();
 
 </script>
