@@ -70,8 +70,11 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            height: 85vh;
             max-height: 85vh;
+            min-height: 0;
             overflow-y: auto;
+            overscroll-behavior: contain;
             box-sizing: border-box;
         }
         #right-panel::-webkit-scrollbar {
@@ -110,8 +113,11 @@
             flex-direction: column;
             gap: 10px;
             background: #1a1a1a;
-            max-height: 380px; 
-            overflow-y: auto; 
+            max-height: 42vh;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable; 
         }
         .accordion-content::-webkit-scrollbar {
             width: 4px;
@@ -123,6 +129,10 @@
         .accordion-item.active .accordion-content {
             display: flex;
         }
+        .accordion-content { scrollbar-width: thin; scrollbar-color: #555 #1a1a1a; }
+        .accordion-content .fx-grid { min-height: 0; }
+        @media (max-height: 700px) { .accordion-content { max-height: 38vh; } }
+        @media (max-width: 900px) { #app-container { flex-direction: column; } #right-panel { width: 100%; height: 70vh; max-height: 70vh; } #videoCanvas { width: 100%; height: auto; aspect-ratio: 16/9; } }
         .control-row {
             display: flex;
             align-items: center;
@@ -255,6 +265,17 @@
                         <button id="fx-swirl">Xoáy nước</button>
                         <button id="fx-pinch">Hút tâm</button>
                         <button id="fx-tile">Gạch lặp</button>
+                        <button id="fx-barrel">Barrel</button>
+                        <button id="fx-fisheye">Fisheye</button>
+                        <button id="fx-ripple">Ripple</button>
+                        <button id="fx-twist">Twist</button>
+                        <button id="fx-bulge">Bulge</button>
+                        <button id="fx-radial">Radial Warp</button>
+                        <button id="fx-kaleido">Kaleidoscope</button>
+                        <button id="fx-turbulence">Turbulent</button>
+                        <button id="fx-scanwarp">Scanline Warp</button>
+                        <button id="fx-blockwarp">Block Warp</button>
+                        <button id="fx-rgbwave">RGB Wave</button>
                     </div>
                 </div>
             </div>
@@ -362,7 +383,7 @@ class MotionFXEngine {
         this.$('btn-clear-all').onclick=()=>{this.pins=[];this.brushMaskCtx.clearRect(0,0,960,540)};
         ['slide-thick','slide-fine','slide-roll','slide-contrast','slide-brightness','slide-saber-glow','slide-chromatic-amt','environment-amount','environment-speed','extra-amount','export-quality'].forEach(id=>{const x=this.$(id);if(x)x.oninput=()=>{const v=this.$(id.replace('slide-','val-'))||this.$('val-'+id.replace('environment-','environment-').replace('extra-','extra-').replace('export-','')); if(v)v.textContent=(id.includes('brightness')||id.includes('amount')&&id!=='environment-speed'&&id!=='export-quality')?x.value:(+x.value).toFixed(2)}});
         this.$('export-quality').oninput=e=>this.$('val-quality').textContent=(+e.target.value).toFixed(2);
-        const fxs=['none','stretch','wave','wavewarp','bend','zoom','mirror','fanwarp','swirl','pinch','tile'];
+        const fxs=['none','stretch','wave','wavewarp','bend','zoom','mirror','fanwarp','swirl','pinch','tile','barrel','fisheye','ripple','twist','bulge','radial','kaleido','turbulence','scanwarp','blockwarp','rgbwave'];
         fxs.forEach(f=>{const b=this.$('fx-'+f);if(b)b.onclick=()=>{fxs.forEach(x=>this.$('fx-'+x)?.classList.remove('active'));b.classList.add('active');this.currentDistortFX=f}});
         this.$('btn-export-start').onclick=()=>this.handleAdvancedExport();
         const pos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
@@ -385,7 +406,7 @@ class MotionFXEngine {
         for(let y=0;y<h;y++)for(let x=0;x<w;x++){
             const idx=(y*w+x)*4;let sx=x,sy=y,fac=hasMask?(mask[idx+3]>128):true,pf=pinFactor(x,y);
             if(distort&&fac&&this.currentDistortFX!=='none'){
-                switch(this.currentDistortFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break}
+                switch(this.currentDistortFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break;case'barrel':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r2=nx*nx+ny*ny,k=1+amt/160*r2;sx=w/2+nx*(w/2)/k;sy=h/2+ny*(h/2)/k}break;case'fisheye':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r=Math.hypot(nx,ny),f=1+(amt/80)*r*r;sx=w/2+nx*(w/2)*f;sy=h/2+ny*(h/2)*f}break;case'ripple':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.sin(r*.08-t*5)*amt/35*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'twist':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/500),a=Math.atan2(dy,dx)+q*q*(amt/18)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'bulge':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/320),f=1+(amt/90)*q*q;sx=w/2+dx*f;sy=h/2+dy*f}break;case'radial':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),f=1+Math.sin(r*.025-t*3)*amt/180*pf;sx=w/2+dx*f;sy=h/2+dy*f}break;case'kaleido':{let dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),seg=Math.PI/4;a=((a+Math.PI*2)%seg);if(a>seg/2)a=seg-a;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'turbulence':{sx+=Math.sin(y*.055+t*2.7)*amt*.55*pf+Math.sin(y*.013-t)*amt*.22;sy+=Math.cos(x*.045-t*2.1)*amt*.45*pf+Math.sin(x*.017+t)*amt*.2}break;case'scanwarp':{sy+=Math.sin(y*.22+t*7)*amt*.22*pf;sx+=Math.sin(y*.035+t*3)*amt*.5*pf}break;case'blockwarp':{const bs=40,bx=Math.floor(x/bs)*bs,by=Math.floor(y/bs)*bs,q=Math.sin((bx+by)*.08+t*3)*amt*.8*pf;sx+=q;sy+=Math.cos((bx-by)*.08+t*2)*amt*.5*pf}break;case'rgbwave':sx+=Math.sin(y*.06+t*4)*amt*.35*pf;break}
             }
             sx=Math.max(0,Math.min(w-1,sx|0));sy=Math.max(0,Math.min(h-1,sy|0));let si=(sy*w+sx)*4,r=s[si],g=s[si+1],b=s[si+2],a=s[si+3];
             if(fac){
