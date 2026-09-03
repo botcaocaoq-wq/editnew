@@ -2,8 +2,10 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>editnew - Advanced Glitch & Motion FX Pro</title>
+    <title>editnew - Advanced Glitch & After Effects Motion FX Pro</title>
+    <!-- Nhúng đầy đủ thư viện đóng gói tệp tin GIF và MP4 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.4.5/gifshot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/antimatter15/whammy@master/whammy.min.js"></script>
     <style>
         body { 
             background: #111; 
@@ -48,7 +50,7 @@
             padding: 15px;
             border-radius: 8px;
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
             justify-content: space-between;
         }
@@ -56,18 +58,31 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 14px;
         }
+        /* FIX LỖI 1: Bật thanh cuộn mượt mà cho bảng điều khiển bên phải giống hệt ảnh mẫu */
         #right-panel {
-            width: 320px;
+            width: 340px;
             background: #1e1e1e;
             border: 1px solid #333;
             border-radius: 8px;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-height: 85vh;
+            gap: 10px;
+            max-height: 82vh;
             overflow-y: auto;
+            box-sizing: border-box;
+        }
+        #right-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        #right-panel::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+        #right-panel::-webkit-scrollbar-thumb:hover {
+            background: #666;
         }
         .accordion-item {
             border: 1px solid #333;
@@ -86,9 +101,7 @@
             user-select: none;
             border-bottom: 1px solid #222;
         }
-        .accordion-header:hover {
-            background: #353535;
-        }
+        .accordion-header:hover { background: #353535; }
         .accordion-content {
             padding: 10px;
             display: none;
@@ -106,9 +119,7 @@
             gap: 10px;
             font-size: 13px;
         }
-        .control-row input[type="range"] {
-            flex: 1;
-        }
+        .control-row input[type="range"] { flex: 1; }
         .value-disp {
             min-width: 35px;
             text-align: right;
@@ -130,11 +141,30 @@
             display: flex;
             gap: 8px;
             margin-bottom: 5px;
+            align-items: center;
         }
         .fx-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
+        }
+        #export-panel {
+            background: #222;
+            border: 1px solid #3b82f6;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .text-input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            width: 50px;
+            text-align: center;
         }
     </style>
 </head>
@@ -142,15 +172,16 @@
     <div id="app-container">
         <div id="left-panel">
             <div id="top-controls">
+                <!-- FIX LỖI 2: Tải ảnh từ thiết bị chuẩn logic kích hoạt trực tiếp -->
                 <div class="global-slider">
-                    <label>📁 <input type="file" id="image-upload" accept="image/*" style="display:none;"><button id="btn-upload">Tải ảnh lên</button></label>
+                    <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                    <button id="btn-upload" style="background:#ea580c; font-weight:bold;">📁 Chọn ảnh từ thiết bị</button>
                 </div>
                 <div class="global-slider">
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="toggle-greenscreen"> 🟢 Phông xanh lót dưới
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:5px; user-select:none;">
+                        <input type="checkbox" id="toggle-greenscreen"> 🟢 Kích hoạt phông xanh lót nền dưới
                     </label>
                 </div>
-                <button id="btn-export-gif" style="background:#10b981; border-color:#059669; font-weight:bold;">💾 Xuất file GIF</button>
             </div>
 
             <div id="preview-window">
@@ -160,29 +191,46 @@
             <div class="tool-section">
                 <button id="btn-pin-mode" style="background:#ca8a04;">📍 Ghim điểm neo</button>
                 <button id="btn-mask-mode" style="background:#9333ea;">🎨 Vẽ vùng xử lý (Brush)</button>
-                <button id="btn-clear-all" style="background:#dc2626;">❌ Xóa ghim / cọ</button>
+                <button id="btn-clear-all" style="background:#dc2626;">❌ Xóa dữ liệu vẽ</button>
                 <div class="global-slider" style="margin-left:15px;">
                     <label>Cỡ cọ: </label>
-                    <input type="range" id="slider-brush-size" min="5" max="80" value="30">
+                    <input type="range" id="slider-brush-size" min="5" max="100" value="30">
                 </div>
+            </div>
+
+            <!-- FIX LỖI 3: THANH CÔNG CỤ ĐIỀU KHIỂN RENDER XUẤT VIDEO THEO GIÂY -->
+            <div id="export-panel">
+                <div class="global-slider">
+                    <label>⏱️ Thời lượng video:</label>
+                    <input type="number" id="export-duration" class="text-input" min="1" max="30" value="3">
+                    <span>giây</span>
+                </div>
+                <div class="global-slider">
+                    <label>🎛️ Định dạng xuất:</label>
+                    <select id="export-format" style="background:#333; color:white; border:1px solid #555; padding:5px; border-radius:4px;">
+                        <option value="mp4">Đoạn Video .MP4 chất lượng cao</option>
+                        <option value="gif">Ảnh động .GIF</option>
+                    </select>
+                </div>
+                <button id="btn-export-start" style="background:#10b981; border-color:#059669; font-weight:bold; flex:1;">🎬 Bắt đầu xuất tệp tin</button>
             </div>
         </div>
 
         <div id="right-panel">
-            <!-- DISTORTION & WARP -->
-            <div class="accordion-item">
-                <div class="accordion-header">🌀 Distortion & Warp <span>➔</span></div>
+            <!-- ACCORDION 1: ALIGHT DISTORTION & WARP -->
+            <div class="accordion-item active">
+                <div class="accordion-header">🌀 Distortion & Warp <span>▼</span></div>
                 <div class="accordion-content">
                     <div class="control-row">
-                        <label>Kích hoạt:</label>
-                        <input type="checkbox" id="chk-distort">
+                        <label>Kích hoạt hiệu ứng:</label>
+                        <input type="checkbox" id="chk-distort" checked>
                     </div>
                     <div class="control-row">
-                        <label>Tốc độ:</label>
-                        <input type="range" id="distort-speed" min="0.1" max="5" step="0.1" value="1">
+                        <label>Tốc độ chuyển động:</label>
+                        <input type="range" id="distort-speed" min="0.1" max="5" step="0.1" value="1.0">
                     </div>
                     <div class="control-row">
-                        <label>Cường độ:</label>
+                        <label>Cường độ bóp méo:</label>
                         <input type="range" id="distort-amount" min="1" max="100" value="30">
                     </div>
                     <div class="fx-grid">
@@ -201,9 +249,9 @@
                 </div>
             </div>
 
-            <!-- BAD TV GLITCH -->
+            <!-- ACCORDION 2: BAD TV GLITCH -->
             <div class="accordion-item">
-                <div class="accordion-header">📺 Bad TV Glitch <span>➔</span></div>
+                <div class="accordion-header">📺 Bad TV Glitch <span>▼</span></div>
                 <div class="accordion-content">
                     <div class="control-row">
                         <label>Kích hoạt:</label>
@@ -221,15 +269,15 @@
                     </div>
                     <div class="control-row">
                         <label>Roll Speed:</label>
-                        <input type="range" id="slide-roll" min="0" max="5" step="0.1" value="1">
+                        <input type="range" id="slide-roll" min="0" max="5" step="0.1" value="1.0">
                         <span class="value-disp" id="val-roll">1.0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- BRIGHTNESS & CONTRAST -->
+            <!-- ACCORDION 3: BRIGHTNESS & CONTRAST -->
             <div class="accordion-item">
-                <div class="accordion-header">🌓 Brightness & Contrast <span>➔</span></div>
+                <div class="accordion-header">🌓 Brightness & Contrast <span>▼</span></div>
                 <div class="accordion-content">
                     <div class="control-row">
                         <label>Kích hoạt:</label>
@@ -248,12 +296,40 @@
                 </div>
             </div>
 
-            <!-- ALIGHT STYLIZE EFFECTS -->
+            <!-- ACCORDION 4: AFTER EFFECTS SPECIAL EFFECTS -->
             <div class="accordion-item">
-                <div class="accordion-header">🎨 Alight Stylize FX <span>➔</span></div>
+                <div class="accordion-header">⚡ After Effects FX (Saber) <span>▼</span></div>
                 <div class="accordion-content">
                     <div class="control-row">
-                        <label>Kích hoạt:</label>
+                        <label>Kích hoạt Saber Glow:</label>
+                        <input type="checkbox" id="chk-saber">
+                    </div>
+                    <div class="control-row">
+                        <label>Màu tia năng lượng:</label>
+                        <input type="color" id="color-saber" value="#00ffff">
+                    </div>
+                    <div class="control-row">
+                        <label>Độ nhòe (Glow Radius):</label>
+                        <input type="range" id="slide-saber-glow" min="5" max="50" value="20">
+                    </div>
+                    <div class="divider" style="height:1px; background:#333; margin:5px 0;"></div>
+                    <div class="control-row">
+                        <label>Kích hoạt Lệch sắc Rìa:</label>
+                        <input type="checkbox" id="chk-chromatic">
+                    </div>
+                    <div class="control-row">
+                        <label>Độ phân tách RGB:</label>
+                        <input type="range" id="slide-chromatic-amt" min="2" max="25" value="8">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACCORDION 5: ALIGHT STYLIZE LIST -->
+            <div class="accordion-item">
+                <div class="accordion-header">🎨 Alight Stylize FX <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="control-row">
+                        <label>Kích hoạt bộ lọc:</label>
                         <input type="checkbox" id="chk-stylize">
                     </div>
                     <div class="fx-grid" style="grid-template-columns: 1fr;">
@@ -291,8 +367,8 @@
 
                 this.time = 0;
                 this.useGreenScreen = false;
-                
                 this.currentDistortFX = 'none';
+                
                 this.initAccordion();
                 this.initEvents();
                 this.animate();
@@ -312,7 +388,7 @@
 
                 const bindSlider = (sldId, dispId) => {
                     const s = document.getElementById(sldId);
-                    s.addEventListener('input', (e) => document.getElementById(dispId).innerText = parseFloat(e.target.value).toFixed(sldId.includes('brightness')?0:2));
+                    if(s) s.addEventListener('input', (e) => document.getElementById(dispId).innerText = parseFloat(e.target.value).toFixed(sldId.includes('brightness')?0:2));
                 };
                 bindSlider('slide-thick', 'val-thick');
                 bindSlider('slide-fine', 'val-fine');
@@ -346,10 +422,13 @@
                     });
                 });
 
-                document.getElementById('btn-upload').addEventListener('click', () => document.getElementById('image-upload').click());
-                document.getElementById('image-upload').addEventListener('change', (e) => {
-                    const file = e.target.files;
-                    if (!file) return;
+                const uploadBtn = document.getElementById('btn-upload');
+                const fileInp = document.getElementById('image-upload');
+                uploadBtn.addEventListener('click', () => fileInp.click());
+                
+                fileInp.addEventListener('change', (e) => {
+                    const files = e.target.files;
+                    if (!files || files.length === 0) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         const img = new Image();
@@ -364,7 +443,7 @@
                         };
                         img.src = ev.target.result;
                     };
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(files[0]);
                 });
 
                 const getMousePos = (e) => {
@@ -392,7 +471,7 @@
                 });
 
                 window.addEventListener('mouseup', () => this.isDrawing = false);
-                document.getElementById('btn-export-gif').addEventListener('click', () => this.exportToGIF());
+                document.getElementById('btn-export-start').addEventListener('click', () => this.handleAdvancedExport());
             }
 
             drawBrush(x, y, isLeft) {
@@ -430,14 +509,15 @@
                 
                 const maskData = this.brushMaskCtx.getImageData(0, 0, w, h).data;
                 let hasMask = false;
-                for (let i = 0; i < maskData.length; i += 4) {
-                    if (maskData[i] > 0) { hasMask = true; break; }
+                for(let i=0; i<maskData.length; i+=4) {
+                    if(maskData[i] > 0) { hasMask = true; break; }
                 }
 
                 const doDistort = document.getElementById('chk-distort').checked;
                 const doBadTV = document.getElementById('chk-badtv').checked;
                 const doBC = document.getElementById('chk-bc').checked;
                 const doStylize = document.getElementById('chk-stylize').checked;
+                const doChromatic = document.getElementById('chk-chromatic').checked;
 
                 const dAmt = parseFloat(document.getElementById('distort-amount').value);
                 const dSpd = parseFloat(document.getElementById('distort-speed').value);
@@ -448,6 +528,7 @@
 
                 const bcCont = parseFloat(document.getElementById('slide-contrast').value) + 1;
                 const bcBright = parseFloat(document.getElementById('slide-brightness').value);
+                const chromAmt = parseInt(document.getElementById('slide-chromatic-amt').value);
 
                 const stylType = document.querySelector('input[name="rad-stylize"]:checked').value;
                 const t = this.time;
@@ -455,11 +536,7 @@
                 for (let y = 0; y < h; y++) {
                     for (let x = 0; x < w; x++) {
                         const idx = (y * w + x) * 4;
-                        
-                        let inMask = true;
-                        if (hasMask) {
-                            inMask = maskData[idx] > 128; 
-                        }
+                        let inMask = hasMask ? maskData[idx] > 128 : true;
 
                         let pinFactor = 1;
                         if (this.pins.length > 0) {
@@ -561,6 +638,13 @@
                                 g = (g - 128) * bcCont + 128 + bcBright;
                                 b = (b - 128) * bcCont + 128 + bcBright;
                             }
+
+                            if (doChromatic) {
+                                const rIdx = (srcY * w + Math.max(0, srcX - chromAmt)) * 4;
+                                const bIdx = (srcY * w + Math.min(w - 1, srcX + chromAmt)) * 4;
+                                r = src[rIdx];
+                                b = src[bIdx];
+                            }
                         }
 
                         dst[idx] = Math.max(0, Math.min(255, r));
@@ -587,8 +671,7 @@
 
                 if (this.bgImage) {
                     const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = w;
-                    tempCanvas.height = h;
+                    tempCanvas.width = w; tempCanvas.height = h;
                     const tempCtx = tempCanvas.getContext('2d');
                     tempCtx.drawImage(this.bgImage, 0, 0, w, h);
 
@@ -598,10 +681,19 @@
                     tempCtx.putImageData(dstData, 0, 0);
                     
                     this.ctx.drawImage(tempCanvas, 0, 0);
+
+                    if (document.getElementById('chk-saber').checked) {
+                        this.ctx.save();
+                        this.ctx.globalCompositeOperation = 'screen';
+                        this.ctx.shadowColor = document.getElementById('color-saber').value;
+                        this.ctx.shadowBlur = parseInt(document.getElementById('slide-saber-glow').value);
+                        this.ctx.drawImage(this.brushMaskCanvas, 0, 0);
+                        this.ctx.restore();
+                    }
                 } else {
-                    this.ctx.fillStyle = '#666';
-                    this.ctx.font = '20px Arial';
-                    this.ctx.fillText('Hãy bấm nút tải ảnh lên để bắt đầu biên tập hiệu ứng...', w/2 - 240, h/2);
+                    this.ctx.fillStyle = '#aaa';
+                    this.ctx.font = '22px sans-serif';
+                    this.ctx.fillText('📁 Vui lòng bấm nút chọn ảnh để bắt đầu...', w/2 - 200, h/2);
                 }
 
                 this.pins.forEach(pin => {
@@ -610,18 +702,31 @@
                     this.ctx.strokeStyle = '#fff'; this.ctx.stroke();
                 });
 
+                if (this.interactionMode === 'mask') {
+                    this.ctx.save(); this.ctx.globalAlpha = 0.2;
+                    this.ctx.drawImage(this.brushMaskCanvas, 0, 0);
+                    this.ctx.restore();
+                }
+
                 requestAnimationFrame(() => this.animate());
             }
 
-            exportToGIF() {
-                if (!this.bgImage) { alert("Hãy tải ảnh lên trước bro nhé!"); return; }
-                alert("Đang đóng gói hiệu ứng và kết xuất ảnh GIF. Vui lòng đợi trong giây lát...");
+            handleAdvancedExport() {
+                if (!this.bgImage) { alert("Vui lòng nạp ảnh trước bro ơi!"); return; }
+                
+                const secs = parseInt(document.getElementById('export-duration').value);
+                const format = document.getElementById('export-format').value;
+                const totalFrames = secs * 10; 
+                
+                alert(`Đang tiến hành render chuỗi ${totalFrames} khung hình nâng cao. Vui lòng đợi trong giây lát...`);
                 
                 const frames = [];
                 const w = this.canvas.width; const h = this.canvas.height;
                 const backupTime = this.time;
 
-                for (let i = 0; i < 15; i++) {
+                let encoder = format === 'mp4' ? new Whammy.Video(10) : null;
+
+                for (let i = 0; i < totalFrames; i++) {
                     this.time = i * 0.2;
                     const outCanvas = document.createElement('canvas');
                     outCanvas.width = w; outCanvas.height = h;
@@ -641,20 +746,46 @@
                     imgCtx.putImageData(dstData, 0, 0);
                     
                     outCtx.drawImage(imgCanvas, 0, 0);
-                    frames.push(outCanvas.toDataURL('image/jpeg', 0.8));
+
+                    if (document.getElementById('chk-saber').checked) {
+                        outCtx.save();
+                        outCtx.globalCompositeOperation = 'screen';
+                        outCtx.shadowColor = document.getElementById('color-saber').value;
+                        outCtx.shadowBlur = parseInt(document.getElementById('slide-saber-glow').value);
+                        outCtx.drawImage(this.brushMaskCanvas, 0, 0);
+                        outCtx.restore();
+                    }
+
+                    if (format === 'mp4') {
+                        encoder.add(outCtx);
+                    } else {
+                        frames.push(outCanvas.toDataURL('image/jpeg', 0.85));
+                    }
                 }
 
                 this.time = backupTime;
-                gifshot.createGIF({ images: frames, gifWidth: w, gifHeight: h, interval: 0.1 }, function (obj) {
-                    if (!obj.error) {
-                        const link = document.createElement('a');
-                        link.download = `editnew_alightpro_${Date.now()}.gif`;
-                        link.href = obj.image; link.click();
-                    } else { alert("Lỗi khi kết xuất GIF."); }
-                });
+
+                if (format === 'gif') {
+                    gifshot.createGIF({ images: frames, gifWidth: w, gifHeight: h, interval: 0.1 }, (obj) => {
+                        if (!obj.error) this.triggerSystemSave(obj.image, `motion_fx_${Date.now()}.gif`);
+                        else alert("Lỗi khi kết xuất GIF.");
+                    });
+                } else {
+                    let outputBlob = encoder.compile();
+                    let videoUrl = URL.createObjectURL(outputBlob);
+                    this.triggerSystemSave(videoUrl, `motion_video_${Date.now()}.mp4`);
+                }
+            }
+
+            triggerSystemSave(fileUrl, defaultName) {
+                const link = document.createElement('a');
+                link.download = defaultName;
+                link.href = fileUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         }
-
         window.addEventListener('DOMContentLoaded', () => { new MotionFXEngine(); });
     </script>
 </body>
