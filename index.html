@@ -203,6 +203,12 @@
 .mesh-point{position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-sizing:border-box}
 .mesh-point:active{cursor:grabbing}
 #preview-window.mesh-editing #videoCanvas{cursor:crosshair}
+
+        #rig-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#19191f;border:1px solid #333;border-radius:8px;padding:8px;margin-top:8px}
+        #rig-toolbar button{padding:7px 10px}
+        #rig-overlay{position:absolute;inset:0;pointer-events:none}
+        .rig-joint{position:absolute;width:14px;height:14px;border:2px solid #ffd166;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-shadow:0 0 8px rgba(255,209,102,.7)}
+        .grid-overlay{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px}
 </style>
 </head>
 <body>
@@ -221,7 +227,7 @@
             </div>
 
             <div id="preview-window">
-                <canvas id="videoCanvas" width="960" height="540"></canvas><div id="mesh-overlay"></div>
+                <canvas id="videoCanvas" width="960" height="540"></canvas><div id="mesh-overlay"></div><div id="rig-overlay"></div><div id="grid-overlay" class="grid-overlay" style="display:none"></div>
             </div>
 
             <div class="tool-section">
@@ -234,6 +240,15 @@
                 </div>
             </div>
 
+            <div id="rig-toolbar">
+                <strong>🦴 Rig</strong>
+                <button id="rig-toggle">Bật Rig</button>
+                <button id="rig-add">➕ Thêm khớp</button>
+                <button id="rig-left">↶ Xoay trái</button>
+                <button id="rig-right">↷ Xoay phải</button>
+                <button id="rig-up">⬆</button><button id="rig-down">⬇</button>
+                <button id="rig-reset">↺ Reset Rig</button>
+            </div>
             <!-- THANH CÔNG CỤ ĐIỀU KHIỂN RENDER XUẤT VIDEO THEO GIÂY -->
             <div id="export-panel">
                 <div class="global-slider">
@@ -431,6 +446,54 @@
                     <p class="fx-note">Bật lưới rồi kéo các điểm để bóp/méo hình. Điểm được nội suy để chuyển động mềm hơn.</p>
                 </div>
             </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">🎨 Canvas &amp; Blend <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="control-row"><label>Nền:</label><input type="color" id="bg-color" value="#1e1e24"></div>
+                    <div class="control-row"><label>Grid:</label><input type="checkbox" id="grid-toggle"></div>
+                    <div class="control-row"><label>Snap:</label><input type="checkbox" id="snap-toggle" checked></div>
+                    <div class="control-row"><label>Blend Mode layer:</label><select id="layer-blend"><option value="source-over">Normal</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="lighter">Add</option><option value="difference">Difference</option></select></div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">🧱 Layers <span>▼</span></div>
+                <div class="accordion-content">
+                    <button id="layer-add-text">➕ Thêm Text</button>
+                    <button id="layer-add-image">🖼️ Thêm ảnh</button>
+                    <div id="layer-list" class="fx-grid"></div>
+                    <div class="control-row"><label>Opacity:</label><input type="range" id="layer-opacity" min="0" max="100" value="100"><span id="val-layer-opacity" class="value-disp">100</span></div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">🎭 Mask đơn giản <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="fx-grid"><button data-mask="rect">▭ Rectangle</button><button data-mask="circle">◯ Circle</button><button data-mask="clear">✕ Tắt Mask</button></div>
+                    <div class="control-row"><label>Feather:</label><input type="range" id="mask-feather" min="0" max="60" value="0"><span id="val-mask-feather" class="value-disp">0</span></div>
+                    <p class="fx-note">Mask áp dụng cho layer đang chọn.</p>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">📝 Text Animation <span>▼</span></div>
+                <div class="accordion-content">
+                    <input id="text-content" placeholder="Nội dung text" value="EDITNEW">
+                    <div class="control-row"><label>Cỡ chữ:</label><input type="range" id="text-size" min="12" max="180" value="60"><span id="val-text-size" class="value-disp">60</span></div>
+                    <div class="control-row"><label>Opacity:</label><input type="range" id="text-opacity" min="0" max="100" value="100"><span id="val-text-opacity" class="value-disp">100</span></div>
+                    <div class="control-row"><label>Animate:</label><input type="checkbox" id="text-animate"></div>
+                    <button id="text-keyframe">🔑 Lưu Keyframe</button>
+                    <p id="text-key-status" class="fx-note">Keyframe: chưa có</p>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">↩️ Undo / Redo & Project <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="fx-grid"><button id="undo-btn">↩ Undo</button><button id="redo-btn">↪ Redo</button></div>
+                    <div class="fx-grid"><button id="project-save">💾 Save Project</button><button id="project-load">📂 Load Project</button></div>
+                    <input type="file" id="project-file" accept=".json,application/json" style="display:none">
+                    <p class="fx-note">Project lưu layer, text, mask và thiết lập chính thành file JSON.</p>
+                </div>
+            </div>
+
             <div class="accordion-item">
                 <div class="accordion-header">💾 Export Manager <span>▼</span></div>
                 <div class="accordion-content">
@@ -452,7 +515,7 @@ class MotionFXEngine {
         this.brushMaskCanvas=document.createElement('canvas'); this.brushMaskCanvas.width=960; this.brushMaskCanvas.height=540;
         this.brushMaskCtx=this.brushMaskCanvas.getContext('2d'); this.cachedBase=document.createElement('canvas');
         this.cachedBase.width=960; this.cachedBase.height=540; this.cachedBaseCtx=this.cachedBase.getContext('2d',{willReadFrequently:true});
-        this.exporting=false; this.lastFrame=0; this.transformX=0; this.transformY=0; this.transformRotation=0; this.meshEnabled=false; this.meshDensity=5; this.meshPoints=[]; this.dragMeshIndex=-1; this.aeFX=new Set(); this.aeAmount=35; this.previewScale=0.5; this.baseDirty=true; this.frameCanvas=document.createElement('canvas'); this.frameCanvas.width=960; this.frameCanvas.height=540; this.frameCtx=this.frameCanvas.getContext('2d'); this.bind(); this.animate();
+        this.exporting=false; this.lastFrame=0; this.layers=[{id:1,type:'image',name:'Ảnh gốc',opacity:1,visible:true,mask:null}]; this.selectedLayer=1; this.nextLayerId=2; this.undoStack=[]; this.redoStack=[]; this.textKeyframes=[]; this.textX=480; this.textY=270; this.textColor='#ffffff'; this.transformX=0; this.transformY=0; this.transformRotation=0; this.bgColor='#1e1e24'; this.snapEnabled=true; this.rigEnabled=false; this.rigJoints=[]; this.rigRotation=0; this.meshEnabled=false; this.meshDensity=5; this.meshPoints=[]; this.dragMeshIndex=-1; this.aeFX=new Set(); this.aeAmount=35; this.previewScale=0.5; this.baseDirty=true; this.frameCanvas=document.createElement('canvas'); this.frameCanvas.width=960; this.frameCanvas.height=540; this.frameCtx=this.frameCanvas.getContext('2d'); this.bind(); this.animate();
     }
     $(id){return document.getElementById(id)}
     bind(){
@@ -482,6 +545,7 @@ class MotionFXEngine {
         mo.addEventListener('pointermove',e=>{if(this.dragMeshIndex<0)return;const p=meshPos(e);this.meshPoints[this.dragMeshIndex].x=Math.max(0,Math.min(960,p.x));this.meshPoints[this.dragMeshIndex].y=Math.max(0,Math.min(540,p.y));this.renderMeshOverlay()});
         mo.addEventListener('pointerup',()=>this.dragMeshIndex=-1);
         this.resetMesh();
+        this.setupNewFeatures();
         this.$('btn-export-start').onclick=()=>this.handleAdvancedExport();
         const pos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
         this.canvas.onmousedown=e=>{const p=pos(e);if(this.interactionMode==='pin')this.pins.push(p);else if(this.interactionMode==='mask'){this.isDrawing=true;this.lastX=p.x;this.lastY=p.y;this.drawBrush(p.x,p.y,false)}};
@@ -492,12 +556,37 @@ class MotionFXEngine {
         const ae=this.$('ae-amount');if(ae)ae.oninput=()=>{this.aeAmount=+ae.value;this.$('val-ae').textContent=ae.value};
         const pq=this.$('preview-quality');if(pq)pq.onchange=()=>{this.previewScale=+pq.value};
     }
+setupNewFeatures(){
+        const save=()=>this.pushUndo();
+        const list=this.$('layer-list'), renderList=()=>{list.innerHTML='';this.layers.slice().reverse().forEach(l=>{const b=document.createElement('button');b.textContent=(l.visible?'👁 ':'🚫 ')+l.name;b.classList.toggle('active',l.id===this.selectedLayer);b.onclick=()=>{this.selectedLayer=l.id;this.$('layer-opacity').value=Math.round(l.opacity*100);this.$('val-layer-opacity').textContent=Math.round(l.opacity*100);this.$('layer-blend').value=l.blend||'source-over';renderList()};list.appendChild(b)})};
+        this.$('layer-add-text').onclick=()=>{save();const l={id:this.nextLayerId++,type:'text',name:'Text '+this.nextLayerId,text:this.$('text-content').value||'EDITNEW',size:+this.$('text-size').value,color:'#fff',opacity:1,visible:true,mask:null,blend:'source-over',x:480,y:270,rotation:0,keyframes:[]};this.layers.push(l);this.selectedLayer=l.id;renderList()};
+        this.$('layer-add-image').onclick=()=>{save();const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{this.layers.push({id:this.nextLayerId++,type:'image',name:f.name,image:img,src:img.src,opacity:1,visible:true,mask:null,blend:'source-over',x:480,y:270,rotation:0});this.selectedLayer=this.layers.at(-1).id;renderList()};img.src=URL.createObjectURL(f)};input.click()};
+        this.$('layer-opacity').oninput=e=>{const l=this.layers.find(x=>x.id===this.selectedLayer);if(l){l.opacity=+e.target.value/100;this.$('val-layer-opacity').textContent=e.target.value}};
+        document.querySelectorAll('[data-mask]').forEach(b=>b.onclick=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer);if(!l)return;save();l.mask=b.dataset.mask==='clear'?null:b.dataset.mask});
+        this.$('mask-feather').oninput=e=>this.$('val-mask-feather').textContent=e.target.value;
+        this.$('text-content').oninput=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer&&x.type==='text');if(l)l.text=this.$('text-content').value};
+        this.$('text-size').oninput=()=>this.$('val-text-size').textContent=this.$('text-size').value;
+        this.$('text-opacity').oninput=()=>this.$('val-text-opacity').textContent=this.$('text-opacity').value;
+        this.$('text-keyframe').onclick=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer&&x.type==='text');if(!l)return alert('Hãy chọn một Text layer');l.keyframes=l.keyframes||[];l.keyframes.push({t:this.time,x:l.x,y:l.y,opacity:+this.$('text-opacity').value/100});this.$('text-key-status').textContent=`Keyframe: ${l.keyframes.length} tại ${this.time.toFixed(2)}s`;};
+        this.$('undo-btn').onclick=()=>this.undo();this.$('redo-btn').onclick=()=>this.redo();
+        this.$('project-save').onclick=()=>this.saveProject();this.$('project-load').onclick=()=>this.$('project-file').click();this.$('project-file').onchange=e=>this.loadProject(e.target.files[0]);renderList();
+    }
+    snapshot(){return JSON.stringify(this.layers.map(l=>{const x={...l};delete x.image;return x}),null,0)}
+    pushUndo(){this.undoStack.push(this.snapshot());if(this.undoStack.length>30)this.undoStack.shift();this.redoStack=[]}
+    restore(json){const arr=JSON.parse(json);this.layers=arr.map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;}
+    undo(){if(!this.undoStack.length)return;this.redoStack.push(this.snapshot());this.restore(this.undoStack.pop());}
+    redo(){if(!this.redoStack.length)return;this.undoStack.push(this.snapshot());this.restore(this.redoStack.pop());}
+    saveProject(){const data={version:1,layers:this.layers.map(l=>{const x={...l};delete x.image;return x}),settings:{distort:this.currentDistortFX,transformX:this.transformX,transformY:this.transformY,rotation:this.transformRotation,bgColor:this.bgColor,snapEnabled:this.snapEnabled}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='editnew-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+    loadProject(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);this.layers=(d.layers||[]).map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;this.nextLayerId=Math.max(0,...this.layers.map(x=>x.id||0))+1;if(d.settings){this.bgColor=d.settings.bgColor||this.bgColor;this.snapEnabled=d.settings.snapEnabled!==false;this.$('bg-color').value=this.bgColor;this.$('snap-toggle').checked=this.snapEnabled;}alert('✅ Đã load project')}catch(e){alert('Project lỗi: '+e.message)}};r.readAsText(file)}
+    drawLayers(ctx,time){
+        const active=this.layers.filter(l=>l.visible); for(const l of active){ctx.save();ctx.globalAlpha=l.opacity??1;ctx.globalCompositeOperation=l.blend||'source-over';let x=l.x??480,y=l.y??270;const rot=(l.rotation||0)*Math.PI/180;ctx.translate(x,y);ctx.rotate(rot); if(l.type==='text'){let k=l.keyframes||[];if(k.length){const a=k.filter(q=>q.t<=time).at(-1),b=k.find(q=>q.t>time);if(a){if(b){const u=(time-a.t)/(b.t-a.t);x=a.x+(b.x-a.x)*u;y=a.y+(b.y-a.y)*u;ctx.globalAlpha=a.opacity+(b.opacity-a.opacity)*u}else{x=a.x;y=a.y;ctx.globalAlpha=a.opacity}}}ctx.font=`${l.size||60}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=l.color||'#fff';ctx.fillText(l.text||'',0,0)}else if(l.image){const iw=l.image.naturalWidth||960,ih=l.image.naturalHeight||540,sc=Math.min(960/iw,540/ih),dw=iw*sc,dh=ih*sc;if(l.mask){ctx.beginPath();if(l.mask==='circle')ctx.arc(480,270,Math.min(dw,dh)/2,0,Math.PI*2);else ctx.rect((960-dw)/2,(540-dh)/2,dw,dh);ctx.clip()}ctx.drawImage(l.image,-dw/2,-dh/2,dw,dh)}ctx.restore()}
+    }
     resetMesh(){this.meshPoints=[];const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n;i++)this.meshPoints.push({x:i*960/(n-1),y:j*540/(n-1),ox:i*960/(n-1),oy:j*540/(n-1)});this.renderMeshOverlay()}
     renderMeshOverlay(){const o=this.$('mesh-overlay');if(!o)return;o.innerHTML='';if(!this.meshEnabled)return;const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n-1;i++){const a=this.meshPoints[j*n+i],b=this.meshPoints[j*n+i+1];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}for(let i=0;i<n;i++)for(let j=0;j<n-1;j++){const a=this.meshPoints[j*n+i],b=this.meshPoints[(j+1)*n+i];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}this.meshPoints.forEach((p,i)=>{const d=document.createElement('div');d.className='mesh-point';d.style.left=p.x+'px';d.style.top=p.y+'px';d.dataset.i=i;o.appendChild(d)})}
     meshSample(x,y,w,h){if(!this.meshEnabled||!this.meshPoints.length)return{x,y};const n=this.meshDensity, gx=x/w*(n-1),gy=y/h*(n-1),i=Math.max(0,Math.min(n-2,Math.floor(gx))),j=Math.max(0,Math.min(n-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*n+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1);return{x:(p00.x*(1-u)*(1-v)+p10.x*u*(1-v)+p01.x*(1-u)*v+p11.x*u*v),y:(p00.y*(1-u)*(1-v)+p10.y*u*(1-v)+p01.y*(1-u)*v+p11.y*u*v)}}
     updateButtons(){this.$('btn-pin-mode').style.boxShadow=this.interactionMode==='pin'?'0 0 12px #f59e0b':'none';this.$('btn-mask-mode').style.boxShadow=this.interactionMode==='mask'?'0 0 12px #a855f7':'none'}
     drawBrush(x,y,line){const c=this.brushMaskCtx;c.save();c.strokeStyle='#fff';c.fillStyle='#fff';c.lineWidth=this.brushSize;c.lineCap='round';c.beginPath();if(line){c.moveTo(this.lastX,this.lastY);c.lineTo(x,y);c.stroke()}else{c.arc(x,y,this.brushSize/2,0,Math.PI*2);c.fill()}c.restore();this.lastX=x;this.lastY=y}
-    prepareBase(){const c=this.cachedBaseCtx;c.clearRect(0,0,960,540);c.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';c.fillRect(0,0,960,540);if(!this.bgImage)return;const iw=this.bgImage.naturalWidth,ih=this.bgImage.naturalHeight,scale=Math.min(960/iw,540/ih),dw=iw*scale,dh=ih*scale;c.drawImage(this.bgImage,(960-dw)/2,(540-dh)/2,dw,dh);this.baseDirty=false}
+    prepareBase(){const c=this.cachedBaseCtx;c.clearRect(0,0,960,540);c.fillStyle=this.useGreenScreen?'#00ff00':this.bgColor;c.fillRect(0,0,960,540);if(!this.bgImage)return;const iw=this.bgImage.naturalWidth,ih=this.bgImage.naturalHeight,scale=Math.min(960/iw,540/ih),dw=iw*scale,dh=ih*scale;c.drawImage(this.bgImage,(960-dw)/2,(540-dh)/2,dw,dh);this.baseDirty=false}
     sampleBase(){if(!this.bgImage)return this.cachedBaseCtx.getImageData(0,0,960,540);return this.cachedBaseCtx.getImageData(0,0,960,540)}
     applyAllFX(srcData,dstData,w,h){
         const s=srcData.data,d=dstData.data,amt=+this.$('distort-amount').value,spd=+this.$('distort-speed').value,t=this.time*spd;
@@ -588,7 +677,7 @@ class MotionFXEngine {
         fc.putImageData(dst,0,0);
         ctx.clearRect(0,0,960,540);
         ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);
-        ctx.drawImage(frame,0,0);
+        ctx.drawImage(frame,0,0); this.drawLayers(ctx,time);
         if(this.$('chk-saber').checked&&this.pins.length){ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowColor=this.$('color-saber').value;ctx.shadowBlur=+this.$('slide-saber-glow').value;for(const p of this.pins){ctx.strokeStyle=this.$('color-saber').value;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.sin(time*3)*80,p.y+Math.cos(time*2)*80);ctx.stroke()}ctx.restore()}
         this.drawEnvironment(ctx);
         this.applyPostFX(ctx,frame,time,isExport);
