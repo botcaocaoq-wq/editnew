@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>editnew - Advanced Glitch & Motion FX Pro</title>
-    <link real="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.4.5/gifshot.min.js"></script>
     <style>
         body { 
@@ -12,12 +11,22 @@
             font-family: sans-serif; 
             padding: 20px; 
             margin: 0;
+            display: flex;
+            justify-content: center;
         }
         #app-container { 
             display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 15px; 
+            flex-direction: row; 
+            gap: 20px; 
+            width: 100%;
+            max-width: 1350px;
+            align-items: flex-start;
+        }
+        #left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
         }
         #preview-window { 
             background: #000; 
@@ -25,46 +34,86 @@
             border-radius: 8px; 
             overflow: hidden; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            position: relative;
         }
-        /* MÀN HÌNH TO HƠN: Cấu hình hiển thị Canvas lớn và rõ nét */
         #videoCanvas {
             display: block;
-            max-width: 100%;
-            height: auto;
+            width: 960px;
+            height: 540px;
+            background: #1a1a1a;
+            cursor: crosshair;
+        }
+        #top-controls {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .global-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #right-panel {
+            width: 320px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .accordion-item {
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #252525;
+            overflow: hidden;
+        }
+        .accordion-header {
+            background: #2d2d2d;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            border-bottom: 1px solid #222;
+        }
+        .accordion-header:hover {
+            background: #353535;
+        }
+        .accordion-content {
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
             background: #1a1a1a;
         }
-        #fx-controls-panel { 
-            display: flex; 
-            gap: 20px; 
-            background: #222; 
-            padding: 15px; 
-            border-radius: 8px; 
-            width: 100%; 
-            max-width: 960px; 
-            justify-content: space-around; 
-            align-items: center; 
-            box-sizing: border-box;
+        .accordion-item.active .accordion-content {
+            display: flex;
         }
-        .slider-group { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
         }
-        #toolbar { 
-            background: #222; 
-            padding: 15px; 
-            border-radius: 8px; 
-            width: 100%; 
-            max-width: 960px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            box-sizing: border-box;
+        .control-row input[type="range"] {
+            flex: 1;
         }
-        .fx-section { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 8px; 
+        .value-disp {
+            min-width: 35px;
+            text-align: right;
+            color: #06b6d4;
+            font-family: monospace;
         }
         button { 
             background: #333; 
@@ -75,76 +124,153 @@
             cursor: pointer; 
             transition: 0.2s; 
         }
-        button:hover { 
-            background: #444; 
+        button:hover { background: #444; }
+        button.active { background: #2563eb !important; border-color: #3b82f6 !important; }
+        .tool-section {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
         }
-        button.active { 
-            background: #2563eb !important; 
-            border-color: #3b82f6 !important; 
-        }
-        .divider { 
-            height: 1px; 
-            background: #444; 
-            margin: 5px 0; 
-        }
-        .upload-section, .export-section { 
-            display: flex; 
-            gap: 10px; 
+        .fx-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <!-- ĐÃ ĐƯỢC TĂNG KÍCH THƯỚC LÊN 960x540 -->
-        <div id="preview-window">
-            <canvas id="videoCanvas" width="960" height="540"></canvas>
+        <div id="left-panel">
+            <div id="top-controls">
+                <div class="global-slider">
+                    <label>📁 <input type="file" id="image-upload" accept="image/*" style="display:none;"><button id="btn-upload">Tải ảnh lên</button></label>
+                </div>
+                <div class="global-slider">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" id="toggle-greenscreen"> 🟢 Phông xanh lót dưới
+                    </label>
+                </div>
+                <button id="btn-export-gif" style="background:#10b981; border-color:#059669; font-weight:bold;">💾 Xuất file GIF</button>
+            </div>
+
+            <div id="preview-window">
+                <canvas id="videoCanvas" width="960" height="540"></canvas>
+            </div>
+
+            <div class="tool-section">
+                <button id="btn-pin-mode" style="background:#ca8a04;">📍 Ghim điểm neo</button>
+                <button id="btn-mask-mode" style="background:#9333ea;">🎨 Vẽ vùng xử lý (Brush)</button>
+                <button id="btn-clear-all" style="background:#dc2626;">❌ Xóa ghim / cọ</button>
+                <div class="global-slider" style="margin-left:15px;">
+                    <label>Cỡ cọ: </label>
+                    <input type="range" id="slider-brush-size" min="5" max="80" value="30">
+                </div>
+            </div>
         </div>
 
-        <div id="fx-controls-panel">
-            <div class="slider-group">
-                <label>⚡ Tốc độ (Speed):</label>
-                <input type="range" id="slider-speed" min="0.1" max="5" step="0.1" value="1">
+        <div id="right-panel">
+            <!-- DISTORTION & WARP -->
+            <div class="accordion-item">
+                <div class="accordion-header">🌀 Distortion & Warp <span>➔</span></div>
+                <div class="accordion-content">
+                    <div class="control-row">
+                        <label>Kích hoạt:</label>
+                        <input type="checkbox" id="chk-distort">
+                    </div>
+                    <div class="control-row">
+                        <label>Tốc độ:</label>
+                        <input type="range" id="distort-speed" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+                    <div class="control-row">
+                        <label>Cường độ:</label>
+                        <input type="range" id="distort-amount" min="1" max="100" value="30">
+                    </div>
+                    <div class="fx-grid">
+                        <button id="fx-none" class="active">Gốc</button>
+                        <button id="fx-stretch">Sợi tóc</button>
+                        <button id="fx-wave">Gợn sóng</button>
+                        <button id="fx-wavewarp">WaveWarp</button>
+                        <button id="fx-bend">Uốn mềm</button>
+                        <button id="fx-zoom">Zoom</button>
+                        <button id="fx-mirror">Mirror</button>
+                        <button id="fx-fanwarp">Quạt</button>
+                        <button id="fx-swirl">Xoáy nước</button>
+                        <button id="fx-pinch">Hút tâm</button>
+                        <button id="fx-tile">Gạch lặp</button>
+                    </div>
+                </div>
             </div>
-            <div class="slider-group">
-                <label>💥 Cường độ (Amount):</label>
-                <input type="range" id="slider-amount" min="1" max="100" step="1" value="30">
-            </div>
-            <div class="slider-group" style="margin-left: 15px;">
-                <label style="min-width: auto; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                    <input type="checkbox" id="toggle-greenscreen"> 🟢 Phông xanh dưới hình ảnh
-                </label>
-            </div>
-        </div>
 
-        <div id="toolbar">
-            <div class="upload-section">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;">
-                <button id="btn-upload">📁 Tải ảnh lên</button>
+            <!-- BAD TV GLITCH -->
+            <div class="accordion-item">
+                <div class="accordion-header">📺 Bad TV Glitch <span>➔</span></div>
+                <div class="accordion-content">
+                    <div class="control-row">
+                        <label>Kích hoạt:</label>
+                        <input type="checkbox" id="chk-badtv">
+                    </div>
+                    <div class="control-row">
+                        <label>Thick Distort:</label>
+                        <input type="range" id="slide-thick" min="0" max="10" step="0.1" value="1.7">
+                        <span class="value-disp" id="val-thick">1.7</span>
+                    </div>
+                    <div class="control-row">
+                        <label>Fine Distort:</label>
+                        <input type="range" id="slide-fine" min="0" max="2" step="0.05" value="0.1">
+                        <span class="value-disp" id="val-fine">0.1</span>
+                    </div>
+                    <div class="control-row">
+                        <label>Roll Speed:</label>
+                        <input type="range" id="slide-roll" min="0" max="5" step="0.1" value="1">
+                        <span class="value-disp" id="val-roll">1.0</span>
+                    </div>
+                </div>
             </div>
-            <div class="divider"></div>
-            <div class="fx-section">
-                <button id="btn-pin-mode" style="background: #ca8a04; color: white; border-color: #a16207;">📍 Ghim điểm neo</button>
-                <button id="btn-mask-mode" style="background: #9333ea; color: white; border-color: #7e22ce;">🎯 Khoanh vùng xử lý</button>
-                <button id="btn-clear-all" style="background: #dc2626; border-color: #b91c1c;">❌ Xóa điểm ghim / vùng</button>
-                
-                <div class="divider" style="width: 100%;"></div>
-                
-                <button id="btn-fx-none" class="active">⏹ Giữ ảnh gốc</button>
-                <button id="btn-fx-stretch">💇 Co giãn sợi tóc</button>
-                <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
-                <button id="btn-fx-wavewarp">🌀 Wave Warp (Alight)</button>
-                <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
-                <button id="btn-fx-glitch" style="border-color: #06b6d4;">📺 Glitch RGB Split</button>
-                <button id="btn-fx-zoom" style="border-color: #ec4899;">🔍 Co giãn Zoom</button>
-                <button id="btn-fx-mirror" style="border-color: #f59e0b;">🪞 Gương (Mirror)</button>
-                <button id="btn-fx-fanwarp" style="border-color: #f59e0b;">🌟 Biến dạng quạt</button>
-                <button id="btn-fx-swirl" style="border-color: #f59e0b;">🌪️ Xoáy nước (Swirl)</button>
-                <button id="btn-fx-pinch" style="border-color: #f59e0b;">🕳️ Hút/Đẩy tâm</button>
-                <button id="btn-fx-tile" style="border-color: #f59e0b;">🔲 Gạch gương (Tile)</button>
+
+            <!-- BRIGHTNESS & CONTRAST -->
+            <div class="accordion-item">
+                <div class="accordion-header">🌓 Brightness & Contrast <span>➔</span></div>
+                <div class="accordion-content">
+                    <div class="control-row">
+                        <label>Kích hoạt:</label>
+                        <input type="checkbox" id="chk-bc">
+                    </div>
+                    <div class="control-row">
+                        <label>Contrast:</label>
+                        <input type="range" id="slide-contrast" min="-1" max="1" step="0.05" value="0.20">
+                        <span class="value-disp" id="val-contrast">0.20</span>
+                    </div>
+                    <div class="control-row">
+                        <label>Brightness:</label>
+                        <input type="range" id="slide-brightness" min="-100" max="100" value="0">
+                        <span class="value-disp" id="val-brightness">0</span>
+                    </div>
+                </div>
             </div>
-            <div class="divider"></div>
-            <div class="export-section">
-                <button id="btn-export-gif" style="background: #10b981; border-color: #059669; font-weight: bold;">💾 Xuất file GIF</button>
+
+            <!-- ALIGHT STYLIZE EFFECTS -->
+            <div class="accordion-item">
+                <div class="accordion-header">🎨 Alight Stylize FX <span>➔</span></div>
+                <div class="accordion-content">
+                    <div class="control-row">
+                        <label>Kích hoạt:</label>
+                        <input type="checkbox" id="chk-stylize">
+                    </div>
+                    <div class="fx-grid" style="grid-template-columns: 1fr;">
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="pixelate" checked> Pixelate (Lego)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="polar"> Polar Pixelate</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="slices"> Slices (Cắt lát)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="jitter"> Jitter (Nhiễu giật)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="melt"> Melt (Tan chảy)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="wobble"> Wobble (Lung lay)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="shake"> Shake (Rung lắc)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="edges"> Edges (Tìm viền)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="solarize"> Solarize (Âm bản)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="dotmatrix"> Dot Matrix (LED)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="posterize"> Posterize (Phẳng màu)</label>
+                        <label class="control-row"><input type="radio" name="rad-stylize" value="duotone"> DuoTone (2 Tông màu)</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -155,253 +281,298 @@
                 this.canvas = document.getElementById('videoCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.bgImage = null;
-                this.currentFX = 'none';
                 this.interactionMode = 'none';
+                
                 this.pins = [];              
-                this.maskZone = null;
+                this.brushMaskCanvas = document.createElement('canvas');
+                this.brushMaskCtx = this.brushMaskCanvas.getContext('2d');
+                this.isDrawing = false;
+                this.brushSize = 30;
+
                 this.time = 0;
-                this.speed = 1;
-                this.amount = 30;
                 this.useGreenScreen = false;
                 
-                this.fxModes = ['none', 'stretch', 'wave', 'wavewarp', 'bend', 'glitch', 'zoom', 'mirror', 'fanwarp', 'swirl', 'pinch', 'tile'];
-                
+                this.currentDistortFX = 'none';
+                this.initAccordion();
                 this.initEvents();
                 this.animate();
             }
 
+            initAccordion() {
+                document.querySelectorAll('.accordion-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        header.parentElement.classList.toggle('active');
+                    });
+                });
+            }
+
             initEvents() {
-                document.getElementById('slider-speed').addEventListener('input', (e) => this.speed = parseFloat(e.target.value));
-                document.getElementById('slider-amount').addEventListener('input', (e) => this.amount = parseInt(e.target.value));
                 document.getElementById('toggle-greenscreen').addEventListener('change', (e) => this.useGreenScreen = e.target.checked);
+                document.getElementById('slider-brush-size').addEventListener('input', (e) => this.brushSize = parseInt(e.target.value));
+
+                const bindSlider = (sldId, dispId) => {
+                    const s = document.getElementById(sldId);
+                    s.addEventListener('input', (e) => document.getElementById(dispId).innerText = parseFloat(e.target.value).toFixed(sldId.includes('brightness')?0:2));
+                };
+                bindSlider('slide-thick', 'val-thick');
+                bindSlider('slide-fine', 'val-fine');
+                bindSlider('slide-roll', 'val-roll');
+                bindSlider('slide-contrast', 'val-contrast');
+                bindSlider('slide-brightness', 'val-brightness');
 
                 const btnPin = document.getElementById('btn-pin-mode');
                 const btnMask = document.getElementById('btn-mask-mode');
                 const btnClearAll = document.getElementById('btn-clear-all');
 
-                btnPin?.addEventListener('click', () => {
+                btnPin.addEventListener('click', () => {
                     this.interactionMode = this.interactionMode === 'pin' ? 'none' : 'pin';
-                    this.updateInteractionButtons();
+                    this.updateButtons();
                 });
-                btnMask?.addEventListener('click', () => {
+                btnMask.addEventListener('click', () => {
                     this.interactionMode = this.interactionMode === 'mask' ? 'none' : 'mask';
-                    this.updateInteractionButtons();
+                    this.updateButtons();
                 });
-                btnClearAll?.addEventListener('click', () => {
+                btnClearAll.addEventListener('click', () => {
                     this.pins = [];
-                    this.maskZone = null;
+                    this.brushMaskCtx.clearRect(0, 0, this.brushMaskCanvas.width, this.brushMaskCanvas.height);
                 });
 
-                this.fxModes.forEach(mode => {
-                    document.getElementById(`btn-fx-${mode}`)?.addEventListener('click', (e) => {
-                        this.fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
+                const distortFXs = ['none', 'stretch', 'wave', 'wavewarp', 'bend', 'zoom', 'mirror', 'fanwarp', 'swirl', 'pinch', 'tile'];
+                distortFXs.forEach(fx => {
+                    document.getElementById(`fx-${fx}`).addEventListener('click', (e) => {
+                        distortFXs.forEach(f => document.getElementById(`fx-${f}`).classList.remove('active'));
                         e.target.classList.add('active');
-                        this.currentFX = mode;
+                        this.currentDistortFX = fx;
                     });
                 });
 
-                const btnUpload = document.getElementById('btn-upload');
-                const fileInput = document.getElementById('image-upload');
-                btnUpload?.addEventListener('click', () => fileInput.click());
-                
-                fileInput?.addEventListener('change', (e) => {
-                    const files = e.target.files;
-                    if (!files || files.length === 0) return;
-                    const file = files[0];
+                document.getElementById('btn-upload').addEventListener('click', () => document.getElementById('image-upload').click());
+                document.getElementById('image-upload').addEventListener('change', (e) => {
+                    const file = e.target.files;
+                    if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         const img = new Image();
-                        img.onload = () => { 
-                            this.bgImage = img; 
-                            this.pins = []; 
-                            this.maskZone = null;
-                            const maxBoundingWidth = 960;
-                            const maxBoundingHeight = 540;
-                            let newWidth = img.width;
-                            let newHeight = img.height;
-                            if (img.width > maxBoundingWidth || img.height > maxBoundingHeight) {
-                                const ratioX = maxBoundingWidth / img.width;
-                                const ratioY = maxBoundingHeight / img.height;
-                                const scale = Math.min(ratioX, ratioY);
-                                newWidth = img.width * scale;
-                                newHeight = img.height * scale;
-                            }
-                            this.canvas.width = newWidth;
-                            this.canvas.height = newHeight;
-                            this.currentFX = 'none';
-                            this.fxModes.forEach(m => document.getElementById(`btn-fx-${m}`)?.classList.remove('active'));
-                            document.getElementById('btn-fx-none')?.classList.add('active');
+                        img.onload = () => {
+                            this.bgImage = img;
+                            this.pins = [];
+                            this.canvas.width = 960;
+                            this.canvas.height = 540;
+                            this.brushMaskCanvas.width = 960;
+                            this.brushMaskCanvas.height = 540;
+                            this.brushMaskCtx.clearRect(0, 0, 960, 540);
                         };
                         img.src = ev.target.result;
                     };
                     reader.readAsDataURL(file);
                 });
 
-                this.canvas.addEventListener('mousedown', (e) => {
+                const getMousePos = (e) => {
                     const rect = this.canvas.getBoundingClientRect();
-                    const mouseX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
-                    const mouseY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
-                    const mousePos = { x: mouseX, y: mouseY };
-                    
+                    return {
+                        x: (e.clientX - rect.left) * (this.canvas.width / rect.width),
+                        y: (e.clientY - rect.top) * (this.canvas.height / rect.height)
+                    };
+                };
+
+                this.canvas.addEventListener('mousedown', (e) => {
+                    const pos = getMousePos(e);
                     if (this.interactionMode === 'pin') {
-                        this.pins.push(mousePos); 
+                        this.pins.push(pos);
                     } else if (this.interactionMode === 'mask') {
-                        this.maskZone = { x: mousePos.x, y: mousePos.y, r: 130 };
+                        this.isDrawing = true;
+                        this.drawBrush(pos.x, pos.y, false);
                     }
                 });
 
-                document.getElementById('btn-export-gif')?.addEventListener('click', () => this.exportToGIF());
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.isDrawing || this.interactionMode !== 'mask') return;
+                    const pos = getMousePos(e);
+                    this.drawBrush(pos.x, pos.y, true);
+                });
+
+                window.addEventListener('mouseup', () => this.isDrawing = false);
+                document.getElementById('btn-export-gif').addEventListener('click', () => this.exportToGIF());
             }
 
-            updateInteractionButtons() {
-                const btnPin = document.getElementById('btn-pin-mode');
-                const btnMask = document.getElementById('btn-mask-mode');
-                
-                if (this.interactionMode === 'pin') {
-                    btnPin.style.boxShadow = "0 0 10px #f59e0b";
-                    btnMask.style.boxShadow = "none";
-                } else if (this.interactionMode === 'mask') {
-                    btnMask.style.boxShadow = "0 0 10px #a855f7";
-                    btnPin.style.boxShadow = "none";
+            drawBrush(x, y, isLeft) {
+                this.brushMaskCtx.save();
+                this.brushMaskCtx.fillStyle = '#fff';
+                this.brushMaskCtx.strokeStyle = '#fff';
+                this.brushMaskCtx.lineWidth = this.brushSize;
+                this.brushMaskCtx.lineCap = 'round';
+                this.brushMaskCtx.lineJoin = 'round';
+                if (!isLeft) {
+                    this.brushMaskCtx.beginPath();
+                    this.brushMaskCtx.arc(x, y, this.brushSize / 2, 0, Math.PI * 2);
+                    this.brushMaskCtx.fill();
+                    this.lastX = x;
+                    this.lastY = y;
                 } else {
-                    btnPin.style.boxShadow = "none";
-                    btnMask.style.boxShadow = "none";
+                    this.brushMaskCtx.beginPath();
+                    this.brushMaskCtx.moveTo(this.lastX, this.lastY);
+                    this.brushMaskCtx.lineTo(x, y);
+                    this.brushMaskCtx.stroke();
+                    this.lastX = x;
+                    this.lastY = y;
                 }
+                this.brushMaskCtx.restore();
             }
 
-            applyDistortion(srcData, dstData, width, height) {
+            updateButtons() {
+                document.getElementById('btn-pin-mode').style.boxShadow = this.interactionMode === 'pin' ? "0 0 12px #f59e0b" : "none";
+                document.getElementById('btn-mask-mode').style.boxShadow = this.interactionMode === 'mask' ? "0 0 12px #a855f7" : "none";
+            }
+
+            applyAllFX(srcData, dstData, w, h) {
                 const src = srcData.data;
                 const dst = dstData.data;
-                const amt = this.amount;
-                const t = this.time;
-
-                if (this.currentFX === 'none') {
-                    for (let i = 0; i < src.length; i++) {
-                        dst[i] = src[i];
-                    }
-                    return;
+                
+                const maskData = this.brushMaskCtx.getImageData(0, 0, w, h).data;
+                let hasMask = false;
+                for (let i = 0; i < maskData.length; i += 4) {
+                    if (maskData[i] > 0) { hasMask = true; break; }
                 }
 
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        let srcX = x;
-                        let srcY = y;
+                const doDistort = document.getElementById('chk-distort').checked;
+                const doBadTV = document.getElementById('chk-badtv').checked;
+                const doBC = document.getElementById('chk-bc').checked;
+                const doStylize = document.getElementById('chk-stylize').checked;
 
+                const dAmt = parseFloat(document.getElementById('distort-amount').value);
+                const dSpd = parseFloat(document.getElementById('distort-speed').value);
+                
+                const tvThick = parseFloat(document.getElementById('slide-thick').value);
+                const tvFine = parseFloat(document.getElementById('slide-fine').value);
+                const tvRoll = parseFloat(document.getElementById('slide-roll').value);
+
+                const bcCont = parseFloat(document.getElementById('slide-contrast').value) + 1;
+                const bcBright = parseFloat(document.getElementById('slide-brightness').value);
+
+                const stylType = document.querySelector('input[name="rad-stylize"]:checked').value;
+                const t = this.time;
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+                        
                         let inMask = true;
-                        if (this.maskZone) {
-                            const dx = x - this.maskZone.x;
-                            const dy = y - this.maskZone.y;
-                            if (dx * dx + dy * dy > this.maskZone.r * this.maskZone.r) {
-                                inMask = false;
-                            }
+                        if (hasMask) {
+                            inMask = maskData[idx] > 128; 
                         }
 
                         let pinFactor = 1;
                         if (this.pins.length > 0) {
                             let minDist = Infinity;
                             this.pins.forEach(pin => {
-                                const dx = x - pin.x;
-                                const dy = y - pin.y;
-                                const d = Math.sqrt(dx * dx + dy * dy);
+                                const d = Math.sqrt((x - pin.x)**2 + (y - pin.y)**2);
                                 if (d < minDist) minDist = d;
                             });
                             pinFactor = Math.min(1, minDist / 100);
                         }
 
-                        if (inMask) {
-                            switch(this.currentFX) {
-                                case 'stretch':
-                                    srcY += Math.sin(x * 0.05 + t) * (amt * 0.3) * pinFactor;
-                                    break;
-                                case 'wave':
-                                    srcX += Math.sin(y * 0.05 + t) * (amt * 0.4) * pinFactor;
-                                    break;
+                        let srcX = x;
+                        let srcY = y;
+
+                        if (doDistort && inMask && this.currentDistortFX !== 'none') {
+                            const tDist = t * dSpd;
+                            switch(this.currentDistortFX) {
+                                case 'stretch': srcY += Math.sin(x * 0.05 + tDist) * (dAmt * 0.3) * pinFactor; break;
+                                case 'wave': srcX += Math.sin(y * 0.05 + tDist) * (dAmt * 0.4) * pinFactor; break;
                                 case 'wavewarp':
-                                    srcX += Math.sin(y * 0.08 + t * 1.5) * (amt * 0.3) * pinFactor;
-                                    srcY += Math.cos(x * 0.08 + t * 1.5) * (amt * 0.2) * pinFactor;
+                                    srcX += Math.sin(y * 0.08 + tDist * 1.5) * (dAmt * 0.3) * pinFactor;
+                                    srcY += Math.cos(x * 0.08 + tDist * 1.5) * (dAmt * 0.2) * pinFactor;
                                     break;
-                                case 'bend':
-                                    srcX += ((y / height) * Math.sin(t)) * (amt * 0.5) * pinFactor;
-                                    break;
+                                case 'bend': srcX += ((y / h) * Math.sin(tDist)) * (dAmt * 0.5) * pinFactor; break;
                                 case 'zoom':
-                                    const zx = x - width / 2;
-                                    const zy = y - height / 2;
-                                    const zFactor = 1 + (Math.sin(t) * (amt / 200)) * pinFactor;
-                                    srcX = width / 2 + zx * zFactor;
-                                    srcY = height / 2 + zy * zFactor;
+                                    const zFactor = 1 + (Math.sin(tDist) * (dAmt / 200)) * pinFactor;
+                                    srcX = w / 2 + (x - w / 2) * zFactor; srcY = h / 2 + (y - h / 2) * zFactor;
                                     break;
-                                case 'mirror':
-                                    if (x > width / 2) {
-                                        srcX = width - x;
-                                    }
-                                    break;
+                                case 'mirror': if (x > w / 2) srcX = w - x; break;
                                 case 'fanwarp':
-                                    const fx = x - width / 2;
-                                    const fy = y - height / 2;
-                                    const angleFan = Math.atan2(fy, fx) + Math.sin(t) * (amt / 50) * pinFactor;
-                                    const distFan = Math.sqrt(fx * fx + fy * fy);
-                                    srcX = width / 2 + Math.cos(angleFan) * distFan;
-                                    srcY = height / 2 + Math.sin(angleFan) * distFan;
+                                    const angleFan = Math.atan2(y - h/2, x - w/2) + Math.sin(tDist) * (dAmt / 50) * pinFactor;
+                                    const dFan = Math.sqrt((x - w/2)**2 + (y - h/2)**2);
+                                    srcX = w / 2 + Math.cos(angleFan) * dFan; srcY = h / 2 + Math.sin(angleFan) * dFan;
                                     break;
                                 case 'swirl':
-                                    const sx = x - (this.maskZone ? this.maskZone.x : width / 2);
-                                    const sy = y - (this.maskZone ? this.maskZone.y : height / 2);
-                                    const sDist = Math.sqrt(sx * sx + sy * sy);
+                                    const sDist = Math.sqrt((x - w/2)**2 + (y - h/2)**2);
                                     if (sDist < 250) {
-                                        const swirlAmount = ((250 - sDist) / 250) * (amt / 10) * Math.sin(t) * pinFactor;
-                                        const sAngle = Math.atan2(sy, sx) + swirlAmount;
-                                        srcX = (this.maskZone ? this.maskZone.x : width / 2) + Math.cos(sAngle) * sDist;
-                                        srcY = (this.maskZone ? this.maskZone.y : height / 2) + Math.sin(sAngle) * sDist;
+                                        const swirlAmt = ((250 - sDist) / 250) * (dAmt / 10) * Math.sin(tDist) * pinFactor;
+                                        const sAngle = Math.atan2(y - h/2, x - w/2) + swirlAmt;
+                                        srcX = w / 2 + Math.cos(sAngle) * sDist; srcY = h / 2 + Math.sin(sAngle) * sDist;
                                     }
                                     break;
                                 case 'pinch':
-                                    const px = x - (this.maskZone ? this.maskZone.x : width / 2);
-                                    const py = y - (this.maskZone ? this.maskZone.y : height / 2);
-                                    const pDist = Math.sqrt(px * px + py * py);
+                                    const pDist = Math.sqrt((x - w/2)**2 + (y - h/2)**2);
                                     if (pDist < 300) {
-                                        const bindFactor = Math.sin(t) * (amt / 100); 
-                                        const pScale = Math.pow(pDist / 300, bindFactor * pinFactor);
-                                        srcX = (this.maskZone ? this.maskZone.x : width / 2) + px * pScale;
-                                        srcY = (this.maskZone ? this.maskZone.y : height / 2) + py * pScale;
+                                        const pScale = Math.pow(pDist / 300, Math.sin(tDist) * (dAmt / 100) * pinFactor);
+                                        srcX = w / 2 + (x - w / 2) * pScale; srcY = h / 2 + (y - h / 2) * pScale;
                                     }
                                     break;
                                 case 'tile':
-                                    const tileScale = 1 + (amt / 50);
-                                    srcX = (x * tileScale + t * 20) % width;
-                                    srcY = (y * tileScale) % height;
-                                    if (srcX < 0) srcX += width;
-                                    if (srcY < 0) srcY += height;
+                                    srcX = (x * (1 + dAmt/50) + tDist * 20) % w; srcY = (y * (1 + dAmt/50)) % h;
+                                    if (srcX < 0) srcX += w; if (srcY < 0) srcY += h;
                                     break;
                             }
                         }
 
-                        srcX = Math.max(0, Math.min(width - 1, Math.floor(srcX)));
-                        srcY = Math.max(0, Math.min(height - 1, Math.floor(srcY)));
+                        srcX = Math.max(0, Math.min(w - 1, Math.floor(srcX)));
+                        srcY = Math.max(0, Math.min(h - 1, Math.floor(srcY)));
+                        const sIdx = (srcY * w + srcX) * 4;
 
-                        const dstIdx = (y * width + x) * 4;
-                        const srcIdx = (srcY * width + srcX) * 4;
+                        let r = src[sIdx], g = src[sIdx + 1], b = src[sIdx + 2], a = src[sIdx + 3];
 
-                        if (this.currentFX === 'glitch' && inMask) {
-                            const offset = Math.floor(Math.sin(y * 0.1 + t * 5) * (amt * 0.3) * pinFactor);
-                            let rX = Math.max(0, Math.min(width - 1, srcX + offset));
-                            let bX = Math.max(0, Math.min(width - 1, srcX - offset));
-                            
-                            dst[dstIdx]     = src[(srcY * width + rX) * 4];     
-                            dst[dstIdx + 1] = src[srcIdx + 1];                  
-                            dst[dstIdx + 2] = src[(srcY * width + bX) * 4 + 2]; 
-                            dst[dstIdx + 3] = src[srcIdx + 3];
-                        } else {
-                            dst[dstIdx]     = src[srcIdx];
-                            dst[dstIdx + 1] = src[srcIdx + 1];
-                            dst[dstIdx + 2] = src[srcIdx + 2];
-                            dst[dstIdx + 3] = src[srcIdx + 3];
+                        if (inMask) {
+                            if (doStylize) {
+                                switch(stylType) {
+                                    case 'pixelate':
+                                        const size = 12; const px = Math.floor(srcX / size) * size; const py = Math.floor(srcY / size) * size;
+                                        const pIdx = (py * w + px) * 4; r = src[pIdx]; g = src[pIdx+1]; b = src[pIdx+2]; break;
+                                    case 'polar':
+                                        const pr = Math.floor(Math.sqrt((srcX-w/2)**2+(srcY-h/2)**2)/10)*10;
+                                        const pa = Math.floor(Math.atan2(srcY-h/2, srcX-w/2)*10)/10;
+                                        const pX = Math.floor(w/2+Math.cos(pa)*pr); const pY = Math.floor(h/2+Math.sin(pa)*pr);
+                                        const plIdx = (Math.max(0,Math.min(h-1,pY))*w + Math.max(0,Math.min(w-1,pX)))*4;
+                                        r = src[plIdx]; g = src[plIdx+1]; b = src[plIdx+2]; break;
+                                    case 'slices': if (Math.floor(srcY / 15) % 2 === 0) { const slIdx = (srcY * w + Math.max(0, Math.min(w-1, srcX + 25)))*4; r=src[slIdx]; g=src[slIdx+1]; b=src[slIdx+2]; } break;
+                                    case 'jitter': if (Math.random() > 0.7) { r = Math.min(255, r+40); g = Math.max(0, g-30); } break;
+                                    case 'melt': const meltY = Math.max(0, Math.min(h-1, Math.floor(srcY + Math.sin(srcX*0.05)*20))); const mIdx = (meltY*w+srcX)*4; r=src[mIdx]; g=src[mIdx+1]; b=src[mIdx+2]; break;
+                                    case 'wobble': const wobX = Math.max(0, Math.min(w-1, Math.floor(srcX + Math.sin(srcY*0.04 + t*4)*12))); const wbIdx = (srcY*w+wobX)*4; r=src[wbIdx]; g=src[wbIdx+1]; b=src[wbIdx+2]; break;
+                                    case 'shake': const shk = Math.floor(Math.sin(t*8)*8); const skIdx = (Math.max(0,Math.min(h-1,srcY+shk))*w + Math.max(0,Math.min(w-1,srcX+shk)))*4; r=src[skIdx]; g=src[skIdx+1]; b=src[skIdx+2]; break;
+                                    case 'edges': const edgeVal = (r+g+b)/3; r = edgeVal > 120 ? 0 : 255; g = edgeVal > 120 ? 255 : 0; b = 255; break;
+                                    case 'solarize': r = r > 128 ? 255 - r : r; g = g > 128 ? 255 - g : g; break;
+                                    case 'dotmatrix': if (srcX % 6 > 2 || srcY % 6 > 2) { r *= 0.2; g *= 0.2; b *= 0.2; } break;
+                                    case 'posterize': r = Math.floor(r / 64) * 64; g = Math.floor(g / 64) * 64; b = Math.floor(b / 64) * 64; break;
+                                    case 'duotone': const gray = (r+g+b)/3; r = gray * 0.4; g = gray * 0.3; b = gray * 0.9; break;
+                                }
+                            }
+
+                            if (doBadTV) {
+                                const rollY = Math.floor(srcY + t * tvRoll * 150) % h;
+                                const tvIdx = (rollY * w + srcX) * 4;
+                                const noise = Math.sin(srcY * tvThick + t * 10) * 15 + (Math.random() - 0.5) * tvFine * 100;
+                                r = Math.max(0, Math.min(255, src[tvIdx] + noise));
+                                g = Math.max(0, Math.min(255, src[tvIdx + 1] + noise));
+                                b = Math.max(0, Math.min(255, src[tvIdx + 2] + noise));
+                            }
+
+                            if (doBC) {
+                                r = (r - 128) * bcCont + 128 + bcBright;
+                                g = (g - 128) * bcCont + 128 + bcBright;
+                                b = (b - 128) * bcCont + 128 + bcBright;
+                            }
                         }
+
+                        dst[idx] = Math.max(0, Math.min(255, r));
+                        dst[idx + 1] = Math.max(0, Math.min(255, g));
+                        dst[idx + 2] = Math.max(0, Math.min(255, b));
+                        dst[idx + 3] = a;
                     }
                 }
             }
 
             animate() {
-                this.time += 0.05 * this.speed;
+                this.time += 0.03;
                 const w = this.canvas.width;
                 const h = this.canvas.height;
 
@@ -421,110 +592,70 @@
                     const tempCtx = tempCanvas.getContext('2d');
                     tempCtx.drawImage(this.bgImage, 0, 0, w, h);
 
-                    if (this.currentFX !== 'none') {
-                        const srcData = tempCtx.getImageData(0, 0, w, h);
-                        const dstData = tempCtx.createImageData(w, h);
-                        this.applyDistortion(srcData, dstData, w, h);
-                        tempCtx.putImageData(dstData, 0, 0);
-                    }
+                    const srcData = tempCtx.getImageData(0, 0, w, h);
+                    const dstData = tempCtx.createImageData(w, h);
+                    this.applyAllFX(srcData, dstData, w, h);
+                    tempCtx.putImageData(dstData, 0, 0);
                     
                     this.ctx.drawImage(tempCanvas, 0, 0);
                 } else {
                     this.ctx.fillStyle = '#666';
-                    this.ctx.font = '18px Arial';
-                    this.ctx.fillText('Vui lòng tải ảnh lên để bắt đầu biên tập...', w/2 - 160, h/2);
+                    this.ctx.font = '20px Arial';
+                    this.ctx.fillText('Hãy bấm nút tải ảnh lên để bắt đầu biên tập hiệu ứng...', w/2 - 240, h/2);
                 }
 
                 this.pins.forEach(pin => {
-                    this.ctx.beginPath();
-                    this.ctx.arc(pin.x, pin.y, 6, 0, 2 * Math.PI);
-                    this.ctx.fillStyle = '#f59e0b';
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = '#fff';
-                    this.ctx.stroke();
+                    this.ctx.beginPath(); this.ctx.arc(pin.x, pin.y, 6, 0, 2 * Math.PI);
+                    this.ctx.fillStyle = '#f59e0b'; this.ctx.fill();
+                    this.ctx.strokeStyle = '#fff'; this.ctx.stroke();
                 });
-
-                if (this.maskZone) {
-                    this.ctx.beginPath();
-                    this.ctx.arc(this.maskZone.x, this.maskZone.y, this.maskZone.r, 0, 2 * Math.PI);
-                    this.ctx.strokeStyle = 'rgba(147, 51, 234, 0.7)';
-                    this.ctx.lineWidth = 3;
-                    this.ctx.stroke();
-                }
 
                 requestAnimationFrame(() => this.animate());
             }
 
             exportToGIF() {
-                if (!this.bgImage) {
-                    alert("Hãy tải ảnh lên trước khi xuất thành file GIF nhé!");
-                    return;
-                }
-                alert("Hệ thống đang render chuỗi hiệu ứng biến dạng. Vui lòng đợi trong giây lát...");
+                if (!this.bgImage) { alert("Hãy tải ảnh lên trước bro nhé!"); return; }
+                alert("Đang đóng gói hiệu ứng và kết xuất ảnh GIF. Vui lòng đợi trong giây lát...");
                 
                 const frames = [];
-                const w = this.canvas.width;
-                const h = this.canvas.height;
-                const duration = 20; 
-                let backupTime = this.time;
+                const w = this.canvas.width; const h = this.canvas.height;
+                const backupTime = this.time;
 
-                for (let i = 0; i < duration; i++) {
-                    this.time = i * 0.15 * this.speed;
+                for (let i = 0; i < 15; i++) {
+                    this.time = i * 0.2;
+                    const outCanvas = document.createElement('canvas');
+                    outCanvas.width = w; outCanvas.height = h;
+                    const outCtx = outCanvas.getContext('2d');
                     
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = w;
-                    tempCanvas.height = h;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    
-                    if (this.useGreenScreen) {
-                        tempCtx.fillStyle = '#00ff00';
-                        tempCtx.fillRect(0, 0, w, h);
-                    } else {
-                        tempCtx.fillStyle = '#1e1e24';
-                        tempCtx.fillRect(0, 0, w, h);
-                    }
+                    if (this.useGreenScreen) { outCtx.fillStyle = '#00ff00'; outCtx.fillRect(0,0,w,h); }
+                    else { outCtx.fillStyle = '#1e1e24'; outCtx.fillRect(0,0,w,h); }
                     
                     const imgCanvas = document.createElement('canvas');
-                    imgCanvas.width = w;
-                    imgCanvas.height = h;
+                    imgCanvas.width = w; imgCanvas.height = h;
                     const imgCtx = imgCanvas.getContext('2d');
                     imgCtx.drawImage(this.bgImage, 0, 0, w, h);
 
-                    if (this.currentFX !== 'none') {
-                        const srcData = imgCtx.getImageData(0, 0, w, h);
-                        const dstData = imgCtx.createImageData(w, h);
-                        this.applyDistortion(srcData, dstData, w, h);
-                        imgCtx.putImageData(dstData, 0, 0);
-                    }
+                    const srcData = imgCtx.getImageData(0, 0, w, h);
+                    const dstData = imgCtx.createImageData(w, h);
+                    this.applyAllFX(srcData, dstData, w, h);
+                    imgCtx.putImageData(dstData, 0, 0);
                     
-                    tempCtx.drawImage(imgCanvas, 0, 0);
-                    frames.push(tempCanvas.toDataURL('image/jpeg', 0.8));
+                    outCtx.drawImage(imgCanvas, 0, 0);
+                    frames.push(outCanvas.toDataURL('image/jpeg', 0.8));
                 }
 
                 this.time = backupTime;
-
-                gifshot.createGIF({
-                    images: frames,
-                    gifWidth: w,
-                    gifHeight: h,
-                    interval: 0.1,
-                    numWorkers: 2
-                }, function (obj) {
+                gifshot.createGIF({ images: frames, gifWidth: w, gifHeight: h, interval: 0.1 }, function (obj) {
                     if (!obj.error) {
                         const link = document.createElement('a');
-                        link.download = `editnew_alight_fx_${Date.now()}.gif`;
-                        link.href = obj.image;
-                        link.click();
-                    } else {
-                        alert("Có lỗi xảy ra khi đóng gói ảnh GIF.");
-                    }
+                        link.download = `editnew_alightpro_${Date.now()}.gif`;
+                        link.href = obj.image; link.click();
+                    } else { alert("Lỗi khi kết xuất GIF."); }
                 });
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            new MotionFXEngine();
-        });
+        window.addEventListener('DOMContentLoaded', () => { new MotionFXEngine(); });
     </script>
 </body>
 </html>
