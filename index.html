@@ -209,6 +209,23 @@
         #rig-overlay{position:absolute;inset:0;pointer-events:none}
         .rig-joint{position:absolute;width:14px;height:14px;border:2px solid #ffd166;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-shadow:0 0 8px rgba(255,209,102,.7)}
         .grid-overlay{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px}
+
+        /* Giao diện Effect dạng thư mục: bấm nhóm -> mở toàn bộ control, bấm Quay lại -> về danh sách */
+        #fx-home{display:flex;flex-direction:column;gap:10px;min-height:0}
+        #fx-home .accordion-item{flex:0 0 auto}
+        #fx-home .accordion-item .accordion-content{display:none!important}
+        #fx-home .accordion-header{min-height:20px;font-size:14px;padding:9px 10px;border:0;border-radius:5px}
+        #fx-home .accordion-header span{font-size:12px;opacity:.8}
+        #fx-home .accordion-header:hover{background:#383838}
+        #fx-detail{flex-direction:column;min-height:0;height:100%;gap:10px}
+        #fx-detail-top{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5;background:#1e1e1e;padding-bottom:8px;border-bottom:1px solid #333}
+        #fx-back{background:#333;border:1px solid #555;font-weight:bold}
+        #fx-back:hover{background:#444}
+        #fx-detail-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #fx-detail-content{min-height:0;overflow-y:auto;flex:1;background:#1a1a1a;border-radius:6px;padding:10px;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#555 #1a1a1a}
+        #fx-detail-content::-webkit-scrollbar{width:6px}
+        #fx-detail-content::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
+        #fx-detail-content .accordion-content{display:flex!important;max-height:none;overflow:visible;padding:0;background:transparent}
 </style>
 </head>
 <body>
@@ -268,6 +285,8 @@
         </div>
 
         <div id="right-panel">
+            <div id="fx-home">
+            <!-- CÁC NHÓM EFFECT: CHỈ HIỆN NÚT, KHÔNG HIỆN TOÀN BỘ CONTROL -->
             <!-- ACCORDION 1: ALIGHT DISTORTION & WARP -->
             <div class="accordion-item active">
                 <div class="accordion-header">🌀 Distortion & Warp <span>▼</span></div>
@@ -504,6 +523,14 @@
                     <div id="export-status" style="font-size:12px;color:#aaa;min-height:18px"></div>
                 </div>
             </div>
+            </div><!-- /fx-home -->
+            <div id="fx-detail" style="display:none">
+                <div id="fx-detail-top">
+                    <button id="fx-back" type="button">← Quay lại</button>
+                    <strong id="fx-detail-title">Effect</strong>
+                </div>
+                <div id="fx-detail-content"></div>
+            </div>
         </div>
     </div>
 <script>
@@ -519,7 +546,24 @@ class MotionFXEngine {
     }
     $(id){return document.getElementById(id)}
     bind(){
-        document.querySelectorAll('.accordion-header').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('active'));
+        // Điều hướng Effect: danh sách -> trang effect -> Quay lại. Nội dung được di chuyển nguyên khối nên các control cũ vẫn hoạt động.
+        const home=this.$('fx-home'), detail=this.$('fx-detail'), detailContent=this.$('fx-detail-content'), detailTitle=this.$('fx-detail-title'), back=this.$('fx-back');
+        document.querySelectorAll('#fx-home .accordion-header').forEach(h=>h.onclick=()=>{
+            const item=h.parentElement, content=item.querySelector('.accordion-content');
+            if(!content)return;
+            detailTitle.textContent=h.childNodes[0]?.textContent?.trim()||'Effect';
+            detailContent.innerHTML=''; detailContent.appendChild(content);
+            home.style.display='none'; detail.style.display='flex';
+            item.classList.add('active');
+            const span=h.querySelector('span'); if(span)span.textContent='←';
+        });
+        back.onclick=()=>{
+            const item=[...document.querySelectorAll('#fx-home .accordion-item')].find(x=>x.querySelector('.accordion-content')===detailContent.firstElementChild);
+            const content=detailContent.firstElementChild;
+            if(item&&content)item.appendChild(content);
+            if(item){item.classList.remove('active');const span=item.querySelector('.accordion-header span');if(span)span.textContent='▼'}
+            detailContent.innerHTML=''; detail.style.display='none'; home.style.display='flex';
+        };
         this.$('btn-upload').onclick=()=>this.$('image-upload').click();
         this.$('image-upload').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const u=URL.createObjectURL(f),img=new Image();img.onload=()=>{this.bgImage=img;this.prepareBase();URL.revokeObjectURL(u)};img.src=u};
         this.$('toggle-greenscreen').onchange=e=>this.useGreenScreen=e.target.checked;
