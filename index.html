@@ -84,6 +84,11 @@
             background: #444;
             border-radius: 3px;
         }
+        .fx-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+        .fx-subgrid label{display:flex;align-items:center;gap:6px;background:#252525;border:1px solid #3a3a3a;border-radius:5px;padding:6px;font-size:11px;cursor:pointer}
+        .fx-subgrid input{accent-color:#2f6fed}
+        .fx-note{font-size:10px;color:#888;margin:6px 0}
+
         #right-panel::-webkit-scrollbar-thumb:hover {
             background: #666;
         }
@@ -187,7 +192,18 @@
             width: 50px;
             text-align: center;
         }
-    </style>
+    
+/* Advanced AE controls + smooth mesh editor */
+.transform-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.transform-panel button,.ae10-grid button{background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:6px;padding:8px;cursor:pointer}
+.transform-panel button:hover,.ae10-grid button:hover{background:#383838}
+.ae10-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#mesh-overlay{position:absolute;inset:0;pointer-events:none}
+.mesh-line{position:absolute;background:rgba(255,255,255,.25);pointer-events:none}
+.mesh-point{position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-sizing:border-box}
+.mesh-point:active{cursor:grabbing}
+#preview-window.mesh-editing #videoCanvas{cursor:crosshair}
+</style>
 </head>
 <body>
     <div id="app-container">
@@ -205,7 +221,7 @@
             </div>
 
             <div id="preview-window">
-                <canvas id="videoCanvas" width="960" height="540"></canvas>
+                <canvas id="videoCanvas" width="960" height="540"></canvas><div id="mesh-overlay"></div>
             </div>
 
             <div class="tool-section">
@@ -349,6 +365,73 @@
                 </div>
             </div>
             <div class="accordion-item">
+                <div class="accordion-header">🎬 After Effects FX Pack <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="fx-subgrid">
+                        <label><input type="checkbox" data-aefx="blur"> Gaussian Blur</label>
+                        <label><input type="checkbox" data-aefx="motionblur"> Motion Blur</label>
+                        <label><input type="checkbox" data-aefx="radialblur"> Radial Blur</label>
+                        <label><input type="checkbox" data-aefx="glow"> Glow</label>
+                        <label><input type="checkbox" data-aefx="sharpen"> Sharpen</label>
+                        <label><input type="checkbox" data-aefx="noise"> Noise / Grain</label>
+                        <label><input type="checkbox" data-aefx="vignette"> Vignette</label>
+                        <label><input type="checkbox" data-aefx="scanlines"> Scanlines</label>
+                        <label><input type="checkbox" data-aefx="invert"> Invert</label>
+                        <label><input type="checkbox" data-aefx="sepia"> Sepia</label>
+                        <label><input type="checkbox" data-aefx="threshold"> Threshold</label>
+                        <label><input type="checkbox" data-aefx="huerotate"> Hue Rotate</label>
+                        <label><input type="checkbox" data-aefx="saturate"> Saturation</label>
+                        <label><input type="checkbox" data-aefx="edgeglow"> Edge Glow</label>
+                        <label><input type="checkbox" data-aefx="heat"> Heat Distortion</label>
+                        <label><input type="checkbox" data-aefx="pixelSort"> Pixel Sort</label>
+                    </div>
+                    <div class="ae10-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0">
+<label><input type="checkbox" data-aefx="blur"> Blur</label><label><input type="checkbox" data-aefx="saturate"> Saturate</label>
+<label><input type="checkbox" data-aefx="huerotate"> Hue Rotate</label><label><input type="checkbox" data-aefx="contrast"> Contrast</label>
+<label><input type="checkbox" data-aefx="brightness"> Brightness</label><label><input type="checkbox" data-aefx="grayscale"> Grayscale</label>
+<label><input type="checkbox" data-aefx="invert"> Invert</label><label><input type="checkbox" data-aefx="sepia"> Sepia</label>
+<label><input type="checkbox" data-aefx="dropShadow"> Drop Shadow</label><label><input type="checkbox" data-aefx="hueSat"> Hue/Sat</label>
+</div>
+<div class="control-row"><label>AE FX Amount:</label><input type="range" id="ae-amount" min="0" max="100" value="35"><span id="val-ae" class="value-disp">35</span></div>
+                    <div class="control-row"><label>Preview Quality:</label><select id="preview-quality"><option value="0.5" selected>Performance 50%</option><option value="0.75">Balanced 75%</option><option value="1">Full 100%</option></select></div>
+                    <p class="fx-note">Preview có thể giảm độ phân giải để đỡ lag. Export vẫn render theo chất lượng đầy đủ.</p>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">🎬 After Effects FX — 10 Effect mới <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="ae10-grid">
+                        <button data-ae10="boxblur">Box Blur</button>
+                        <button data-ae10="directionalblur">Directional Blur</button>
+                        <button data-ae10="emboss">Emboss</button>
+                        <button data-ae10="findedges">Find Edges</button>
+                        <button data-ae10="colorbalance">Color Balance</button>
+                        <button data-ae10="poster">Posterize</button>
+                        <button data-ae10="threshold">Threshold</button>
+                        <button data-ae10="huerotate">Hue Rotate</button>
+                        <button data-ae10="solarize">Solarize</button>
+                        <button data-ae10="halftone">Halftone</button>
+                    </div>
+                    <div class="control-row"><label>Cường độ:</label><input type="range" id="ae10-amount" min="0" max="100" value="45"><span id="val-ae10" class="value-disp">45</span></div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header">🧩 Mesh Transform / Di chuyển mượt <span>▼</span></div>
+                <div class="accordion-content">
+                    <div class="transform-panel">
+                        <button id="mesh-toggle">🧩 Bật lưới</button>
+                        <button id="mesh-reset">↩ Reset lưới</button>
+                        <button id="transform-up">⬆ Di chuyển lên</button>
+                        <button id="transform-down">⬇ Di chuyển xuống</button>
+                        <button id="rotate-left">↶ Xoay trái</button>
+                        <button id="rotate-right">↷ Xoay phải</button>
+                    </div>
+                    <div class="control-row"><label>Độ xoay:</label><input type="range" id="transform-rotate" min="-180" max="180" value="0"><span id="val-rotate" class="value-disp">0°</span></div>
+                    <div class="control-row"><label>Lưới:</label><select id="mesh-density"><option value="3">3 × 3</option><option value="5" selected>5 × 5</option><option value="7">7 × 7</option></select></div>
+                    <p class="fx-note">Bật lưới rồi kéo các điểm để bóp/méo hình. Điểm được nội suy để chuyển động mềm hơn.</p>
+                </div>
+            </div>
+            <div class="accordion-item">
                 <div class="accordion-header">💾 Export Manager <span>▼</span></div>
                 <div class="accordion-content">
                     <p style="margin:0;color:#bbb;font-size:12px;line-height:1.4">Bấm Xuất → chọn tên/nơi lưu → Save → render. Nếu trình duyệt không hỗ trợ chọn nơi lưu trực tiếp, file sẽ được tải xuống thư mục Downloads.</p>
@@ -369,7 +452,7 @@ class MotionFXEngine {
         this.brushMaskCanvas=document.createElement('canvas'); this.brushMaskCanvas.width=960; this.brushMaskCanvas.height=540;
         this.brushMaskCtx=this.brushMaskCanvas.getContext('2d'); this.cachedBase=document.createElement('canvas');
         this.cachedBase.width=960; this.cachedBase.height=540; this.cachedBaseCtx=this.cachedBase.getContext('2d',{willReadFrequently:true});
-        this.exporting=false; this.lastFrame=0; this.bind(); this.animate();
+        this.exporting=false; this.lastFrame=0; this.transformX=0; this.transformY=0; this.transformRotation=0; this.meshEnabled=false; this.meshDensity=5; this.meshPoints=[]; this.dragMeshIndex=-1; this.aeFX=new Set(); this.aeAmount=35; this.previewScale=0.5; this.baseDirty=true; this.frameCanvas=document.createElement('canvas'); this.frameCanvas.width=960; this.frameCanvas.height=540; this.frameCtx=this.frameCanvas.getContext('2d'); this.bind(); this.animate();
     }
     $(id){return document.getElementById(id)}
     bind(){
@@ -385,17 +468,37 @@ class MotionFXEngine {
         this.$('export-quality').oninput=e=>this.$('val-quality').textContent=(+e.target.value).toFixed(2);
         const fxs=['none','stretch','wave','wavewarp','bend','zoom','mirror','fanwarp','swirl','pinch','tile','barrel','fisheye','ripple','twist','bulge','radial','kaleido','turbulence','scanwarp','blockwarp','rgbwave'];
         fxs.forEach(f=>{const b=this.$('fx-'+f);if(b)b.onclick=()=>{fxs.forEach(x=>this.$('fx-'+x)?.classList.remove('active'));b.classList.add('active');this.currentDistortFX=f}});
+        const ae10Buttons=document.querySelectorAll('[data-ae10]'); ae10Buttons.forEach(b=>b.onclick=()=>{b.classList.toggle('active'); this.ae10FX=b.dataset.ae10; const map={boxblur:'blur',directionalblur:'directionalBlur',emboss:'emboss',findedges:'findEdges',colorbalance:'contrast',poster:'saturate',threshold:'threshold',huerotate:'huerotate',solarize:'invert',halftone:'halftone'}; const key=map[this.ae10FX]; if(key){if(this.aeFX.has(key))this.aeFX.delete(key);else this.aeFX.add(key)}});
+        const a10=this.$('ae10-amount'); if(a10)a10.oninput=()=>this.$('val-ae10').textContent=a10.value;
+        this.$('transform-up').onclick=()=>this.transformY-=10; this.$('transform-down').onclick=()=>this.transformY+=10;
+        this.$('rotate-left').onclick=()=>{this.transformRotation-=5;this.$('transform-rotate').value=this.transformRotation;this.$('val-rotate').textContent=this.transformRotation+'°'};
+        this.$('rotate-right').onclick=()=>{this.transformRotation+=5;this.$('transform-rotate').value=this.transformRotation;this.$('val-rotate').textContent=this.transformRotation+'°'};
+        this.$('transform-rotate').oninput=e=>{this.transformRotation=+e.target.value;this.$('val-rotate').textContent=e.target.value+'°'};
+        this.$('mesh-density').onchange=e=>{this.meshDensity=+e.target.value;this.resetMesh()};
+        this.$('mesh-toggle').onclick=()=>{this.meshEnabled=!this.meshEnabled;this.$('mesh-toggle').textContent=this.meshEnabled?'🧩 Tắt lưới':'🧩 Bật lưới';this.renderMeshOverlay()};
+        this.$('mesh-reset').onclick=()=>this.resetMesh();
+        const mo=this.$('mesh-overlay'); const meshPos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
+        mo.addEventListener('pointerdown',e=>{if(!this.meshEnabled)return;const p=meshPos(e);let best=-1,bd=18;this.meshPoints.forEach((q,i)=>{const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=i}});if(best>=0){this.dragMeshIndex=best;mo.setPointerCapture(e.pointerId)}});
+        mo.addEventListener('pointermove',e=>{if(this.dragMeshIndex<0)return;const p=meshPos(e);this.meshPoints[this.dragMeshIndex].x=Math.max(0,Math.min(960,p.x));this.meshPoints[this.dragMeshIndex].y=Math.max(0,Math.min(540,p.y));this.renderMeshOverlay()});
+        mo.addEventListener('pointerup',()=>this.dragMeshIndex=-1);
+        this.resetMesh();
         this.$('btn-export-start').onclick=()=>this.handleAdvancedExport();
         const pos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
         this.canvas.onmousedown=e=>{const p=pos(e);if(this.interactionMode==='pin')this.pins.push(p);else if(this.interactionMode==='mask'){this.isDrawing=true;this.lastX=p.x;this.lastY=p.y;this.drawBrush(p.x,p.y,false)}};
         this.canvas.onmousemove=e=>{if(this.isDrawing&&this.interactionMode==='mask'){const p=pos(e);this.drawBrush(p.x,p.y,true)}};
         window.onmouseup=()=>this.isDrawing=false;
         document.querySelectorAll('[data-extra]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-extra]').forEach(x=>x.classList.remove('active'));b.classList.toggle('active');this.extraFX=b.dataset.extra});
+        document.querySelectorAll('[data-aefx]').forEach(b=>b.onchange=()=>{if(b.checked)this.aeFX.add(b.dataset.aefx);else this.aeFX.delete(b.dataset.aefx)});
+        const ae=this.$('ae-amount');if(ae)ae.oninput=()=>{this.aeAmount=+ae.value;this.$('val-ae').textContent=ae.value};
+        const pq=this.$('preview-quality');if(pq)pq.onchange=()=>{this.previewScale=+pq.value};
     }
+    resetMesh(){this.meshPoints=[];const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n;i++)this.meshPoints.push({x:i*960/(n-1),y:j*540/(n-1),ox:i*960/(n-1),oy:j*540/(n-1)});this.renderMeshOverlay()}
+    renderMeshOverlay(){const o=this.$('mesh-overlay');if(!o)return;o.innerHTML='';if(!this.meshEnabled)return;const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n-1;i++){const a=this.meshPoints[j*n+i],b=this.meshPoints[j*n+i+1];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}for(let i=0;i<n;i++)for(let j=0;j<n-1;j++){const a=this.meshPoints[j*n+i],b=this.meshPoints[(j+1)*n+i];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}this.meshPoints.forEach((p,i)=>{const d=document.createElement('div');d.className='mesh-point';d.style.left=p.x+'px';d.style.top=p.y+'px';d.dataset.i=i;o.appendChild(d)})}
+    meshSample(x,y,w,h){if(!this.meshEnabled||!this.meshPoints.length)return{x,y};const n=this.meshDensity, gx=x/w*(n-1),gy=y/h*(n-1),i=Math.max(0,Math.min(n-2,Math.floor(gx))),j=Math.max(0,Math.min(n-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*n+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1);return{x:(p00.x*(1-u)*(1-v)+p10.x*u*(1-v)+p01.x*(1-u)*v+p11.x*u*v),y:(p00.y*(1-u)*(1-v)+p10.y*u*(1-v)+p01.y*(1-u)*v+p11.y*u*v)}}
     updateButtons(){this.$('btn-pin-mode').style.boxShadow=this.interactionMode==='pin'?'0 0 12px #f59e0b':'none';this.$('btn-mask-mode').style.boxShadow=this.interactionMode==='mask'?'0 0 12px #a855f7':'none'}
     drawBrush(x,y,line){const c=this.brushMaskCtx;c.save();c.strokeStyle='#fff';c.fillStyle='#fff';c.lineWidth=this.brushSize;c.lineCap='round';c.beginPath();if(line){c.moveTo(this.lastX,this.lastY);c.lineTo(x,y);c.stroke()}else{c.arc(x,y,this.brushSize/2,0,Math.PI*2);c.fill()}c.restore();this.lastX=x;this.lastY=y}
-    prepareBase(){const c=this.cachedBaseCtx;c.clearRect(0,0,960,540);c.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';c.fillRect(0,0,960,540);if(!this.bgImage)return;const iw=this.bgImage.naturalWidth,ih=this.bgImage.naturalHeight,scale=Math.min(960/iw,540/ih),dw=iw*scale,dh=ih*scale;c.drawImage(this.bgImage,(960-dw)/2,(540-dh)/2,dw,dh)}
-    sampleBase(){return this.cachedBaseCtx.getImageData(0,0,960,540)}
+    prepareBase(){const c=this.cachedBaseCtx;c.clearRect(0,0,960,540);c.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';c.fillRect(0,0,960,540);if(!this.bgImage)return;const iw=this.bgImage.naturalWidth,ih=this.bgImage.naturalHeight,scale=Math.min(960/iw,540/ih),dw=iw*scale,dh=ih*scale;c.drawImage(this.bgImage,(960-dw)/2,(540-dh)/2,dw,dh);this.baseDirty=false}
+    sampleBase(){if(!this.bgImage)return this.cachedBaseCtx.getImageData(0,0,960,540);return this.cachedBaseCtx.getImageData(0,0,960,540)}
     applyAllFX(srcData,dstData,w,h){
         const s=srcData.data,d=dstData.data,amt=+this.$('distort-amount').value,spd=+this.$('distort-speed').value,t=this.time*spd;
         const distort=this.$('chk-distort').checked,badtv=this.$('chk-badtv').checked,bc=this.$('chk-bc').checked,styl=this.$('chk-stylize').checked,chrom=this.$('chk-chromatic').checked;
@@ -408,6 +511,8 @@ class MotionFXEngine {
             if(distort&&fac&&this.currentDistortFX!=='none'){
                 switch(this.currentDistortFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break;case'barrel':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r2=nx*nx+ny*ny,k=1+amt/160*r2;sx=w/2+nx*(w/2)/k;sy=h/2+ny*(h/2)/k}break;case'fisheye':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r=Math.hypot(nx,ny),f=1+(amt/80)*r*r;sx=w/2+nx*(w/2)*f;sy=h/2+ny*(h/2)*f}break;case'ripple':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.sin(r*.08-t*5)*amt/35*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'twist':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/500),a=Math.atan2(dy,dx)+q*q*(amt/18)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'bulge':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/320),f=1+(amt/90)*q*q;sx=w/2+dx*f;sy=h/2+dy*f}break;case'radial':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),f=1+Math.sin(r*.025-t*3)*amt/180*pf;sx=w/2+dx*f;sy=h/2+dy*f}break;case'kaleido':{let dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),seg=Math.PI/4;a=((a+Math.PI*2)%seg);if(a>seg/2)a=seg-a;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'turbulence':{sx+=Math.sin(y*.055+t*2.7)*amt*.55*pf+Math.sin(y*.013-t)*amt*.22;sy+=Math.cos(x*.045-t*2.1)*amt*.45*pf+Math.sin(x*.017+t)*amt*.2}break;case'scanwarp':{sy+=Math.sin(y*.22+t*7)*amt*.22*pf;sx+=Math.sin(y*.035+t*3)*amt*.5*pf}break;case'blockwarp':{const bs=40,bx=Math.floor(x/bs)*bs,by=Math.floor(y/bs)*bs,q=Math.sin((bx+by)*.08+t*3)*amt*.8*pf;sx+=q;sy+=Math.cos((bx-by)*.08+t*2)*amt*.5*pf}break;case'rgbwave':sx+=Math.sin(y*.06+t*4)*amt*.35*pf;break}
             }
+            if(this.meshEnabled&&fac){const mp=this.meshSample(x,y,w,h);const gx=x/w*(this.meshDensity-1),gy=y/h*(this.meshDensity-1),i=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gx))),j=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*this.meshDensity+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1),ox=(p00.ox*(1-u)*(1-v)+p10.ox*u*(1-v)+p01.ox*(1-u)*v+p11.ox*u*v),oy=(p00.oy*(1-u)*(1-v)+p10.oy*u*(1-v)+p01.oy*(1-u)*v+p11.oy*u*v);sx+=(mp.x-ox);sy+=(mp.y-oy)}
+            const rr=this.transformRotation*Math.PI/180,cx=w/2,cy=h/2,tx=sx-cx,ty=sy-cy;sx=tx*Math.cos(rr)-ty*Math.sin(rr)+cx-this.transformX;sy=tx*Math.sin(rr)+ty*Math.cos(rr)+cy-this.transformY;
             sx=Math.max(0,Math.min(w-1,sx|0));sy=Math.max(0,Math.min(h-1,sy|0));let si=(sy*w+sx)*4,r=s[si],g=s[si+1],b=s[si+2],a=s[si+3];
             if(fac){
                 if(styl){switch(stylType){case'pixelate':{const q=12,px=Math.floor(sx/q)*q,py=Math.floor(sy/q)*q,ii=(Math.min(h-1,py)*w+Math.min(w-1,px))*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'polar':{const rr=Math.hypot(sx-w/2,sy-h/2),aa=Math.atan2(sy-h/2,sx-w/2);const px=Math.max(0,Math.min(w-1,(w/2+Math.cos(aa)*Math.floor(rr/10)*10)|0)),py=Math.max(0,Math.min(h-1,(h/2+Math.sin(aa)*Math.floor(rr/10)*10)|0)),ii=(py*w+px)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'slices':{const ii=(sy*w+Math.max(0,Math.min(w-1,sx+25))) *4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'jitter':if(Math.random()>.7){r=Math.min(255,r+40);g=Math.max(0,g-30)}break;case'melt':{const yy=Math.max(0,Math.min(h-1,(sy+Math.sin(sx*.05+t)*20)|0)),ii=(yy*w+sx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'wobble':{const xx=Math.max(0,Math.min(w-1,(sx+Math.sin(sy*.04+t*4)*12)|0)),ii=(sy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'shake':{const sh=Math.sin(t*8)*8,yy=Math.max(0,Math.min(h-1,sy+sh|0)),xx=Math.max(0,Math.min(w-1,sx+sh|0)),ii=(yy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'edges':{const v=(r+g+b)/3;r=v>120?0:255;g=v>120?255:0;b=255}break;case'solarize':r=r>128?255-r:r;g=g>128?255-g:g;b=b>128?255-b:b;break;case'dotmatrix':if(sx%6>2||sy%6>2){r*=.2;g*=.2;b*=.2}break;case'posterize':r=Math.floor(r/64)*64;g=Math.floor(g/64)*64;b=Math.floor(b/64)*64;break;case'duotone':{const gr=(r+g+b)/3;r=gr*.4;g=gr*.3;b=gr*.9}break}}
@@ -429,24 +534,82 @@ class MotionFXEngine {
         else if(type==='ice'){ctx.globalAlpha=.15+.35*amount;ctx.fillStyle='#c9f4ff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#fff';for(let i=0;i<20;i++){ctx.beginPath();ctx.moveTo(i*60,0);ctx.lineTo(i*60+100,h);ctx.stroke()}}
         ctx.restore();
     }
-    renderFrameTo(ctx,time){this.time=time;this.prepareBase();const src=this.sampleBase(),dst=this.cachedBaseCtx.createImageData(960,540);this.applyAllFX(src,dst,960,540);const frame=document.createElement('canvas');frame.width=960;frame.height=540;const fc=frame.getContext('2d');fc.putImageData(dst,0,0);ctx.clearRect(0,0,960,540);ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);ctx.drawImage(frame,0,0);if(this.$('chk-saber').checked&&this.pins.length){ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowColor=this.$('color-saber').value;ctx.shadowBlur=+this.$('slide-saber-glow').value;for(const p of this.pins){ctx.strokeStyle=this.$('color-saber').value;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.sin(time*3)*80,p.y+Math.cos(time*2)*80);ctx.stroke()}ctx.restore()}this.drawEnvironment(ctx)}
-    animate(now=0){if(!this.exporting&&now-this.lastFrame>33){this.lastFrame=now;this.time+=.03;this.renderFrameTo(this.ctx,this.time);this.pins.forEach(p=>{this.ctx.beginPath();this.ctx.arc(p.x,p.y,6,0,Math.PI*2);this.ctx.fillStyle='#f59e0b';this.ctx.fill()});if(this.interactionMode==='mask'){this.ctx.save();this.ctx.globalAlpha=.2;this.ctx.drawImage(this.brushMaskCanvas,0,0);this.ctx.restore()}}requestAnimationFrame(t=>this.animate(t))}
+    applyPostFX(ctx, sourceCanvas, time, isExport=false){
+        const A=this.aeFX, amt=this.aeAmount/100, w=960,h=540;
+        if(!A.size)return;
+        // GPU-friendly canvas filters for the common AE-style color/blur effects.
+        let filters=[];
+        if(A.has('blur')) filters.push(`blur(${(amt*8).toFixed(1)}px)`);
+        if(A.has('saturate')) filters.push(`saturate(${(1+amt*2).toFixed(2)})`);
+        if(A.has('huerotate')) filters.push(`hue-rotate(${Math.round(amt*360)}deg)`);
+        if(A.has('contrast')) filters.push(`contrast(${(1+amt*1.5).toFixed(2)})`);
+        if(A.has('brightness')) filters.push(`brightness(${(1+amt).toFixed(2)})`);
+        if(A.has('grayscale')) filters.push(`grayscale(${amt.toFixed(2)})`);
+        if(A.has('invert')) filters.push(`invert(${amt.toFixed(2)})`);
+        if(A.has('sepia')) filters.push(`sepia(${amt.toFixed(2)})`);
+        if(A.has('dropShadow')) filters.push(`drop-shadow(0 0 ${(4+amt*14).toFixed(1)}px rgba(255,255,255,${(.25+amt*.5).toFixed(2)}))`);
+        if(A.has('hueSat')) filters.push(`saturate(${(1+amt*2.5).toFixed(2)}) hue-rotate(${Math.round(amt*180)}deg)`);
+        if(A.has('softLight')) filters.push(`brightness(${(1+amt*.25).toFixed(2)}) contrast(${(1+amt*.35).toFixed(2)})`);
+        if(A.has('colorBurn')) filters.push(`contrast(${(1+amt*2.2).toFixed(2)}) brightness(${(1-amt*.25).toFixed(2)})`);
+
+        if(A.has('sepia')) filters.push(`sepia(${amt.toFixed(2)})`);
+        if(A.has('invert')) filters.push(`invert(${amt.toFixed(2)})`);
+        if(filters.length){ctx.save();ctx.filter=filters.join(' ');ctx.globalAlpha=.55+amt*.45;ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
+        if(A.has('glow')||A.has('edgeglow')){
+            ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=.15+.45*amt;ctx.filter=`blur(${(2+amt*14).toFixed(1)}px)`;ctx.drawImage(sourceCanvas,0,0);ctx.restore();
+        }
+        if(A.has('motionblur')){
+            ctx.save();ctx.globalAlpha=.12+.22*amt;ctx.filter=`blur(${(1+amt*5).toFixed(1)}px)`;ctx.drawImage(sourceCanvas,Math.sin(time*4)*amt*8,Math.cos(time*3)*amt*5);ctx.restore();
+        }
+        if(A.has('radialblur')){
+            ctx.save();ctx.globalAlpha=.12+.2*amt;ctx.translate(w/2,h/2);ctx.scale(1+amt*.035,1+amt*.035);ctx.translate(-w/2,-h/2);ctx.filter='blur(2px)';ctx.drawImage(sourceCanvas,0,0);ctx.restore();
+        }
+        if(A.has('vignette')){const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.2,w/2,h/2,Math.max(w,h)*.72);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${(.25+.6*amt).toFixed(2)})`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+        if(A.has('scanlines')){ctx.save();ctx.globalAlpha=.12+.25*amt;ctx.fillStyle='#000';for(let y=0;y<h;y+=4)ctx.fillRect(0,y,w,1);ctx.restore()}
+        if(A.has('noise')){ctx.save();ctx.globalAlpha=.04+.14*amt;ctx.fillStyle='#fff';for(let i=0;i<Math.floor(800*amt);i++){const x=(i*73+time*17)%w,y=(i*137+time*29)%h;ctx.fillRect(x,y,1,1)}ctx.restore()}
+        if(A.has('threshold')){ctx.save();ctx.globalAlpha=.12+.5*amt;ctx.fillStyle='#000';ctx.globalCompositeOperation='multiply';ctx.fillRect(0,0,w,h);ctx.restore()}
+        if(A.has('sharpen')){ctx.save();ctx.globalAlpha=.18+.25*amt;ctx.globalCompositeOperation='overlay';ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
+        if(A.has('heat')){ctx.save();ctx.globalAlpha=.12+.3*amt;ctx.filter=`blur(${(1+amt*3).toFixed(1)}px)`;ctx.translate(Math.sin(time*7)*amt*5,0);ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
+        if(A.has('pixelSort')){ctx.save();ctx.globalAlpha=.12+.3*amt;for(let y=0;y<h;y+=Math.max(4,Math.floor(18-amt*10))){ctx.drawImage(sourceCanvas,0,y,w,2,Math.sin(y*.07+time*2)*amt*18,y,w,2)}ctx.restore()}
+        ctx.save();
+        if(A.has('emboss')){ctx.globalAlpha=.15+amt*.45;ctx.globalCompositeOperation='overlay';ctx.filter=`blur(0.4px) contrast(${1+amt*2})`;ctx.drawImage(sourceCanvas,amt*3,amt*3,w,h);}
+        if(A.has('findEdges')){ctx.globalAlpha=.25+amt*.65;ctx.globalCompositeOperation='screen';ctx.filter=`contrast(${2+amt*4}) grayscale(1)`;ctx.drawImage(sourceCanvas,0,0,w,h);}
+        if(A.has('threshold')){ctx.globalAlpha=.2+amt*.8;ctx.globalCompositeOperation='multiply';ctx.filter=`contrast(${3+amt*7}) grayscale(1)`;ctx.drawImage(sourceCanvas,0,0,w,h);}
+        if(A.has('halftone')){ctx.globalAlpha=.15+amt*.5;ctx.fillStyle='#fff';for(let y=0;y<h;y+=8)for(let x=0;x<w;x+=8){const r=2+Math.sin(x*.02+time*2)*amt*2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}}
+        if(A.has('directionalBlur')){ctx.globalAlpha=.08+amt*.3;for(let k=1;k<=5;k++)ctx.drawImage(sourceCanvas,k*amt*5,0,w,h);}
+        ctx.restore();
+    }
+    renderFrameTo(ctx,time,isExport=false){
+        this.time=time;
+        this.prepareBase();
+        const src=this.sampleBase(),dst=this.cachedBaseCtx.createImageData(960,540);
+        this.applyAllFX(src,dst,960,540);
+        const frame=this.frameCanvas,fc=this.frameCtx;
+        fc.putImageData(dst,0,0);
+        ctx.clearRect(0,0,960,540);
+        ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);
+        ctx.drawImage(frame,0,0);
+        if(this.$('chk-saber').checked&&this.pins.length){ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowColor=this.$('color-saber').value;ctx.shadowBlur=+this.$('slide-saber-glow').value;for(const p of this.pins){ctx.strokeStyle=this.$('color-saber').value;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.sin(time*3)*80,p.y+Math.cos(time*2)*80);ctx.stroke()}ctx.restore()}
+        this.drawEnvironment(ctx);
+        this.applyPostFX(ctx,frame,time,isExport);
+    }
+    animate(now=0){if(!this.exporting&&now-this.lastFrame>66){this.lastFrame=now;this.time+=.03;this.renderFrameTo(this.ctx,this.time);this.pins.forEach(p=>{this.ctx.beginPath();this.ctx.arc(p.x,p.y,6,0,Math.PI*2);this.ctx.fillStyle='#f59e0b';this.ctx.fill()});if(this.interactionMode==='mask'){this.ctx.save();this.ctx.globalAlpha=.2;this.ctx.drawImage(this.brushMaskCanvas,0,0);this.ctx.restore()}}requestAnimationFrame(t=>this.animate(t))}
     async handleAdvancedExport(){
         if(!this.bgImage){alert('Vui lòng nạp ảnh trước bro ơi!');return} if(this.exporting)return;
         const secs=Math.max(1,Math.min(30,+this.$('export-duration').value||3)),fps=+this.$('export-fps').value,format=this.$('export-format').value,total=Math.round(secs*fps),quality=+this.$('export-quality').value;
         let handle=null,filename=format==='gif'?`motion_fx_${Date.now()}.gif`:`motion_video_${Date.now()}.webm`;
         if(window.showSaveFilePicker){try{handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:format==='gif'?'GIF image':'WebM video',accept:format==='gif'?{'image/gif':['.gif']}:{'video/webm':['.webm']}}]})}catch(e){if(e.name==='AbortError')return;handle=null}}
-        this.exporting=true;this.$('export-progress').value=0;this.$('export-status').textContent='Đang chuẩn bị render...';const backup=this.time;
+        this.exporting=true;this.$('export-progress').value=0;this.$('export-status').textContent=`⚙️ Đang chuẩn bị ${format.toUpperCase()} — ${total} khung hình @ ${fps} FPS...`;const backup=this.time;
         try{
             if(format==='gif'){await this.exportGIF(total,fps,quality,handle,filename)}else await this.exportVideo(total,fps,handle,filename);
             this.$('export-status').textContent='✅ Xuất xong!';this.$('export-progress').value=100;
         }catch(e){console.error(e);this.$('export-status').textContent='❌ Lỗi: '+e.message;alert('Không xuất được: '+e.message)}finally{this.time=backup;this.exporting=false}
     }
     async exportVideo(total,fps,handle,filename){
-        const out=document.createElement('canvas');out.width=960;out.height=540;const stream=out.captureStream(fps);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise((res,rej)=>{rec.onstop=res;rec.onerror=e=>rej(e.error||new Error('MediaRecorder error'))});rec.start();for(let i=0;i<total;i++){this.renderFrameTo(out.getContext('2d'),i/fps);await new Promise(r=>setTimeout(r,1000/fps));this.$('export-progress').value=Math.round((i+1)/total*100);this.$('export-status').textContent=`Render video ${i+1}/${total}`;await new Promise(r=>setTimeout(r,0))}rec.stop();await done;const blob=new Blob(chunks,{type:'video/webm'});await this.saveBlob(blob,handle,filename)}
+        const out=document.createElement('canvas');out.width=960;out.height=540;const stream=out.captureStream(fps);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise((res,rej)=>{rec.onstop=res;rec.onerror=e=>rej(e.error||new Error('MediaRecorder error'))});rec.start();for(let i=0;i<total;i++){this.renderFrameTo(out.getContext('2d'),i/fps,true);await new Promise(r=>setTimeout(r,1000/fps));this.$('export-progress').value=Math.round((i+1)/total*100);this.$('export-status').textContent=`🖼️ Render video ${i+1}/${total} — ${Math.round((i+1)/total*100)}% — hiệu ứng: ${this.aeFX.size?Array.from(this.aeFX).join(', '):'cơ bản'}`;await new Promise(r=>setTimeout(r,0))}rec.stop();await done;const blob=new Blob(chunks,{type:'video/webm'});await this.saveBlob(blob,handle,filename)}
     async exportGIF(total,fps,quality,handle,filename){
         if(!window.gifshot)throw new Error('Thư viện GIF chưa tải. Hãy mở lại trang và thử lại.');const images=[];const out=document.createElement('canvas');out.width=960;out.height=540;const oc=out.getContext('2d');
-        for(let i=0;i<total;i++){this.renderFrameTo(oc,i/fps);images.push(out.toDataURL('image/jpeg',quality));this.$('export-progress').value=Math.round((i+1)/total*75);this.$('export-status').textContent=`Chuẩn bị GIF ${i+1}/${total}`;await new Promise(r=>setTimeout(r,0))}
+        for(let i=0;i<total;i++){this.renderFrameTo(oc,i/fps,true);images.push(out.toDataURL('image/jpeg',quality));this.$('export-progress').value=Math.round((i+1)/total*75);this.$('export-status').textContent=`🖼️ Chuẩn bị GIF ${i+1}/${total} — ${Math.round((i+1)/total*75)}% — hiệu ứng: ${this.aeFX.size?Array.from(this.aeFX).join(', '):'cơ bản'}`;await new Promise(r=>setTimeout(r,0))}
         const blob=await new Promise((resolve,reject)=>window.gifshot.createGIF({images,gifWidth:960,gifHeight:540,interval:1/fps,quality:1},obj=>obj.error?reject(new Error(obj.errorMsg||'GIF error')):fetch(obj.image).then(r=>r.blob()).then(resolve).catch(reject)));
         this.$('export-progress').value=90;await this.saveBlob(blob,handle,filename)
     }
