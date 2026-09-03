@@ -16,32 +16,40 @@
             display: flex;
             justify-content: center;
         }
-        #app-container { 
-            display: flex; 
-            flex-direction: row; 
-            gap: 20px; 
+        #app-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
             width: 100%;
             max-width: 1350px;
             align-items: flex-start;
+            box-sizing: border-box;
+            min-width: 0;
         }
         #left-panel {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 0;
         }
-        #preview-window { 
-            background: #000; 
-            border: 2px solid #333; 
-            border-radius: 8px; 
-            overflow: hidden; 
+        #preview-window {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            min-width: 0;
         }
         #videoCanvas {
             display: block;
-            width: 960px;
-            height: 540px;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: contain;
             background: #1a1a1a;
             cursor: crosshair;
         }
@@ -53,6 +61,8 @@
             gap: 15px;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            box-sizing: border-box;
         }
         .global-slider {
             display: flex;
@@ -63,6 +73,7 @@
         /* Mở khóa thanh cuộn dọc cho bảng điều khiển tổng bên phải */
         #right-panel {
             width: 340px;
+            flex: 0 0 340px;
             background: #1e1e1e;
             border: 1px solid #333;
             border-radius: 8px;
@@ -137,7 +148,15 @@
         .accordion-content { scrollbar-width: thin; scrollbar-color: #555 #1a1a1a; }
         .accordion-content .fx-grid { min-height: 0; }
         @media (max-height: 700px) { .accordion-content { max-height: 38vh; } }
-        @media (max-width: 900px) { #app-container { flex-direction: column; } #right-panel { width: 100%; height: 70vh; max-height: 70vh; } #videoCanvas { width: 100%; height: auto; aspect-ratio: 16/9; } }
+        @media (max-width: 900px) {
+            body { padding: 10px; }
+            #app-container { flex-direction: column; gap: 12px; }
+            #left-panel { width: 100%; }
+            #right-panel { width: 100%; flex: 0 0 auto; height: 60vh; max-height: 60vh; }
+            #preview-window { width: 100%; }
+            #videoCanvas { width: 100%; height: 100%; }
+            #tool-section, .tool-section, #rig-toolbar, #export-panel { flex-wrap: wrap; }
+        } #right-panel { width: 100%; height: 70vh; max-height: 70vh; } #videoCanvas { width: 100%; height: auto; aspect-ratio: 16/9; } }
         .control-row {
             display: flex;
             align-items: center;
@@ -165,6 +184,7 @@
         button.active { background: #2563eb !important; border-color: #3b82f6 !important; }
         .tool-section {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 5px;
             align-items: center;
@@ -175,6 +195,7 @@
             gap: 6px;
         }
         #export-panel {
+            flex-wrap: wrap;
             background: #222;
             border: 1px solid #3b82f6;
             padding: 12px;
@@ -226,6 +247,22 @@
         #fx-detail-content::-webkit-scrollbar{width:6px}
         #fx-detail-content::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
         #fx-detail-content .accordion-content{display:flex!important;max-height:none;overflow:visible;padding:0;background:transparent}
+
+/* PATCH 2026-09: preview ổn định + Slash FX */
+#preview-window{width:min(100%,960px);max-width:960px;margin:0 auto;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+#videoCanvas{width:100%;height:100%;object-fit:contain;image-rendering:auto}
+@media (max-width: 900px){
+  body{padding:10px}
+  #app-container{flex-direction:column;gap:12px}
+  #left-panel{width:100%}
+  #right-panel{width:100%;flex:1 1 auto;height:55vh;max-height:55vh}
+  #preview-window{width:100%;max-width:none}
+}
+.slash-card{background:#171717;border:1px solid #343434;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.slash-card button{font-weight:700}
+.slash-row{display:flex;align-items:center;gap:8px}.slash-row label{min-width:90px;font-size:12px}.slash-row input[type=range]{flex:1}
+.slash-status{font-size:11px;color:#aaa}
+
 </style>
 </head>
 <body>
@@ -749,6 +786,73 @@ setupNewFeatures(){
     async saveBlob(blob,handle,filename){if(handle){const w=await handle.createWritable();await w.write(blob);await w.close();return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
 }
 window.addEventListener('DOMContentLoaded',()=>new MotionFXEngine());
+
+/* ===== Special Slash FX ===== */
+(function(){
+  const oldInit=window.MotionFXEngine;
+  if(!oldInit)return;
+  const proto=oldInit.prototype;
+  const oldRender=proto.renderFrameTo;
+  proto.slashEnabled=false;
+  proto.slashAmount=55;
+  proto.slashSpeed=1;
+  proto.slashBend=28;
+  proto.applySlash=function(ctx,time){
+    if(!this.slashEnabled || !this.bgImage) return;
+    const w=960,h=540, t=(time*this.slashSpeed)%1;
+    const cx=w*(0.12+0.76*t), cy=h*(0.18+0.64*t);
+    const bend=this.slashBend*Math.sin(time*2.4);
+    ctx.save();
+    ctx.globalCompositeOperation='destination-in';
+    ctx.beginPath();
+    ctx.moveTo(cx-250,cy+150);
+    ctx.quadraticCurveTo(cx+bend,cy+25,cx+250,cy-150);
+    ctx.lineWidth=Math.max(18,this.slashAmount*1.35);
+    ctx.lineCap='round'; ctx.stroke();
+    ctx.restore();
+    // Bright slash edge / energy trail
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    ctx.globalAlpha=.35+.25*Math.sin(time*8);
+    ctx.strokeStyle='#fff'; ctx.shadowColor='#fff'; ctx.shadowBlur=12;
+    ctx.lineWidth=2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx-250,cy+150);
+    ctx.quadraticCurveTo(cx+bend,cy+25,cx+250,cy-150);
+    ctx.stroke();
+    ctx.restore();
+  };
+  proto.renderFrameTo=function(ctx,time,isExport){
+    oldRender.call(this,ctx,time,isExport);
+    if(this.slashEnabled){
+      // Re-render as a diagonal animated slash mask using the already rendered frame.
+      const tmp=document.createElement('canvas');tmp.width=960;tmp.height=540;
+      const tc=tmp.getContext('2d');tc.drawImage(ctx.canvas,0,0);
+      ctx.clearRect(0,0,960,540);
+      ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);
+      const t=(time*this.slashSpeed)%1;
+      const cx=960*(0.12+0.76*t),cy=540*(0.18+0.64*t),bend=this.slashBend*Math.sin(time*2.4);
+      ctx.save();ctx.beginPath();ctx.moveTo(cx-260,cy+160);ctx.quadraticCurveTo(cx+bend,cy+20,cx+260,cy-160);ctx.lineWidth=Math.max(20,this.slashAmount*1.5);ctx.lineCap='round';ctx.stroke();ctx.globalCompositeOperation='source-in';ctx.drawImage(tmp,0,0);ctx.restore();
+      ctx.save();ctx.globalCompositeOperation='screen';ctx.strokeStyle='#fff';ctx.shadowColor='#fff';ctx.shadowBlur=14;ctx.globalAlpha=.7;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-260,cy+160);ctx.quadraticCurveTo(cx+bend,cy+20,cx+260,cy-160);ctx.stroke();ctx.restore();
+    }
+  };
+  const makeUI=()=>{
+    const home=document.getElementById('fx-home'); if(!home)return;
+    const item=document.createElement('div');item.className='accordion-item';
+    item.innerHTML=`<div class="accordion-header">🗡️ Special Slash FX <span>▼</span></div><div class="accordion-content"><div class="slash-card"><div class="control-row"><label>Kích hoạt Slash:</label><input type="checkbox" id="chk-slash"></div><div class="slash-row"><label>Độ rộng</label><input id="slash-amount" type="range" min="10" max="100" value="55"><span id="slash-amount-v">55</span></div><div class="slash-row"><label>Tốc độ</label><input id="slash-speed" type="range" min="0.1" max="4" step="0.1" value="1"><span id="slash-speed-v">1</span></div><div class="slash-row"><label>Độ uốn</label><input id="slash-bend" type="range" min="0" max="100" value="28"><span id="slash-bend-v">28</span></div><button id="slash-reset">↺ Reset Slash</button><div class="slash-status">Ảnh sẽ chạy qua một vệt slash cong; bật khi preview/export.</div></div></div>`;
+    home.appendChild(item);
+    const h=item.querySelector('.accordion-header'),c=item.querySelector('.accordion-content');
+    h.onclick=()=>{c.style.display=c.style.display==='flex'?'none':'flex'};
+    const q=id=>item.querySelector(id);
+    q('#chk-slash').onchange=e=>{proto.slashEnabled=e.target.checked};
+    q('#slash-amount').oninput=e=>{proto.slashAmount=+e.target.value;q('#slash-amount-v').textContent=e.target.value};
+    q('#slash-speed').oninput=e=>{proto.slashSpeed=+e.target.value;q('#slash-speed-v').textContent=e.target.value};
+    q('#slash-bend').oninput=e=>{proto.slashBend=+e.target.value;q('#slash-bend-v').textContent=e.target.value};
+    q('#slash-reset').onclick=()=>{proto.slashEnabled=false;proto.slashAmount=55;proto.slashSpeed=1;proto.slashBend=28;q('#chk-slash').checked=false;q('#slash-amount').value=55;q('#slash-speed').value=1;q('#slash-bend').value=28;q('#slash-amount-v').textContent=55;q('#slash-speed-v').textContent=1;q('#slash-bend-v').textContent=28};
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',makeUI);else makeUI();
+})();
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/build/gifshot.min.js"></script>
 </body></html>
