@@ -413,25 +413,25 @@ html,body{min-height:100%;overflow-x:hidden}
                 <div class="accordion-content">
                     <div class="control-row"><label>Kích hoạt bộ lọc:</label><input type="checkbox" id="chk-stylize"></div>
                     <div class="fx-grid">
-                        <label><input type="radio" name="rad-stylize" value="pixelate" checked> Pixelate (Lego)</label>
-                        <label><input type="radio" name="rad-stylize" value="polar"> Polar Pixelate</label>
-                        <label><input type="radio" name="rad-stylize" value="slices"> Slices</label>
-                        <label><input type="radio" name="rad-stylize" value="jitter"> Jitter</label>
-                        <label><input type="radio" name="rad-stylize" value="melt"> Melt</label>
-                        <label><input type="radio" name="rad-stylize" value="wobble"> Wobble</label>
-                        <label><input type="radio" name="rad-stylize" value="shake"> Shake</label>
-                        <label><input type="radio" name="rad-stylize" value="edges"> Edges</label>
-                        <label><input type="radio" name="rad-stylize" value="solarize"> Solarize</label>
-                        <label><input type="radio" name="rad-stylize" value="dotmatrix"> Dot Matrix</label>
-                        <label><input type="radio" name="rad-stylize" value="posterize"> Posterize</label>
-                        <label><input type="radio" name="rad-stylize" value="duotone"> DuoTone</label>
+                        <label><input type="checkbox" class="stylize-check" value="pixelate" checked> Pixelate (Lego)</label>
+                        <label><input type="checkbox" class="stylize-check" value="polar"> Polar Pixelate</label>
+                        <label><input type="checkbox" class="stylize-check" value="slices"> Slices</label>
+                        <label><input type="checkbox" class="stylize-check" value="jitter"> Jitter</label>
+                        <label><input type="checkbox" class="stylize-check" value="melt"> Melt</label>
+                        <label><input type="checkbox" class="stylize-check" value="wobble"> Wobble</label>
+                        <label><input type="checkbox" class="stylize-check" value="shake"> Shake</label>
+                        <label><input type="checkbox" class="stylize-check" value="edges"> Edges</label>
+                        <label><input type="checkbox" class="stylize-check" value="solarize"> Solarize</label>
+                        <label><input type="checkbox" class="stylize-check" value="dotmatrix"> Dot Matrix</label>
+                        <label><input type="checkbox" class="stylize-check" value="posterize"> Posterize</label>
+                        <label><input type="checkbox" class="stylize-check" value="duotone"> DuoTone</label>
                     </div>
                 </div>
             </div>
             <div class="accordion-item">
                 <div class="accordion-header">🌊 Environment FX <span>▼</span></div>
                 <div class="accordion-content">
-                    <div class="control-row"><label>Hiệu ứng môi trường:</label><select id="environment-fx"><option value="none">Không</option><option value="water">Water</option><option value="fire">Fire</option><option value="smoke">Smoke</option><option value="fog">Fog</option><option value="ice">Ice</option><option value="electric">Electric</option><option value="wind">Wind</option><option value="rain">Rain</option><option value="snow">Snow</option><option value="lava">Lava</option><option value="space">Space / Stars</option></select></div>
+                    <div class="control-row"><label>Hiệu ứng môi trường:</label><select id="environment-fx" multiple size="5"><option value="none">Không</option><option value="water">Water</option><option value="fire">Fire</option><option value="smoke">Smoke</option><option value="fog">Fog</option><option value="ice">Ice</option><option value="electric">Electric</option><option value="wind">Wind</option><option value="rain">Rain</option><option value="snow">Snow</option><option value="lava">Lava</option><option value="space">Space / Stars</option></select></div>
                     <div class="control-row"><label>Cường độ:</label><input type="range" id="environment-amount" min="0" max="100" value="35"><span id="val-environment" class="value-disp">35</span></div>
                     <div class="control-row"><label>Tốc độ:</label><input type="range" id="environment-speed" min="0" max="3" step="0.05" value="1"><span id="val-environment-speed" class="value-disp">1.00</span></div>
                 </div>
@@ -587,7 +587,7 @@ html,body{min-height:100%;overflow-x:hidden}
 class MotionFXEngine {
     constructor(){
         this.canvas=document.getElementById('videoCanvas'); this.ctx=this.canvas.getContext('2d',{willReadFrequently:true});
-        this.bgImage=null; this.time=0; this.currentDistortFX='none'; this.useGreenScreen=false;
+        this.bgImage=null; this.time=0; this.currentDistortFX='none'; this.currentDistortFXs=new Set(); this.extraFXs=new Set(); this.useGreenScreen=false;
         this.interactionMode='none'; this.pins=[]; this.isDrawing=false; this.brushSize=30;
         this.brushMaskCanvas=document.createElement('canvas'); this.brushMaskCanvas.width=960; this.brushMaskCanvas.height=540;
         this.brushMaskCtx=this.brushMaskCanvas.getContext('2d'); this.cachedBase=document.createElement('canvas');
@@ -624,7 +624,7 @@ class MotionFXEngine {
         ['slide-thick','slide-fine','slide-roll','slide-contrast','slide-brightness','slide-saber-glow','slide-chromatic-amt','environment-amount','environment-speed','extra-amount','export-quality'].forEach(id=>{const x=this.$(id);if(x)x.oninput=()=>{const v=this.$(id.replace('slide-','val-'))||this.$('val-'+id.replace('environment-','environment-').replace('extra-','extra-').replace('export-','')); if(v)v.textContent=(id.includes('brightness')||id.includes('amount')&&id!=='environment-speed'&&id!=='export-quality')?x.value:(+x.value).toFixed(2)}});
         this.$('export-quality').oninput=e=>this.$('val-quality').textContent=(+e.target.value).toFixed(2);
         const fxs=['none','stretch','wave','wavewarp','bend','zoom','mirror','fanwarp','swirl','pinch','tile','barrel','fisheye','ripple','twist','bulge','radial','kaleido','turbulence','scanwarp','blockwarp','rgbwave'];
-        fxs.forEach(f=>{const b=this.$('fx-'+f);if(b)b.onclick=()=>{fxs.forEach(x=>this.$('fx-'+x)?.classList.remove('active'));b.classList.add('active');this.currentDistortFX=f}});
+        fxs.forEach(f=>{const b=this.$('fx-'+f);if(b)b.onclick=()=>{if(f==='none'){this.currentDistortFXs.clear();fxs.forEach(x=>this.$('fx-'+x)?.classList.remove('active'));b.classList.add('active');this.currentDistortFX='none';return;}this.$('fx-none')?.classList.remove('active');if(this.currentDistortFXs.has(f)){this.currentDistortFXs.delete(f);b.classList.remove('active')}else{this.currentDistortFXs.add(f);b.classList.add('active')}this.currentDistortFX=Array.from(this.currentDistortFXs).join('+')||'none'}});
         const ae10Buttons=document.querySelectorAll('[data-ae10]'); ae10Buttons.forEach(b=>b.onclick=()=>{b.classList.toggle('active'); this.ae10FX=b.dataset.ae10; const map={boxblur:'blur',directionalblur:'directionalBlur',emboss:'emboss',findedges:'findEdges',colorbalance:'contrast',poster:'saturate',threshold:'threshold',huerotate:'huerotate',solarize:'invert',halftone:'halftone'}; const key=map[this.ae10FX]; if(key){if(this.aeFX.has(key))this.aeFX.delete(key);else this.aeFX.add(key)}});
         const a10=this.$('ae10-amount'); if(a10)a10.oninput=()=>this.$('val-ae10').textContent=a10.value;
         this.$('transform-up').onclick=()=>this.transformY-=10; this.$('transform-down').onclick=()=>this.transformY+=10;
@@ -645,7 +645,7 @@ class MotionFXEngine {
         this.canvas.onmousedown=e=>{const p=pos(e);if(this.interactionMode==='pin')this.pins.push(p);else if(this.interactionMode==='mask'){this.isDrawing=true;this.lastX=p.x;this.lastY=p.y;this.drawBrush(p.x,p.y,false)}};
         this.canvas.onmousemove=e=>{if(this.isDrawing&&this.interactionMode==='mask'){const p=pos(e);this.drawBrush(p.x,p.y,true)}};
         window.onmouseup=()=>this.isDrawing=false;
-        document.querySelectorAll('[data-extra]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-extra]').forEach(x=>x.classList.remove('active'));b.classList.toggle('active');this.extraFX=b.dataset.extra});
+        document.querySelectorAll('[data-extra]').forEach(b=>b.onclick=()=>{const f=b.dataset.extra;if(this.extraFXs.has(f)){this.extraFXs.delete(f);b.classList.remove('active')}else{this.extraFXs.add(f);b.classList.add('active')}});
         document.querySelectorAll('[data-aefx]').forEach(b=>b.onchange=()=>{if(b.checked)this.aeFX.add(b.dataset.aefx);else this.aeFX.delete(b.dataset.aefx)});
         const ae=this.$('ae-amount');if(ae)ae.oninput=()=>{this.aeAmount=+ae.value;this.$('val-ae').textContent=ae.value};
         const pq=this.$('preview-quality');if(pq)pq.onchange=()=>{this.previewScale=+pq.value};
@@ -670,7 +670,7 @@ setupNewFeatures(){
     restore(json){const arr=JSON.parse(json);this.layers=arr.map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;}
     undo(){if(!this.undoStack.length)return;this.redoStack.push(this.snapshot());this.restore(this.undoStack.pop());}
     redo(){if(!this.redoStack.length)return;this.undoStack.push(this.snapshot());this.restore(this.redoStack.pop());}
-    saveProject(){const data={version:1,layers:this.layers.map(l=>{const x={...l};delete x.image;return x}),settings:{distort:this.currentDistortFX,transformX:this.transformX,transformY:this.transformY,rotation:this.transformRotation,bgColor:this.bgColor,snapEnabled:this.snapEnabled}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='editnew-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+    saveProject(){const data={version:1,layers:this.layers.map(l=>{const x={...l};delete x.image;return x}),settings:{distort:this.currentDistortFX,distortStack:[...this.currentDistortFXs],transformX:this.transformX,transformY:this.transformY,rotation:this.transformRotation,bgColor:this.bgColor,snapEnabled:this.snapEnabled}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='editnew-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
     loadProject(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);this.layers=(d.layers||[]).map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;this.nextLayerId=Math.max(0,...this.layers.map(x=>x.id||0))+1;if(d.settings){this.bgColor=d.settings.bgColor||this.bgColor;this.snapEnabled=d.settings.snapEnabled!==false;this.$('bg-color').value=this.bgColor;this.$('snap-toggle').checked=this.snapEnabled;}alert('✅ Đã load project')}catch(e){alert('Project lỗi: '+e.message)}};r.readAsText(file)}
     drawLayers(ctx,time){
         const active=this.layers.filter(l=>l.visible); for(const l of active){ctx.save();ctx.globalAlpha=l.opacity??1;ctx.globalCompositeOperation=l.blend||'source-over';let x=l.x??480,y=l.y??270;const rot=(l.rotation||0)*Math.PI/180;ctx.translate(x,y);ctx.rotate(rot); if(l.type==='text'){let k=l.keyframes||[];if(k.length){const a=k.filter(q=>q.t<=time).at(-1),b=k.find(q=>q.t>time);if(a){if(b){const u=(time-a.t)/(b.t-a.t);x=a.x+(b.x-a.x)*u;y=a.y+(b.y-a.y)*u;ctx.globalAlpha=a.opacity+(b.opacity-a.opacity)*u}else{x=a.x;y=a.y;ctx.globalAlpha=a.opacity}}}ctx.font=`${l.size||60}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=l.color||'#fff';ctx.fillText(l.text||'',0,0)}else if(l.image){const iw=l.image.naturalWidth||960,ih=l.image.naturalHeight||540,sc=Math.min(960/iw,540/ih),dw=iw*sc,dh=ih*sc;if(l.mask){ctx.beginPath();if(l.mask==='circle')ctx.arc(480,270,Math.min(dw,dh)/2,0,Math.PI*2);else ctx.rect((960-dw)/2,(540-dh)/2,dw,dh);ctx.clip()}ctx.drawImage(l.image,-dw/2,-dh/2,dw,dh)}ctx.restore()}
@@ -685,20 +685,20 @@ setupNewFeatures(){
     applyAllFX(srcData,dstData,w,h){
         const s=srcData.data,d=dstData.data,amt=+this.$('distort-amount').value,spd=+this.$('distort-speed').value,t=this.time*spd;
         const distort=this.$('chk-distort').checked,badtv=this.$('chk-badtv').checked,bc=this.$('chk-bc').checked,styl=this.$('chk-stylize').checked,chrom=this.$('chk-chromatic').checked;
-        const stylType=document.querySelector('input[name="rad-stylize"]:checked')?.value||'pixelate', tvT=+this.$('slide-thick').value,tvF=+this.$('slide-fine').value,tvR=+this.$('slide-roll').value,cont=+this.$('slide-contrast').value+1,bright=+this.$('slide-brightness').value,ca=+this.$('slide-chromatic-amt').value;
+        const stylTypes=[...document.querySelectorAll('.stylize-check:checked')].map(x=>x.value), tvT=+this.$('slide-thick').value,tvF=+this.$('slide-fine').value,tvR=+this.$('slide-roll').value,cont=+this.$('slide-contrast').value+1,bright=+this.$('slide-brightness').value,ca=+this.$('slide-chromatic-amt').value;
         const mask=this.brushMaskCtx.getImageData(0,0,w,h).data; let hasMask=false;for(let i=3;i<mask.length;i+=4){if(mask[i]>0){hasMask=true;break}}
         const pinFactor=(x,y)=>{if(!this.pins.length)return 1;let md=Infinity;for(const p of this.pins)md=Math.min(md,Math.hypot(x-p.x,y-p.y));return Math.min(1,md/100)};
         const clamp=v=>Math.max(0,Math.min(255,v));
         for(let y=0;y<h;y++)for(let x=0;x<w;x++){
             const idx=(y*w+x)*4;let sx=x,sy=y,fac=hasMask?(mask[idx+3]>128):true,pf=pinFactor(x,y);
-            if(distort&&fac&&this.currentDistortFX!=='none'){
-                switch(this.currentDistortFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break;case'barrel':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r2=nx*nx+ny*ny,k=1+amt/160*r2;sx=w/2+nx*(w/2)/k;sy=h/2+ny*(h/2)/k}break;case'fisheye':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r=Math.hypot(nx,ny),f=1+(amt/80)*r*r;sx=w/2+nx*(w/2)*f;sy=h/2+ny*(h/2)*f}break;case'ripple':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.sin(r*.08-t*5)*amt/35*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'twist':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/500),a=Math.atan2(dy,dx)+q*q*(amt/18)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'bulge':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/320),f=1+(amt/90)*q*q;sx=w/2+dx*f;sy=h/2+dy*f}break;case'radial':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),f=1+Math.sin(r*.025-t*3)*amt/180*pf;sx=w/2+dx*f;sy=h/2+dy*f}break;case'kaleido':{let dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),seg=Math.PI/4;a=((a+Math.PI*2)%seg);if(a>seg/2)a=seg-a;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'turbulence':{sx+=Math.sin(y*.055+t*2.7)*amt*.55*pf+Math.sin(y*.013-t)*amt*.22;sy+=Math.cos(x*.045-t*2.1)*amt*.45*pf+Math.sin(x*.017+t)*amt*.2}break;case'scanwarp':{sy+=Math.sin(y*.22+t*7)*amt*.22*pf;sx+=Math.sin(y*.035+t*3)*amt*.5*pf}break;case'blockwarp':{const bs=40,bx=Math.floor(x/bs)*bs,by=Math.floor(y/bs)*bs,q=Math.sin((bx+by)*.08+t*3)*amt*.8*pf;sx+=q;sy+=Math.cos((bx-by)*.08+t*2)*amt*.5*pf}break;case'rgbwave':sx+=Math.sin(y*.06+t*4)*amt*.35*pf;break}
+            if(distort&&fac&&this.currentDistortFXs.size){
+                for(const distortionFX of this.currentDistortFXs){ switch(distortionFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break;case'barrel':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r2=nx*nx+ny*ny,k=1+amt/160*r2;sx=w/2+nx*(w/2)/k;sy=h/2+ny*(h/2)/k}break;case'fisheye':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r=Math.hypot(nx,ny),f=1+(amt/80)*r*r;sx=w/2+nx*(w/2)*f;sy=h/2+ny*(h/2)*f}break;case'ripple':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.sin(r*.08-t*5)*amt/35*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'twist':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/500),a=Math.atan2(dy,dx)+q*q*(amt/18)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'bulge':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/320),f=1+(amt/90)*q*q;sx=w/2+dx*f;sy=h/2+dy*f}break;case'radial':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),f=1+Math.sin(r*.025-t*3)*amt/180*pf;sx=w/2+dx*f;sy=h/2+dy*f}break;case'kaleido':{let dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),seg=Math.PI/4;a=((a+Math.PI*2)%seg);if(a>seg/2)a=seg-a;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'turbulence':{sx+=Math.sin(y*.055+t*2.7)*amt*.55*pf+Math.sin(y*.013-t)*amt*.22;sy+=Math.cos(x*.045-t*2.1)*amt*.45*pf+Math.sin(x*.017+t)*amt*.2}break;case'scanwarp':{sy+=Math.sin(y*.22+t*7)*amt*.22*pf;sx+=Math.sin(y*.035+t*3)*amt*.5*pf}break;case'blockwarp':{const bs=40,bx=Math.floor(x/bs)*bs,by=Math.floor(y/bs)*bs,q=Math.sin((bx+by)*.08+t*3)*amt*.8*pf;sx+=q;sy+=Math.cos((bx-by)*.08+t*2)*amt*.5*pf}break;case'rgbwave':sx+=Math.sin(y*.06+t*4)*amt*.35*pf;break} }
             }
             if(this.meshEnabled&&fac){const mp=this.meshSample(x,y,w,h);const gx=x/w*(this.meshDensity-1),gy=y/h*(this.meshDensity-1),i=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gx))),j=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*this.meshDensity+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1),ox=(p00.ox*(1-u)*(1-v)+p10.ox*u*(1-v)+p01.ox*(1-u)*v+p11.ox*u*v),oy=(p00.oy*(1-u)*(1-v)+p10.oy*u*(1-v)+p01.oy*(1-u)*v+p11.oy*u*v);sx+=(mp.x-ox);sy+=(mp.y-oy)}
             const rr=this.transformRotation*Math.PI/180,cx=w/2,cy=h/2,tx=sx-cx,ty=sy-cy;sx=tx*Math.cos(rr)-ty*Math.sin(rr)+cx-this.transformX;sy=tx*Math.sin(rr)+ty*Math.cos(rr)+cy-this.transformY;
             sx=Math.max(0,Math.min(w-1,sx|0));sy=Math.max(0,Math.min(h-1,sy|0));let si=(sy*w+sx)*4,r=s[si],g=s[si+1],b=s[si+2],a=s[si+3];
             if(fac){
-                if(styl){switch(stylType){case'pixelate':{const q=12,px=Math.floor(sx/q)*q,py=Math.floor(sy/q)*q,ii=(Math.min(h-1,py)*w+Math.min(w-1,px))*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'polar':{const rr=Math.hypot(sx-w/2,sy-h/2),aa=Math.atan2(sy-h/2,sx-w/2);const px=Math.max(0,Math.min(w-1,(w/2+Math.cos(aa)*Math.floor(rr/10)*10)|0)),py=Math.max(0,Math.min(h-1,(h/2+Math.sin(aa)*Math.floor(rr/10)*10)|0)),ii=(py*w+px)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'slices':{const ii=(sy*w+Math.max(0,Math.min(w-1,sx+25))) *4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'jitter':if(Math.random()>.7){r=Math.min(255,r+40);g=Math.max(0,g-30)}break;case'melt':{const yy=Math.max(0,Math.min(h-1,(sy+Math.sin(sx*.05+t)*20)|0)),ii=(yy*w+sx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'wobble':{const xx=Math.max(0,Math.min(w-1,(sx+Math.sin(sy*.04+t*4)*12)|0)),ii=(sy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'shake':{const sh=Math.sin(t*8)*8,yy=Math.max(0,Math.min(h-1,sy+sh|0)),xx=Math.max(0,Math.min(w-1,sx+sh|0)),ii=(yy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'edges':{const v=(r+g+b)/3;r=v>120?0:255;g=v>120?255:0;b=255}break;case'solarize':r=r>128?255-r:r;g=g>128?255-g:g;b=b>128?255-b:b;break;case'dotmatrix':if(sx%6>2||sy%6>2){r*=.2;g*=.2;b*=.2}break;case'posterize':r=Math.floor(r/64)*64;g=Math.floor(g/64)*64;b=Math.floor(b/64)*64;break;case'duotone':{const gr=(r+g+b)/3;r=gr*.4;g=gr*.3;b=gr*.9}break}}
+                if(styl&&stylTypes.length){for(const stylType of stylTypes){switch(stylType){case'pixelate':{const q=12,px=Math.floor(sx/q)*q,py=Math.floor(sy/q)*q,ii=(Math.min(h-1,py)*w+Math.min(w-1,px))*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'polar':{const rr=Math.hypot(sx-w/2,sy-h/2),aa=Math.atan2(sy-h/2,sx-w/2);const px=Math.max(0,Math.min(w-1,(w/2+Math.cos(aa)*Math.floor(rr/10)*10)|0)),py=Math.max(0,Math.min(h-1,(h/2+Math.sin(aa)*Math.floor(rr/10)*10)|0)),ii=(py*w+px)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'slices':{const ii=(sy*w+Math.max(0,Math.min(w-1,sx+25))) *4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'jitter':if(Math.random()>.7){r=Math.min(255,r+40);g=Math.max(0,g-30)}break;case'melt':{const yy=Math.max(0,Math.min(h-1,(sy+Math.sin(sx*.05+t)*20)|0)),ii=(yy*w+sx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'wobble':{const xx=Math.max(0,Math.min(w-1,(sx+Math.sin(sy*.04+t*4)*12)|0)),ii=(sy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'shake':{const sh=Math.sin(t*8)*8,yy=Math.max(0,Math.min(h-1,sy+sh|0)),xx=Math.max(0,Math.min(w-1,sx+sh|0)),ii=(yy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'edges':{const v=(r+g+b)/3;r=v>120?0:255;g=v>120?255:0;b=255}break;case'solarize':r=r>128?255-r:r;g=g>128?255-g:g;b=b>128?255-b:b;break;case'dotmatrix':if(sx%6>2||sy%6>2){r*=.2;g*=.2;b*=.2}break;case'posterize':r=Math.floor(r/64)*64;g=Math.floor(g/64)*64;b=Math.floor(b/64)*64;break;case'duotone':{const gr=(r+g+b)/3;r=gr*.4;g=gr*.3;b=gr*.9}break}}}
                 if(badtv){const yy=((sy+t*tvR*150)%h+h)%h,ii=((yy|0)*w+sx)*4,n=Math.sin(sy*tvT+t*10)*15+(Math.random()-.5)*tvF*100;r=clamp(s[ii]+n);g=clamp(s[ii+1]+n);b=clamp(s[ii+2]+n)}
                 if(bc){r=(r-128)*cont+128+bright;g=(g-128)*cont+128+bright;b=(b-128)*cont+128+bright}
                 if(chrom){r=s[(sy*w+Math.max(0,sx-ca))*4];b=s[(sy*w+Math.min(w-1,sx+ca))*4]}
@@ -706,7 +706,12 @@ setupNewFeatures(){
             d[idx]=clamp(r);d[idx+1]=clamp(g);d[idx+2]=clamp(b);d[idx+3]=a;
         }
     }
-    drawEnvironment(ctx){const type=this.$('environment-fx').value;if(type==='none')return;const amount=+this.$('environment-amount').value/100,speed=+this.$('environment-speed').value,t=this.time*speed,w=960,h=540;ctx.save();
+    drawEnvironment(ctx){
+        const sel=this.$('environment-fx');
+        const types=[...sel.selectedOptions].map(o=>o.value).filter(v=>v!=='none');
+        if(!types.length)return;
+        const amount=+this.$('environment-amount').value/100,speed=+this.$('environment-speed').value,t=this.time*speed,w=960,h=540;
+        for(const type of types){ctx.save();
         if(type==='rain'||type==='snow'){ctx.globalAlpha=.15+.65*amount;ctx.strokeStyle=type==='rain'?'#9ddcff':'#fff';ctx.lineWidth=1.5;const n=Math.floor(180*amount+20);for(let i=0;i<n;i++){let x=(i*83+t*120)%w,y=(i*47+t*(type==='rain'?500:100))%h;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(type==='rain'?-3:1),y+(type==='rain'?14:5));ctx.stroke()}}
         else if(type==='space'){ctx.globalAlpha=.3+.7*amount;ctx.fillStyle='#fff';for(let i=0;i<180*amount;i++){let x=(i*97)%w,y=(i*53)%h;ctx.fillRect(x,y,1+(i%2),1+(i%2))}}
         else if(type==='fog'||type==='smoke'){ctx.globalAlpha=.08+.22*amount;ctx.fillStyle='#d9e0e8';for(let i=0;i<10;i++){const x=(i*130+t*20)%1100-70,y=80+(i*61)%420;ctx.beginPath();ctx.arc(x,y,70+(i%3)*30,0,Math.PI*2);ctx.fill()}}
@@ -715,7 +720,18 @@ setupNewFeatures(){
         else if(type==='wind'){ctx.globalAlpha=.2+.5*amount;ctx.strokeStyle='#d7f1ff';for(let j=0;j<14;j++){ctx.beginPath();ctx.moveTo((j*73+t*100)%w,30+j*38);ctx.quadraticCurveTo(400,10+j*38,960,40+j*38);ctx.stroke()}}
         else if(type==='water'){ctx.globalAlpha=.15+.35*amount;ctx.strokeStyle='#6fdcff';for(let y=0;y<h;y+=25){ctx.beginPath();for(let x=0;x<=w;x+=20)ctx.lineTo(x,y+Math.sin(x*.03+t*2+y)*5*amount);ctx.stroke()}}
         else if(type==='ice'){ctx.globalAlpha=.15+.35*amount;ctx.fillStyle='#c9f4ff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#fff';for(let i=0;i<20;i++){ctx.beginPath();ctx.moveTo(i*60,0);ctx.lineTo(i*60+100,h);ctx.stroke()}}
-        ctx.restore();
+        ctx.restore();}
+    }
+    applyExtraFX(ctx,time){
+        const E=this.extraFXs||new Set(), a=+this.$('extra-amount').value/100,w=960,h=540; if(!E.size)return;
+        if(E.has('rgb')){ctx.save();ctx.globalAlpha=.18+.35*a;ctx.globalCompositeOperation='screen';ctx.drawImage(ctx.canvas,-8*a,0);ctx.drawImage(ctx.canvas,8*a,0);ctx.restore()}
+        if(E.has('shake')){ctx.save();ctx.globalAlpha=.18+.25*a;ctx.globalCompositeOperation='screen';ctx.drawImage(ctx.canvas,Math.sin(time*18)*10*a,Math.cos(time*15)*6*a);ctx.restore()}
+        if(E.has('echo')){ctx.save();ctx.globalAlpha=.12+.18*a;ctx.globalCompositeOperation='screen';for(let k=1;k<=3;k++)ctx.drawImage(ctx.canvas,-k*8*a,0,w,h);ctx.restore()}
+        if(E.has('glow')){ctx.save();ctx.globalAlpha=.18+.35*a;ctx.globalCompositeOperation='screen';ctx.filter=`blur(${2+12*a}px)`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
+        if(E.has('negative')){ctx.save();ctx.globalAlpha=.2+.8*a;ctx.filter=`invert(${a})`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
+        if(E.has('vignette')){const g=ctx.createRadialGradient(w/2,h/2,100,w/2,h/2,650);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${.25+.55*a})`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+        if(E.has('pixel')){ctx.save();ctx.globalAlpha=.2+.5*a;ctx.filter=`contrast(${1+a*2}) saturate(${1+a})`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
+        if(E.has('vhs')){ctx.save();ctx.globalAlpha=.12+.3*a;ctx.fillStyle='#fff';for(let y=0;y<h;y+=5)ctx.fillRect(0,y,w,1);ctx.restore()}
     }
     applyPostFX(ctx, sourceCanvas, time, isExport=false){
         const A=this.aeFX, amt=this.aeAmount/100, w=960,h=540;
@@ -774,7 +790,8 @@ setupNewFeatures(){
         ctx.drawImage(frame,0,0); this.drawLayers(ctx,time);
         if(this.$('chk-saber').checked&&this.pins.length){ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowColor=this.$('color-saber').value;ctx.shadowBlur=+this.$('slide-saber-glow').value;for(const p of this.pins){ctx.strokeStyle=this.$('color-saber').value;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.sin(time*3)*80,p.y+Math.cos(time*2)*80);ctx.stroke()}ctx.restore()}
         this.drawEnvironment(ctx);
-        this.applyPostFX(ctx,frame,time,isExport);
+        this.applyExtraFX(ctx,time);
+        this.applyPostFX(ctx,ctx.canvas,time,isExport);
     }
     animate(now=0){if(!this.exporting&&now-this.lastFrame>66){this.lastFrame=now;this.time+=.03;this.renderFrameTo(this.ctx,this.time);this.pins.forEach(p=>{this.ctx.beginPath();this.ctx.arc(p.x,p.y,6,0,Math.PI*2);this.ctx.fillStyle='#f59e0b';this.ctx.fill()});if(this.interactionMode==='mask'){this.ctx.save();this.ctx.globalAlpha=.2;this.ctx.drawImage(this.brushMaskCanvas,0,0);this.ctx.restore()}}requestAnimationFrame(t=>this.animate(t))}
     async handleAdvancedExport(){
