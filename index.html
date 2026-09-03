@@ -3,28 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <title>editnew - Advanced Glitch & Motion FX Pro</title>
-    <link rel="stylesheet" href="styles.css">
+    <link real="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.4.5/gifshot.min.js"></script>
     <style>
-        /* CSS Cơ bản bổ sung để giao diện cân đối khi thêm nút */
-        body { background: #111; color: #fff; font-family: sans-serif; padding: 20px; }
-        #app-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        #preview-window { background: #000; border: 2px solid #333; border-radius: 8px; overflow: hidden; }
-        #fx-controls-panel { display: flex; gap: 20px; background: #222; padding: 15px; border-radius: 8px; width: 100%; max-width: 800px; justify-content: space-around; align-items: center; }
-        .slider-group { display: flex; flex-direction: column; gap: 5px; }
-        #toolbar { background: #222; padding: 15px; border-radius: 8px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 10px; }
-        .fx-section { display: flex; flex-wrap: wrap; gap: 8px; }
-        button { background: #333; color: white; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #444; }
-        button.active { background: #2563eb !important; border-color: #3b82f6 !important; }
-        .divider { height: 1px; background: #444; margin: 5px 0; }
-        .upload-section, .export-section { display: flex; gap: 10px; }
+        body { 
+            background: #111; 
+            color: #fff; 
+            font-family: sans-serif; 
+            padding: 20px; 
+            margin: 0;
+        }
+        #app-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        #preview-window { 
+            background: #000; 
+            border: 2px solid #333; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        /* MÀN HÌNH TO HƠN: Cấu hình hiển thị Canvas lớn và rõ nét */
+        #videoCanvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            background: #1a1a1a;
+        }
+        #fx-controls-panel { 
+            display: flex; 
+            gap: 20px; 
+            background: #222; 
+            padding: 15px; 
+            border-radius: 8px; 
+            width: 100%; 
+            max-width: 960px; 
+            justify-content: space-around; 
+            align-items: center; 
+            box-sizing: border-box;
+        }
+        .slider-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+        }
+        #toolbar { 
+            background: #222; 
+            padding: 15px; 
+            border-radius: 8px; 
+            width: 100%; 
+            max-width: 960px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            box-sizing: border-box;
+        }
+        .fx-section { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+        }
+        button { 
+            background: #333; 
+            color: white; 
+            border: 1px solid #555; 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        button:hover { 
+            background: #444; 
+        }
+        button.active { 
+            background: #2563eb !important; 
+            border-color: #3b82f6 !important; 
+        }
+        .divider { 
+            height: 1px; 
+            background: #444; 
+            margin: 5px 0; 
+        }
+        .upload-section, .export-section { 
+            display: flex; 
+            gap: 10px; 
+        }
     </style>
 </head>
 <body>
     <div id="app-container">
+        <!-- ĐÃ ĐƯỢC TĂNG KÍCH THƯỚC LÊN 960x540 -->
         <div id="preview-window">
-            <canvas id="videoCanvas" width="800" height="450"></canvas>
+            <canvas id="videoCanvas" width="960" height="540"></canvas>
         </div>
 
         <div id="fx-controls-panel">
@@ -38,7 +111,7 @@
             </div>
             <div class="slider-group" style="margin-left: 15px;">
                 <label style="min-width: auto; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                    <input type="checkbox" id="toggle-greenscreen"> 🟢 Phông xanh 100%
+                    <input type="checkbox" id="toggle-greenscreen"> 🟢 Phông xanh dưới hình ảnh
                 </label>
             </div>
         </div>
@@ -56,7 +129,6 @@
                 
                 <div class="divider" style="width: 100%;"></div>
                 
-                <!-- Hiệu ứng cũ -->
                 <button id="btn-fx-none" class="active">⏹ Giữ ảnh gốc</button>
                 <button id="btn-fx-stretch">💇 Co giãn sợi tóc</button>
                 <button id="btn-fx-wave">🌊 Uốn gợn sóng</button>
@@ -64,8 +136,6 @@
                 <button id="btn-fx-bend">🥑 Uốn mềm mại</button>
                 <button id="btn-fx-glitch" style="border-color: #06b6d4;">📺 Glitch RGB Split</button>
                 <button id="btn-fx-zoom" style="border-color: #ec4899;">🔍 Co giãn Zoom</button>
-
-                <!-- 🌟 HIỆU ỨNG BÓP MÉO MỚI THÊM VÀO ĐÂY -->
                 <button id="btn-fx-mirror" style="border-color: #f59e0b;">🪞 Gương (Mirror)</button>
                 <button id="btn-fx-fanwarp" style="border-color: #f59e0b;">🌟 Biến dạng quạt</button>
                 <button id="btn-fx-swirl" style="border-color: #f59e0b;">🌪️ Xoáy nước (Swirl)</button>
@@ -94,7 +164,6 @@
                 this.amount = 30;
                 this.useGreenScreen = false;
                 
-                // Cập nhật danh sách hiệu ứng đầy đủ
                 this.fxModes = ['none', 'stretch', 'wave', 'wavewarp', 'bend', 'glitch', 'zoom', 'mirror', 'fanwarp', 'swirl', 'pinch', 'tile'];
                 
                 this.initEvents();
@@ -146,8 +215,8 @@
                             this.bgImage = img; 
                             this.pins = []; 
                             this.maskZone = null;
-                            const maxBoundingWidth = 800;
-                            const maxBoundingHeight = 450;
+                            const maxBoundingWidth = 960;
+                            const maxBoundingHeight = 540;
                             let newWidth = img.width;
                             let newHeight = img.height;
                             if (img.width > maxBoundingWidth || img.height > maxBoundingHeight) {
@@ -170,11 +239,14 @@
 
                 this.canvas.addEventListener('mousedown', (e) => {
                     const rect = this.canvas.getBoundingClientRect();
-                    const mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                    const mouseX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+                    const mouseY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+                    const mousePos = { x: mouseX, y: mouseY };
+                    
                     if (this.interactionMode === 'pin') {
                         this.pins.push(mousePos); 
                     } else if (this.interactionMode === 'mask') {
-                        this.maskZone = { x: mousePos.x, y: mousePos.y, r: 110 };
+                        this.maskZone = { x: mousePos.x, y: mousePos.y, r: 130 };
                     }
                 });
 
@@ -197,19 +269,24 @@
                 }
             }
 
-            // Thuật toán cốt lõi xử lý biến dạng Pixel (Distortion Core)
             applyDistortion(srcData, dstData, width, height) {
                 const src = srcData.data;
                 const dst = dstData.data;
                 const amt = this.amount;
                 const t = this.time;
 
+                if (this.currentFX === 'none') {
+                    for (let i = 0; i < src.length; i++) {
+                        dst[i] = src[i];
+                    }
+                    return;
+                }
+
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         let srcX = x;
                         let srcY = y;
 
-                        // Kiểm tra Mask Zone (Vùng khoanh vùng)
                         let inMask = true;
                         if (this.maskZone) {
                             const dx = x - this.maskZone.x;
@@ -219,7 +296,6 @@
                             }
                         }
 
-                        // Kiểm tra tầm ảnh hưởng của các điểm Pin ghim neo chống bóp méo
                         let pinFactor = 1;
                         if (this.pins.length > 0) {
                             let minDist = Infinity;
@@ -229,7 +305,7 @@
                                 const d = Math.sqrt(dx * dx + dy * dy);
                                 if (d < minDist) minDist = d;
                             });
-                            pinFactor = Math.min(1, minDist / 80); // Càng gần điểm ghim ảnh càng ít bị móp méo
+                            pinFactor = Math.min(1, minDist / 100);
                         }
 
                         if (inMask) {
@@ -241,7 +317,6 @@
                                     srcX += Math.sin(y * 0.05 + t) * (amt * 0.4) * pinFactor;
                                     break;
                                 case 'wavewarp':
-                                    // Giả lập hiệu ứng Wave Warp Alight Motion phối hợp cả X lẫn Y
                                     srcX += Math.sin(y * 0.08 + t * 1.5) * (amt * 0.3) * pinFactor;
                                     srcY += Math.cos(x * 0.08 + t * 1.5) * (amt * 0.2) * pinFactor;
                                     break;
@@ -255,14 +330,12 @@
                                     srcX = width / 2 + zx * zFactor;
                                     srcY = height / 2 + zy * zFactor;
                                     break;
-                                
-                                /* --- CÁC HIỆU ỨNG MỚI ĐƯỢC THÊM VÀO --- */
-                                case 'mirror': // Hiệu ứng Gương lật đối xứng tâm
+                                case 'mirror':
                                     if (x > width / 2) {
                                         srcX = width - x;
                                     }
                                     break;
-                                case 'fanwarp': // Biến dạng hình quạt góc xoay
+                                case 'fanwarp':
                                     const fx = x - width / 2;
                                     const fy = y - height / 2;
                                     const angleFan = Math.atan2(fy, fx) + Math.sin(t) * (amt / 50) * pinFactor;
@@ -270,30 +343,29 @@
                                     srcX = width / 2 + Math.cos(angleFan) * distFan;
                                     srcY = height / 2 + Math.sin(angleFan) * distFan;
                                     break;
-                                case 'swirl': // Hiệu ứng xoáy nước (Swirl Distortion)
+                                case 'swirl':
                                     const sx = x - (this.maskZone ? this.maskZone.x : width / 2);
                                     const sy = y - (this.maskZone ? this.maskZone.y : height / 2);
                                     const sDist = Math.sqrt(sx * sx + sy * sy);
-                                    if (sDist < 200) {
-                                        const swirlAmount = ((200 - sDist) / 200) * (amt / 10) * Math.sin(t) * pinFactor;
+                                    if (sDist < 250) {
+                                        const swirlAmount = ((250 - sDist) / 250) * (amt / 10) * Math.sin(t) * pinFactor;
                                         const sAngle = Math.atan2(sy, sx) + swirlAmount;
                                         srcX = (this.maskZone ? this.maskZone.x : width / 2) + Math.cos(sAngle) * sDist;
                                         srcY = (this.maskZone ? this.maskZone.y : height / 2) + Math.sin(sAngle) * sDist;
                                     }
                                     break;
-                                case 'pinch': // Hiệu ứng Hút tâm / Đẩy lồi (Pinch/Bulge)
+                                case 'pinch':
                                     const px = x - (this.maskZone ? this.maskZone.x : width / 2);
                                     const py = y - (this.maskZone ? this.maskZone.y : height / 2);
                                     const pDist = Math.sqrt(px * px + py * py);
-                                    if (pDist < 250) {
-                                        // Biến thiên lồi lõm dựa vào hàm Sin
+                                    if (pDist < 300) {
                                         const bindFactor = Math.sin(t) * (amt / 100); 
-                                        const pScale = Math.pow(pDist / 250, bindFactor * pinFactor);
+                                        const pScale = Math.pow(pDist / 300, bindFactor * pinFactor);
                                         srcX = (this.maskZone ? this.maskZone.x : width / 2) + px * pScale;
                                         srcY = (this.maskZone ? this.maskZone.y : height / 2) + py * pScale;
                                     }
                                     break;
-                                case 'tile': // Hiệu ứng lặp gạch gương xếp lớp (Tile Shift)
+                                case 'tile':
                                     const tileScale = 1 + (amt / 50);
                                     srcX = (x * tileScale + t * 20) % width;
                                     srcY = (y * tileScale) % height;
@@ -303,22 +375,20 @@
                             }
                         }
 
-                        // Bo ép cạnh biên không cho tràn bộ nhớ màn hình pixel
                         srcX = Math.max(0, Math.min(width - 1, Math.floor(srcX)));
                         srcY = Math.max(0, Math.min(height - 1, Math.floor(srcY)));
 
                         const dstIdx = (y * width + x) * 4;
                         const srcIdx = (srcY * width + srcX) * 4;
 
-                        // Xử lý riêng biệt cho hiệu ứng Glitch RGB Split tách kênh màu
                         if (this.currentFX === 'glitch' && inMask) {
                             const offset = Math.floor(Math.sin(y * 0.1 + t * 5) * (amt * 0.3) * pinFactor);
                             let rX = Math.max(0, Math.min(width - 1, srcX + offset));
                             let bX = Math.max(0, Math.min(width - 1, srcX - offset));
                             
-                            dst[dstIdx]     = src[(srcY * width + rX) * 4];     // Kênh Đỏ R
-                            dst[dstIdx + 1] = src[srcIdx + 1];                  // Kênh Xanh G
-                            dst[dstIdx + 2] = src[(srcY * width + bX) * 4 + 2]; // Kênh Lam B
+                            dst[dstIdx]     = src[(srcY * width + rX) * 4];     
+                            dst[dstIdx + 1] = src[srcIdx + 1];                  
+                            dst[dstIdx + 2] = src[(srcY * width + bX) * 4 + 2]; 
                             dst[dstIdx + 3] = src[srcIdx + 3];
                         } else {
                             dst[dstIdx]     = src[srcIdx];
@@ -335,27 +405,36 @@
                 const w = this.canvas.width;
                 const h = this.canvas.height;
 
+                this.ctx.clearRect(0, 0, w, h);
                 if (this.useGreenScreen) {
                     this.ctx.fillStyle = '#00ff00';
                     this.ctx.fillRect(0, 0, w, h);
-                } else if (this.bgImage) {
-                    this.ctx.drawImage(this.bgImage, 0, 0, w, h);
                 } else {
                     this.ctx.fillStyle = '#1e1e24';
                     this.ctx.fillRect(0, 0, w, h);
+                }
+
+                if (this.bgImage) {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = w;
+                    tempCanvas.height = h;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(this.bgImage, 0, 0, w, h);
+
+                    if (this.currentFX !== 'none') {
+                        const srcData = tempCtx.getImageData(0, 0, w, h);
+                        const dstData = tempCtx.createImageData(w, h);
+                        this.applyDistortion(srcData, dstData, w, h);
+                        tempCtx.putImageData(dstData, 0, 0);
+                    }
+                    
+                    this.ctx.drawImage(tempCanvas, 0, 0);
+                } else {
                     this.ctx.fillStyle = '#666';
-                    this.ctx.font = '16px Arial';
-                    this.ctx.fillText('Vui lòng tải ảnh lên để bắt đầu biên tập...', w/2 - 140, h/2);
+                    this.ctx.font = '18px Arial';
+                    this.ctx.fillText('Vui lòng tải ảnh lên để bắt đầu biên tập...', w/2 - 160, h/2);
                 }
 
-                if (this.bgImage && this.currentFX !== 'none') {
-                    const srcData = this.ctx.getImageData(0, 0, w, h);
-                    const dstData = this.ctx.createImageData(w, h);
-                    this.applyDistortion(srcData, dstData, w, h);
-                    this.ctx.putImageData(dstData, 0, 0);
-                }
-
-                // Vẽ các điểm Pins (Điểm neo định vị)
                 this.pins.forEach(pin => {
                     this.ctx.beginPath();
                     this.ctx.arc(pin.x, pin.y, 6, 0, 2 * Math.PI);
@@ -365,15 +444,12 @@
                     this.ctx.stroke();
                 });
 
-                // Vẽ Mask Zone vòng tròn xử lý dữ liệu ảnh
                 if (this.maskZone) {
                     this.ctx.beginPath();
                     this.ctx.arc(this.maskZone.x, this.maskZone.y, this.maskZone.r, 0, 2 * Math.PI);
-                    this.ctx.strokeStyle = 'rgba(147, 51, 234, 0.6)';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.setLineDash();
+                    this.ctx.strokeStyle = 'rgba(147, 51, 234, 0.7)';
+                    this.ctx.lineWidth = 3;
                     this.ctx.stroke();
-                    this.ctx.setLineDash([]);
                 }
 
                 requestAnimationFrame(() => this.animate());
@@ -394,17 +470,38 @@
 
                 for (let i = 0; i < duration; i++) {
                     this.time = i * 0.15 * this.speed;
-                    this.ctx.drawImage(this.bgImage, 0, 0, w, h);
                     
-                    const srcData = this.ctx.getImageData(0, 0, w, h);
-                    const dstData = this.ctx.createImageData(w, h);
-                    this.applyDistortion(srcData, dstData, w, h);
-                    this.ctx.putImageData(dstData, 0, 0);
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = w;
+                    tempCanvas.height = h;
+                    const tempCtx = tempCanvas.getContext('2d');
                     
-                    frames.push(this.canvas.toDataURL('image/jpeg', 0.8));
+                    if (this.useGreenScreen) {
+                        tempCtx.fillStyle = '#00ff00';
+                        tempCtx.fillRect(0, 0, w, h);
+                    } else {
+                        tempCtx.fillStyle = '#1e1e24';
+                        tempCtx.fillRect(0, 0, w, h);
+                    }
+                    
+                    const imgCanvas = document.createElement('canvas');
+                    imgCanvas.width = w;
+                    imgCanvas.height = h;
+                    const imgCtx = imgCanvas.getContext('2d');
+                    imgCtx.drawImage(this.bgImage, 0, 0, w, h);
+
+                    if (this.currentFX !== 'none') {
+                        const srcData = imgCtx.getImageData(0, 0, w, h);
+                        const dstData = imgCtx.createImageData(w, h);
+                        this.applyDistortion(srcData, dstData, w, h);
+                        imgCtx.putImageData(dstData, 0, 0);
+                    }
+                    
+                    tempCtx.drawImage(imgCanvas, 0, 0);
+                    frames.push(tempCanvas.toDataURL('image/jpeg', 0.8));
                 }
 
-                this.time = backupTime; // Khôi phục thời gian thực cho preview canvas
+                this.time = backupTime;
 
                 gifshot.createGIF({
                     images: frames,
@@ -425,7 +522,6 @@
             }
         }
 
-        // Khởi tạo Engine chạy ứng dụng khi DOM sẵn sàng
         window.addEventListener('DOMContentLoaded', () => {
             new MotionFXEngine();
         });
