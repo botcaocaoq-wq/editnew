@@ -1,1283 +1,1320 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Texture Studio</title>
+<link rel="stylesheet" href="styles.css">
 
-    <title>Texture Studio</title>
-
-    <link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 
 <body>
 
-<!-- =====================================================
-     TOP BAR
-===================================================== -->
-
 <header class="topbar">
-
-    <div class="logo">
-        TEXTURE <span>STUDIO</span>
-    </div>
+    <div class="logo">TEXTURE<span>STUDIO</span></div>
 
     <div class="toolbar">
-
-        <label class="button primary">
-            ⬆ Upload Model
-
-            <input
-                id="modelInput"
-                type="file"
-                accept=".glb,.gltf"
-                hidden
-            >
-        </label>
-
-        <label class="button">
-            ＋ Add Texture
-
-            <input
-                id="textureInput"
-                type="file"
-                accept="image/*"
-                hidden
-            >
-        </label>
-
-        <button
-            id="selectButton"
-            class="button active"
-        >
-            ⌖ Chọn bề mặt
-        </button>
-
+        <button id="uploadModel">＋ Model</button>
+        <button id="uploadTexture">＋ Texture</button>
+        <button id="decalMode">▣ Decal</button>
+        <button id="paintMode">✎ Paint</button>
+        <button id="autoUV">UV</button>
+        <button id="undoBtn">↶</button>
+        <button id="redoBtn">↷</button>
+        <button id="saveProject">Save</button>
+        <button id="exportGLB" class="primary">Export GLB</button>
     </div>
 
+    <input id="modelInput" type="file" accept=".glb,.gltf,.bin" hidden>
+    <input id="textureInput" type="file" accept="image/*" hidden>
 </header>
 
+<main class="layout">
 
-<!-- =====================================================
-     MAIN
-===================================================== -->
-
-<main class="main">
-
-
-    <!-- =================================================
-         TEXTURE LIBRARY
-    ================================================== -->
-
-    <aside class="leftPanel">
-
+    <!-- LEFT -->
+    <aside class="panel library">
         <div class="panelTitle">
-            TEXTURE LIBRARY
+            <span>TEXTURE LIBRARY</span>
+            <small>POLY HAVEN</small>
         </div>
 
+        <input id="searchBox" class="search" placeholder="Search wood, stone, metal...">
 
-        <div class="searchBox">
-
-            <input
-                id="textureSearch"
-                type="text"
-                placeholder="Tìm texture..."
-            >
-
+        <div class="categories">
+            <button data-cat="all" class="active">ALL</button>
+            <button data-cat="wood">WOOD</button>
+            <button data-cat="stone">STONE</button>
+            <button data-cat="metal">METAL</button>
+            <button data-cat="concrete">CONCRETE</button>
+            <button data-cat="ground">GROUND</button>
         </div>
 
-
-        <div
-            id="textureLibrary"
-            class="textureLibrary"
-        >
-
-            <div class="empty">
-
-                Chưa có texture.
-
-                <br><br>
-
-                Nhấn
-                <b>Add Texture</b>
-                để thêm.
-
-            </div>
-
+        <div id="textureList" class="textureList">
+            <div class="loading">Loading Poly Haven...</div>
         </div>
 
+        <div class="credit">
+            Powered by
+            <a href="https://polyhaven.com" target="_blank">Poly Haven</a>
+        </div>
     </aside>
 
 
-    <!-- =================================================
-         3D VIEW
-    ================================================== -->
-
+    <!-- VIEWPORT -->
     <section class="viewport">
 
         <div id="viewer"></div>
 
-
-        <div
-            id="status"
-            class="status"
-        >
-            Chưa tải model
+        <div class="viewerTop">
+            <span id="modelName">No model</span>
+            <span id="selectionInfo">Nothing selected</span>
         </div>
 
+        <div class="crosshair"></div>
 
-        <div class="controlsHint">
-
-            🖱 Kéo để xoay
-            ·
-            Cuộn để zoom
-            ·
-            Click model để chọn
-
+        <div class="bottomTools">
+            <button id="focusBtn">Focus</button>
+            <button id="wireBtn">Wireframe</button>
+            <button id="gridBtn">Grid</button>
         </div>
 
     </section>
 
 
-    <!-- =================================================
-         MATERIAL PANEL
-    ================================================== -->
-
-    <aside class="rightPanel">
+    <!-- RIGHT -->
+    <aside class="panel inspector">
 
         <div class="panelTitle">
-            MATERIAL
+            <span>MATERIAL</span>
+            <small id="selectedName">NONE</small>
         </div>
 
-
-        <div
-            id="selectedObject"
-            class="selectedObject"
-        >
-
-            Chưa chọn bề mặt
-
+        <div class="section">
+            <label>Base Color</label>
+            <div class="colorRow">
+                <input id="baseColor" type="color" value="#ffffff">
+                <span id="baseColorValue">#ffffff</span>
+            </div>
         </div>
 
+        <div class="section">
+            <label>Texture Scale <b id="scaleValue">1.00</b></label>
+            <input id="scale" type="range" min=".05" max="20" step=".05" value="1">
+        </div>
 
-        <!-- SCALE -->
+        <div class="section">
+            <label>Rotation <b id="rotationValue">0°</b></label>
+            <input id="rotation" type="range" min="-180" max="180" step="1" value="0">
+        </div>
 
-        <div class="property">
+        <div class="section">
+            <label>Offset X <b id="offsetXValue">0</b></label>
+            <input id="offsetX" type="range" min="-2" max="2" step=".01" value="0">
+        </div>
 
-            <div class="propertyHeader">
+        <div class="section">
+            <label>Offset Y <b id="offsetYValue">0</b></label>
+            <input id="offsetY" type="range" min="-2" max="2" step=".01" value="0">
+        </div>
 
-                <span>
-                    Texture Scale
-                </span>
+        <div class="section">
+            <label>Roughness <b id="roughnessValue">0.50</b></label>
+            <input id="roughness" type="range" min="0" max="1" step=".01" value=".5">
+        </div>
 
-                <span id="scaleValue">
-                    1.00
-                </span>
+        <div class="section">
+            <label>Metallic <b id="metallicValue">0.00</b></label>
+            <input id="metallic" type="range" min="0" max="1" step=".01" value="0">
+        </div>
 
+        <div class="section">
+            <label>Layers</label>
+
+            <div id="layers">
+                <div class="layer selected">
+                    <span>●</span>
+                    <span>Base Material</span>
+                    <button>×</button>
+                </div>
             </div>
 
-
-            <input
-                id="scale"
-                type="range"
-                min="0.1"
-                max="10"
-                step="0.05"
-                value="1"
-            >
-
+            <button id="newLayer" class="wide">＋ Add Layer</button>
         </div>
 
+        <div class="section">
+            <label>TOOLS</label>
 
-        <!-- ROTATION -->
+            <button id="removeTexture" class="danger wide">
+                Remove Texture
+            </button>
 
-        <div class="property">
-
-            <div class="propertyHeader">
-
-                <span>
-                    Rotation
-                </span>
-
-                <span id="rotationValue">
-                    0°
-                </span>
-
-            </div>
-
-
-            <input
-                id="rotation"
-                type="range"
-                min="0"
-                max="360"
-                step="1"
-                value="0"
-            >
-
+            <button id="resetMaterial" class="wide">
+                Reset Material
+            </button>
         </div>
-
-
-        <!-- ROUGHNESS -->
-
-        <div class="property">
-
-            <div class="propertyHeader">
-
-                <span>
-                    Roughness
-                </span>
-
-                <span id="roughnessValue">
-                    0.50
-                </span>
-
-            </div>
-
-
-            <input
-                id="roughness"
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value="0.5"
-            >
-
-        </div>
-
-
-        <!-- METALLIC -->
-
-        <div class="property">
-
-            <div class="propertyHeader">
-
-                <span>
-                    Metallic
-                </span>
-
-                <span id="metallicValue">
-                    0.00
-                </span>
-
-            </div>
-
-
-            <input
-                id="metallic"
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value="0"
-            >
-
-        </div>
-
-
-        <button
-            id="removeTexture"
-            class="removeButton"
-        >
-
-            🗑 Xóa texture
-
-        </button>
 
     </aside>
 
 </main>
 
-
-<!-- =====================================================
-     THREE.JS
-===================================================== -->
-
-<script type="importmap">
-
-{
-    "imports": {
-
-        "three":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-
-        "three/addons/":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-
-    }
-}
-
-</script>
-
-
-<!-- =====================================================
-     EVERYTHING BELOW IS JAVASCRIPT
-     Không cần index.js
-===================================================== -->
-
 <script type="module">
 
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
 
-import {
-    OrbitControls
-}
-from "three/addons/controls/OrbitControls.js";
+const API = "https://api.polyhaven.com";
 
-import {
-    GLTFLoader
-}
-from "three/addons/loaders/GLTFLoader.js";
+let scene;
+let camera;
+let renderer;
+let controls;
 
+let model = null;
+let selectedMesh = null;
 
-/* =====================================================
-   ELEMENTS
-===================================================== */
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
 
-const viewer =
-    document.getElementById("viewer");
+let textureCache = new Map();
+let polyAssets = [];
 
-const status =
-    document.getElementById("status");
+let history = [];
+let historyIndex = -1;
 
-const library =
-    document.getElementById("textureLibrary");
+let paintMode = false;
+let decalMode = false;
+let wireframe = false;
+let gridVisible = true;
 
-const selectedObject =
-    document.getElementById("selectedObject");
+const viewer = document.getElementById("viewer");
 
-const modelInput =
-    document.getElementById("modelInput");
+init();
+loadPolyHaven();
 
-const textureInput =
-    document.getElementById("textureInput");
+function init(){
 
-const selectButton =
-    document.getElementById("selectButton");
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x101216);
 
-const searchInput =
-    document.getElementById("textureSearch");
-
-const scale =
-    document.getElementById("scale");
-
-const rotation =
-    document.getElementById("rotation");
-
-const roughness =
-    document.getElementById("roughness");
-
-const metallic =
-    document.getElementById("metallic");
-
-
-/* =====================================================
-   THREE.JS SCENE
-===================================================== */
-
-const scene =
-    new THREE.Scene();
-
-scene.background =
-    new THREE.Color(0x0c0e12);
-
-
-const camera =
-    new THREE.PerspectiveCamera(
+    camera = new THREE.PerspectiveCamera(
         45,
-        1,
-        0.01,
-        1000
+        viewer.clientWidth / viewer.clientHeight,
+        .01,
+        5000
     );
 
+    camera.position.set(3,2,5);
 
-camera.position.set(
-    3,
-    2,
-    5
-);
-
-
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias: true
+    renderer = new THREE.WebGLRenderer({
+        antialias:true,
+        preserveDrawingBuffer:true
     });
 
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setSize(viewer.clientWidth,viewer.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
-);
+    viewer.appendChild(renderer.domElement);
 
+    controls = new OrbitControls(camera,renderer.domElement);
+    controls.enableDamping = true;
 
-viewer.appendChild(
-    renderer.domElement
-);
-
-
-/* =====================================================
-   CAMERA
-===================================================== */
-
-const controls =
-    new OrbitControls(
-        camera,
-        renderer.domElement
-    );
-
-
-controls.enableDamping = true;
-
-
-/* =====================================================
-   LIGHT
-===================================================== */
-
-const hemisphere =
-    new THREE.HemisphereLight(
+    const hemi = new THREE.HemisphereLight(
         0xffffff,
-        0x252a34,
+        0x202020,
         2
     );
 
+    scene.add(hemi);
 
-scene.add(hemisphere);
-
-
-const directional =
-    new THREE.DirectionalLight(
+    const key = new THREE.DirectionalLight(
         0xffffff,
         3
     );
 
+    key.position.set(4,8,5);
+    scene.add(key);
 
-directional.position.set(
-    4,
-    6,
-    4
-);
-
-
-scene.add(directional);
-
-
-/* =====================================================
-   GRID
-===================================================== */
-
-const grid =
-    new THREE.GridHelper(
-        10,
-        20
+    const fill = new THREE.DirectionalLight(
+        0x8aaaff,
+        1
     );
 
+    fill.position.set(-4,2,-4);
+    scene.add(fill);
 
-scene.add(grid);
+    window.addEventListener("resize",resize);
 
+    renderer.domElement.addEventListener(
+        "pointerdown",
+        selectObject
+    );
 
-/* =====================================================
-   VARIABLES
-===================================================== */
+    document.getElementById("uploadModel")
+        .onclick = () => document.getElementById("modelInput").click();
 
-const loader =
-    new GLTFLoader();
+    document.getElementById("uploadTexture")
+        .onclick = () => document.getElementById("textureInput").click();
 
+    document.getElementById("modelInput")
+        .addEventListener("change",loadModel);
 
-const raycaster =
-    new THREE.Raycaster();
+    document.getElementById("textureInput")
+        .addEventListener("change",uploadTexture);
 
+    document.getElementById("searchBox")
+        .addEventListener("input",filterTextures);
 
-const mouse =
-    new THREE.Vector2();
+    document.querySelectorAll("[data-cat]")
+        .forEach(btn=>{
+            btn.onclick=()=>{
+                document.querySelectorAll("[data-cat]")
+                    .forEach(x=>x.classList.remove("active"));
 
+                btn.classList.add("active");
+                renderLibrary();
+            };
+        });
 
-let model = null;
+    bindMaterialControls();
 
-let selectedMesh = null;
+    document.getElementById("wireBtn").onclick=toggleWire;
+    document.getElementById("gridBtn").onclick=toggleGrid;
+    document.getElementById("focusBtn").onclick=focusModel;
 
-let selectMode = true;
+    document.getElementById("removeTexture")
+        .onclick=removeTexture;
 
-let textureList = [];
+    document.getElementById("resetMaterial")
+        .onclick=resetMaterial;
 
+    document.getElementById("undoBtn")
+        .onclick=undo;
 
-/* =====================================================
-   RESIZE
-===================================================== */
+    document.getElementById("redoBtn")
+        .onclick=redo;
 
-function resizeViewer() {
+    document.getElementById("saveProject")
+        .onclick=saveProject;
 
-    const width =
-        viewer.clientWidth;
+    document.getElementById("exportGLB")
+        .onclick=exportGLB;
 
-    const height =
-        viewer.clientHeight;
+    document.getElementById("autoUV")
+        .onclick=autoUV;
 
+    document.getElementById("decalMode")
+        .onclick=()=>{
+            decalMode=!decalMode;
+            paintMode=false;
+            updateModeButtons();
+        };
+
+    document.getElementById("paintMode")
+        .onclick=()=>{
+            paintMode=!paintMode;
+            decalMode=false;
+            updateModeButtons();
+        };
+
+    document.getElementById("newLayer")
+        .onclick=addLayer;
+
+    animate();
+}
+
+function resize(){
 
     camera.aspect =
-        width / height;
-
+        viewer.clientWidth /
+        viewer.clientHeight;
 
     camera.updateProjectionMatrix();
 
-
     renderer.setSize(
-        width,
-        height,
-        false
+        viewer.clientWidth,
+        viewer.clientHeight
     );
-
 }
 
+async function loadPolyHaven(){
 
-window.addEventListener(
-    "resize",
-    resizeViewer
-);
+    try{
 
+        const response =
+            await fetch(API + "/assets");
 
-resizeViewer();
+        const data =
+            await response.json();
 
+        polyAssets =
+            Object.entries(data)
+            .filter(([id,a])=>a.type === 1)
+            .map(([id,a])=>({
+                id,
+                ...a
+            }));
 
-/* =====================================================
-   UPLOAD MODEL
-===================================================== */
+        renderLibrary();
 
-modelInput.addEventListener(
-    "change",
-    event => {
+    }catch(error){
 
-        const file =
-            event.target.files[0];
+        document.getElementById("textureList").innerHTML =
+            `<div class="error">
+                Không tải được Poly Haven.<br>
+                Bạn vẫn có thể upload texture riêng.
+            </div>`;
 
-        if (!file)
-            return;
-
-
-        const url =
-            URL.createObjectURL(file);
-
-
-        status.textContent =
-            "Đang tải model...";
-
-
-        loader.load(
-
-            url,
-
-            gltf => {
-
-                if (model) {
-
-                    scene.remove(model);
-
-                }
-
-
-                model =
-                    gltf.scene;
-
-
-                model.traverse(
-                    object => {
-
-                        if (
-                            object.isMesh
-                        ) {
-
-                            object.userData.originalMaterial =
-                                object.material;
-
-                        }
-
-                    }
-                );
-
-
-                scene.add(model);
-
-
-                centerModel(
-                    model
-                );
-
-
-                selectedMesh =
-                    null;
-
-
-                selectedObject.textContent =
-                    "Chưa chọn bề mặt";
-
-
-                status.textContent =
-                    "Model: " +
-                    file.name;
-
-
-                URL.revokeObjectURL(
-                    url
-                );
-
-            },
-
-            undefined,
-
-            error => {
-
-                console.error(error);
-
-                status.textContent =
-                    "Không thể đọc model.";
-
-            }
-
-        );
-
+        console.error(error);
     }
-);
-
-
-/* =====================================================
-   CENTER MODEL
-===================================================== */
-
-function centerModel(root) {
-
-    const box =
-        new THREE.Box3()
-            .setFromObject(root);
-
-
-    const size =
-        box.getSize(
-            new THREE.Vector3()
-        );
-
-
-    const center =
-        box.getCenter(
-            new THREE.Vector3()
-        );
-
-
-    const maxSize =
-        Math.max(
-            size.x,
-            size.y,
-            size.z
-        );
-
-
-    root.position.sub(
-        center
-    );
-
-
-    camera.position.set(
-        maxSize * 1.8,
-        maxSize * 1.2,
-        maxSize * 2.2
-    );
-
-
-    controls.target.set(
-        0,
-        0,
-        0
-    );
-
-
-    controls.update();
-
 }
 
+function filterTextures(){
+    renderLibrary();
+}
 
-/* =====================================================
-   ADD TEXTURE
-===================================================== */
+function renderLibrary(){
 
-textureInput.addEventListener(
-    "change",
-    event => {
+    const list =
+        document.getElementById("textureList");
 
-        const file =
-            event.target.files[0];
+    const query =
+        document.getElementById("searchBox")
+        .value
+        .toLowerCase()
+        .trim();
 
-        if (!file)
-            return;
+    const category =
+        document.querySelector("[data-cat].active")
+        ?.dataset.cat || "all";
 
+    let items = polyAssets.filter(asset=>{
 
-        const url =
-            URL.createObjectURL(file);
-
-
-        textureList.push({
-
-            name:
-                file.name,
-
-            url:
-                url
-
-        });
-
-
-        renderTextureLibrary();
-
-
-        textureInput.value = "";
-
-    }
-);
-
-
-/* =====================================================
-   TEXTURE LIBRARY
-===================================================== */
-
-function renderTextureLibrary() {
-
-    const search =
-        searchInput.value
+        const text =
+            `${asset.name} ${asset.category || ""} ${(asset.tags || []).join(" ")}`
             .toLowerCase();
 
+        const matchSearch =
+            !query || text.includes(query);
 
-    library.innerHTML = "";
+        const matchCategory =
+            category === "all" ||
+            text.includes(category);
 
+        return matchSearch && matchCategory;
+    });
 
-    const filtered =
-        textureList.filter(
-            texture =>
-                texture.name
-                    .toLowerCase()
-                    .includes(search)
-        );
+    items = items.slice(0,60);
 
+    list.innerHTML = "";
 
-    if (
-        filtered.length === 0
-    ) {
+    if(!items.length){
 
-        library.innerHTML = `
+        list.innerHTML =
+            `<div class="empty">No texture found</div>`;
 
-            <div class="empty">
+        return;
+    }
 
-                Không tìm thấy texture.
+    items.forEach(asset=>{
 
+        const card =
+            document.createElement("div");
+
+        card.className="textureCard";
+
+        card.innerHTML = `
+            <img
+              src="${asset.thumbnail_url || ""}"
+              loading="lazy"
+            >
+            <div>
+                <strong>${escapeHTML(asset.name)}</strong>
+                <small>${escapeHTML(asset.category || "PBR")}</small>
             </div>
-
         `;
 
-        return;
+        card.onclick=()=>{
+            applyPolyMaterial(asset);
+        };
 
-    }
-
-
-    filtered.forEach(
-        texture => {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            card.className =
-                "textureCard";
-
-
-            card.innerHTML = `
-
-                <img
-                    src="${texture.url}"
-                    class="texturePreview"
-                >
-
-                <div class="textureInfo">
-
-                    <div class="textureName">
-                        ${texture.name}
-                    </div>
-
-                    <div class="textureType">
-                        IMAGE TEXTURE
-                    </div>
-
-                </div>
-
-            `;
-
-
-            card.addEventListener(
-                "click",
-                () => {
-
-                    applyTexture(
-                        texture
-                    );
-
-                }
-            );
-
-
-            library.appendChild(
-                card
-            );
-
-        }
-    );
-
+        list.appendChild(card);
+    });
 }
 
+async function applyPolyMaterial(asset){
 
-/* =====================================================
-   SEARCH
-===================================================== */
+    if(!selectedMesh){
 
-searchInput.addEventListener(
-    "input",
-    renderTextureLibrary
-);
-
-
-/* =====================================================
-   CLICK MODEL
-===================================================== */
-
-renderer.domElement.addEventListener(
-    "pointerdown",
-    event => {
-
-        if (!selectMode)
-            return;
-
-
-        if (!model)
-            return;
-
-
-        const rect =
-            renderer.domElement
-                .getBoundingClientRect();
-
-
-        mouse.x =
-            (
-                (
-                    event.clientX -
-                    rect.left
-                )
-                /
-                rect.width
-            ) * 2 - 1;
-
-
-        mouse.y =
-            -(
-                (
-                    event.clientY -
-                    rect.top
-                )
-                /
-                rect.height
-            ) * 2 + 1;
-
-
-        raycaster.setFromCamera(
-            mouse,
-            camera
-        );
-
-
-        const hits =
-            raycaster.intersectObject(
-                model,
-                true
-            );
-
-
-        if (
-            hits.length > 0 &&
-            hits[0].object.isMesh
-        ) {
-
-            selectMesh(
-                hits[0].object
-            );
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   SELECT MESH
-===================================================== */
-
-function selectMesh(mesh) {
-
-    selectedMesh =
-        mesh;
-
-
-    selectedObject.textContent =
-        mesh.name ||
-        "Mesh không tên";
-
-
-    status.textContent =
-        "Đã chọn: " +
-        (
-            mesh.name ||
-            "Mesh"
-        );
-
-
-    const material =
-        mesh.material;
-
-
-    if (!material)
-        return;
-
-
-    roughness.value =
-        material.roughness ?? 0.5;
-
-
-    metallic.value =
-        material.metalness ?? 0;
-
-
-    if (material.map) {
-
-        scale.value =
-            material.map.repeat.x;
-
-
-        rotation.value =
-            THREE.MathUtils.radToDeg(
-                material.map.rotation
-            );
-
-    }
-
-
-    updateLabels();
-
-}
-
-
-/* =====================================================
-   APPLY TEXTURE
-===================================================== */
-
-function applyTexture(
-    textureData
-) {
-
-    if (!selectedMesh) {
-
-        status.textContent =
-            "Hãy click vào phần model trước.";
+        alert("Hãy click vào một mesh trước.");
 
         return;
-
     }
 
+    try{
 
-    const textureLoader =
-        new THREE.TextureLoader();
+        const response =
+            await fetch(`${API}/files/${asset.id}`);
 
+        const files =
+            await response.json();
 
-    textureLoader.load(
+        const textureFiles =
+            findTextureFiles(files);
 
-        textureData.url,
+        saveHistory();
 
-        texture => {
+        const loader =
+            new THREE.TextureLoader();
 
-            texture.wrapS =
-                THREE.RepeatWrapping;
+        if(textureFiles.diff){
 
+            const tex =
+                await loader.loadAsync(textureFiles.diff);
 
-            texture.wrapT =
-                THREE.RepeatWrapping;
-
-
-            texture.colorSpace =
+            tex.colorSpace =
                 THREE.SRGBColorSpace;
 
+            tex.wrapS =
+                THREE.RepeatWrapping;
 
-            texture.center.set(
-                0.5,
-                0.5
-            );
-
-
-            texture.repeat.set(
-                Number(scale.value),
-                Number(scale.value)
-            );
-
-
-            texture.rotation =
-                THREE.MathUtils.degToRad(
-                    Number(
-                        rotation.value
-                    )
-                );
-
-
-            const material =
-                selectedMesh.material.clone();
-
-
-            material.map =
-                texture;
-
-
-            material.roughness =
-                Number(
-                    roughness.value
-                );
-
-
-            material.metalness =
-                Number(
-                    metallic.value
-                );
-
-
-            material.needsUpdate =
-                true;
-
+            tex.wrapT =
+                THREE.RepeatWrapping;
 
             selectedMesh.material =
-                material;
+                cloneMaterial(selectedMesh.material);
 
+            selectedMesh.material.map = tex;
 
-            status.textContent =
-                "Đã gắn texture: " +
-                textureData.name;
-
+            textureCache.set(
+                asset.id + "_diff",
+                tex
+            );
         }
 
-    );
+        if(textureFiles.rough){
 
+            const rough =
+                await loader.loadAsync(textureFiles.rough);
+
+            rough.colorSpace =
+                THREE.NoColorSpace;
+
+            selectedMesh.material.roughnessMap =
+                rough;
+        }
+
+        if(textureFiles.normal){
+
+            const normal =
+                await loader.loadAsync(textureFiles.normal);
+
+            normal.colorSpace =
+                THREE.NoColorSpace;
+
+            selectedMesh.material.normalMap =
+                normal;
+        }
+
+        if(textureFiles.ao){
+
+            const ao =
+                await loader.loadAsync(textureFiles.ao);
+
+            ao.colorSpace =
+                THREE.NoColorSpace;
+
+            selectedMesh.material.aoMap =
+                ao;
+
+            if(!selectedMesh.geometry.attributes.uv2){
+
+                selectedMesh.geometry.setAttribute(
+                    "uv2",
+                    selectedMesh.geometry.attributes.uv
+                );
+            }
+        }
+
+        if(textureFiles.metal){
+
+            const metal =
+                await loader.loadAsync(textureFiles.metal);
+
+            metal.colorSpace =
+                THREE.NoColorSpace;
+
+            selectedMesh.material.metalnessMap =
+                metal;
+        }
+
+        selectedMesh.material.needsUpdate=true;
+
+        updateSelectionUI();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Không thể tải material này.");
+    }
 }
 
+function findTextureFiles(obj){
 
-/* =====================================================
-   MATERIAL CONTROLS
-===================================================== */
+    let result = {};
 
-function updateLabels() {
+    function walk(value){
 
-    document.getElementById(
-        "scaleValue"
-    ).textContent =
-        Number(
-            scale.value
-        ).toFixed(2);
+        if(!value) return;
 
+        if(typeof value === "object"){
 
-    document.getElementById(
-        "rotationValue"
-    ).textContent =
-        Math.round(
-            rotation.value
-        ) + "°";
+            for(const key in value){
 
+                const v=value[key];
 
-    document.getElementById(
-        "roughnessValue"
-    ).textContent =
-        Number(
-            roughness.value
-        ).toFixed(2);
+                if(v && typeof v === "object"){
 
+                    if(v.url){
 
-    document.getElementById(
-        "metallicValue"
-    ).textContent =
-        Number(
-            metallic.value
-        ).toFixed(2);
+                        const lower =
+                            `${key} ${v.url}`
+                            .toLowerCase();
 
-}
-
-
-[
-    scale,
-    rotation,
-    roughness,
-    metallic
-
-].forEach(
-    input => {
-
-        input.addEventListener(
-            "input",
-            () => {
-
-                updateLabels();
-
-
-                if (!selectedMesh)
-                    return;
-
-
-                const material =
-                    selectedMesh.material;
-
-
-                if (
-                    material.map
-                ) {
-
-                    material.map.repeat.set(
-
-                        Number(
-                            scale.value
-                        ),
-
-                        Number(
-                            scale.value
+                        if(
+                            lower.includes("diff") ||
+                            lower.includes("albedo") ||
+                            lower.includes("basecolor")
                         )
+                            result.diff ||= v.url;
 
-                    );
+                        if(lower.includes("rough"))
+                            result.rough ||= v.url;
 
+                        if(
+                            lower.includes("nor_gl") ||
+                            lower.includes("normal")
+                        )
+                            result.normal ||= v.url;
 
-                    material.map.rotation =
-                        THREE.MathUtils.degToRad(
-                            Number(
-                                rotation.value
-                            )
-                        );
+                        if(lower.includes("ao"))
+                            result.ao ||= v.url;
 
+                        if(
+                            lower.includes("metal")
+                        )
+                            result.metal ||= v.url;
+                    }
 
-                    material.map.needsUpdate =
-                        true;
+                    walk(v);
+                }
+            }
+        }
+    }
 
+    walk(obj);
+
+    return result;
+}
+
+function cloneMaterial(material){
+
+    if(Array.isArray(material))
+        return material.map(m=>m.clone());
+
+    return material.clone();
+}
+
+function loadModel(event){
+
+    const file =
+        event.target.files[0];
+
+    if(!file) return;
+
+    const url =
+        URL.createObjectURL(file);
+
+    const loader =
+        new GLTFLoader();
+
+    loader.load(
+        url,
+        gltf=>{
+
+            if(model)
+                scene.remove(model);
+
+            model =
+                gltf.scene;
+
+            scene.add(model);
+
+            model.traverse(obj=>{
+
+                if(obj.isMesh){
+
+                    obj.castShadow=true;
+                    obj.receiveShadow=true;
+
+                    if(
+                        obj.material &&
+                        obj.material.map
+                    ){
+                        obj.material.map.colorSpace =
+                            THREE.SRGBColorSpace;
+                    }
                 }
 
+            });
 
-                material.roughness =
-                    Number(
-                        roughness.value
-                    );
+            centerModel();
 
+            document.getElementById("modelName")
+                .textContent=file.name;
 
-                material.metalness =
-                    Number(
-                        metallic.value
-                    );
+            URL.revokeObjectURL(url);
 
-            }
-        );
-
-    }
-);
-
-
-/* =====================================================
-   REMOVE TEXTURE
-===================================================== */
-
-document
-    .getElementById(
-        "removeTexture"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            if (!selectedMesh)
-                return;
-
-
-            const material =
-                selectedMesh.material;
-
-
-            if (
-                material &&
-                material.map
-            ) {
-
-                material.map.dispose();
-
-                material.map = null;
-
-                material.needsUpdate =
-                    true;
-
-            }
-
-
-            status.textContent =
-                "Đã xóa texture.";
-
+        },
+        undefined,
+        error=>{
+            console.error(error);
+            alert("Không thể đọc model.");
         }
     );
+}
 
+function centerModel(){
 
-/* =====================================================
-   SELECT MODE
-===================================================== */
+    if(!model) return;
 
-selectButton.addEventListener(
-    "click",
-    () => {
+    const box =
+        new THREE.Box3().setFromObject(model);
 
-        selectMode =
-            !selectMode;
+    const center =
+        box.getCenter(new THREE.Vector3());
 
+    model.position.sub(center);
 
-        selectButton.classList.toggle(
-            "active",
-            selectMode
-        );
+    const size =
+        box.getSize(new THREE.Vector3());
 
+    const max =
+        Math.max(size.x,size.y,size.z);
 
-        selectButton.textContent =
-            selectMode
-                ? "⌖ Chọn bề mặt"
-                : "✋ Xoay / xem";
+    const distance =
+        max * 2.5;
 
-    }
-);
-
-
-/* =====================================================
-   RENDER
-===================================================== */
-
-function animate() {
-
-    requestAnimationFrame(
-        animate
+    camera.position.set(
+        distance*.8,
+        distance*.6,
+        distance
     );
 
+    controls.target.set(0,0,0);
+    controls.update();
+}
+
+function selectObject(event){
+
+    if(!model) return;
+
+    const rect =
+        renderer.domElement.getBoundingClientRect();
+
+    mouse.x =
+        ((event.clientX-rect.left)/rect.width)*2-1;
+
+    mouse.y =
+        -((event.clientY-rect.top)/rect.height)*2+1;
+
+    raycaster.setFromCamera(mouse,camera);
+
+    const hits =
+        raycaster.intersectObject(model,true);
+
+    if(!hits.length) return;
+
+    const hit=hits[0];
+
+    if(hit.object.isMesh){
+
+        selectedMesh=hit.object;
+
+        updateSelectionUI();
+
+        if(decalMode){
+            createDecalPlaceholder(hit);
+        }
+    }
+}
+
+function updateSelectionUI(){
+
+    if(!selectedMesh) return;
+
+    document.getElementById("selectedName")
+        .textContent =
+        selectedMesh.name || "MESH";
+
+    document.getElementById("selectionInfo")
+        .textContent =
+        selectedMesh.name || "Selected mesh";
+
+    const m=selectedMesh.material;
+
+    if(!m) return;
+
+    document.getElementById("roughness").value =
+        m.roughness ?? .5;
+
+    document.getElementById("roughnessValue")
+        .textContent =
+        Number(m.roughness ?? .5).toFixed(2);
+
+    document.getElementById("metallic").value =
+        m.metalness ?? 0;
+
+    document.getElementById("metallicValue")
+        .textContent =
+        Number(m.metalness ?? 0).toFixed(2);
+
+    if(m.color){
+
+        document.getElementById("baseColor").value =
+            "#" + m.color.getHexString();
+
+        document.getElementById("baseColorValue")
+            .textContent =
+            "#" + m.color.getHexString();
+    }
+}
+
+function bindMaterialControls(){
+
+    const scale =
+        document.getElementById("scale");
+
+    const rotation =
+        document.getElementById("rotation");
+
+    const offsetX =
+        document.getElementById("offsetX");
+
+    const offsetY =
+        document.getElementById("offsetY");
+
+    const roughness =
+        document.getElementById("roughness");
+
+    const metallic =
+        document.getElementById("metallic");
+
+    scale.oninput=()=>{
+
+        document.getElementById("scaleValue")
+            .textContent =
+            Number(scale.value).toFixed(2);
+
+        applyUV();
+    };
+
+    rotation.oninput=()=>{
+
+        document.getElementById("rotationValue")
+            .textContent =
+            rotation.value+"°";
+
+        applyUV();
+    };
+
+    offsetX.oninput=()=>{
+
+        document.getElementById("offsetXValue")
+            .textContent =
+            offsetX.value;
+
+        applyUV();
+    };
+
+    offsetY.oninput=()=>{
+
+        document.getElementById("offsetYValue")
+            .textContent =
+            offsetY.value;
+
+        applyUV();
+    };
+
+    roughness.oninput=()=>{
+
+        if(!selectedMesh) return;
+
+        selectedMesh.material.roughness =
+            Number(roughness.value);
+
+        document.getElementById("roughnessValue")
+            .textContent =
+            Number(roughness.value).toFixed(2);
+
+        selectedMesh.material.needsUpdate=true;
+    };
+
+    metallic.oninput=()=>{
+
+        if(!selectedMesh) return;
+
+        selectedMesh.material.metalness =
+            Number(metallic.value);
+
+        document.getElementById("metallicValue")
+            .textContent =
+            Number(metallic.value).toFixed(2);
+
+        selectedMesh.material.needsUpdate=true;
+    };
+
+    document.getElementById("baseColor")
+        .oninput=e=>{
+
+            if(!selectedMesh) return;
+
+            selectedMesh.material.color
+                .set(e.target.value);
+
+            document.getElementById("baseColorValue")
+                .textContent=e.target.value;
+
+            selectedMesh.material.needsUpdate=true;
+        };
+}
+
+function applyUV(){
+
+    if(!selectedMesh) return;
+
+    const mat=selectedMesh.material;
+
+    const maps=[
+        mat.map,
+        mat.normalMap,
+        mat.roughnessMap,
+        mat.metalnessMap,
+        mat.aoMap
+    ];
+
+    const s=
+        Number(document.getElementById("scale").value);
+
+    const r=
+        Number(document.getElementById("rotation").value)
+        * Math.PI / 180;
+
+    const x=
+        Number(document.getElementById("offsetX").value);
+
+    const y=
+        Number(document.getElementById("offsetY").value);
+
+    maps.forEach(tex=>{
+
+        if(!tex) return;
+
+        tex.wrapS=THREE.RepeatWrapping;
+        tex.wrapT=THREE.RepeatWrapping;
+
+        tex.repeat.set(s,s);
+        tex.rotation=r;
+        tex.offset.set(x,y);
+
+        tex.needsUpdate=true;
+    });
+}
+
+function uploadTexture(event){
+
+    const file =
+        event.target.files[0];
+
+    if(!file || !selectedMesh){
+
+        if(!selectedMesh)
+            alert("Hãy chọn mesh trước.");
+
+        return;
+    }
+
+    const url =
+        URL.createObjectURL(file);
+
+    const loader =
+        new THREE.TextureLoader();
+
+    loader.load(url,tex=>{
+
+        saveHistory();
+
+        tex.colorSpace =
+            THREE.SRGBColorSpace;
+
+        tex.wrapS =
+            THREE.RepeatWrapping;
+
+        tex.wrapT =
+            THREE.RepeatWrapping;
+
+        selectedMesh.material =
+            cloneMaterial(selectedMesh.material);
+
+        selectedMesh.material.map=tex;
+        selectedMesh.material.needsUpdate=true;
+
+        updateSelectionUI();
+
+    });
+}
+
+function createDecalPlaceholder(hit){
+
+    const geometry =
+        new THREE.PlaneGeometry(.5,.5);
+
+    const material =
+        new THREE.MeshBasicMaterial({
+            color:0xffffff,
+            transparent:true,
+            opacity:.8,
+            side:THREE.DoubleSide,
+            depthWrite:false
+        });
+
+    const decal =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    decal.position.copy(hit.point);
+
+    decal.lookAt(
+        hit.point.clone().add(hit.face.normal)
+    );
+
+    decal.userData.isDecal=true;
+
+    scene.add(decal);
+}
+
+function removeTexture(){
+
+    if(!selectedMesh) return;
+
+    saveHistory();
+
+    const m=selectedMesh.material;
+
+    m.map=null;
+    m.normalMap=null;
+    m.roughnessMap=null;
+    m.metalnessMap=null;
+    m.aoMap=null;
+
+    m.needsUpdate=true;
+}
+
+function resetMaterial(){
+
+    if(!selectedMesh) return;
+
+    saveHistory();
+
+    selectedMesh.material =
+        new THREE.MeshStandardMaterial({
+            color:0xffffff,
+            roughness:.5,
+            metalness:0
+        });
+}
+
+function addLayer(){
+
+    const layer =
+        document.createElement("div");
+
+    layer.className="layer";
+
+    layer.innerHTML=`
+        <span>●</span>
+        <span>New Layer</span>
+        <button>×</button>
+    `;
+
+    layer.querySelector("button")
+        .onclick=()=>layer.remove();
+
+    document.getElementById("layers")
+        .appendChild(layer);
+}
+
+function toggleWire(){
+
+    if(!model) return;
+
+    wireframe=!wireframe;
+
+    model.traverse(obj=>{
+
+        if(!obj.isMesh) return;
+
+        if(Array.isArray(obj.material)){
+
+            obj.material.forEach(
+                m=>m.wireframe=wireframe
+            );
+
+        }else{
+
+            obj.material.wireframe=wireframe;
+        }
+    });
+}
+
+function toggleGrid(){
+
+    gridVisible=!gridVisible;
+}
+
+function focusModel(){
+
+    if(model) centerModel();
+}
+
+function updateModeButtons(){
+
+    document.getElementById("paintMode")
+        .classList.toggle("active",paintMode);
+
+    document.getElementById("decalMode")
+        .classList.toggle("active",decalMode);
+}
+
+function autoUV(){
+
+    if(!selectedMesh){
+
+        alert("Hãy chọn mesh trước.");
+
+        return;
+    }
+
+    /*
+      Three.js không có UV unwrap chuyên nghiệp
+      tích hợp sẵn.
+
+      Ở bản này, nếu model đã có UV:
+      giữ nguyên UV.
+
+      Bước tiếp theo có thể tích hợp
+      UV unwrap thực sự.
+    */
+
+    if(selectedMesh.geometry.attributes.uv){
+
+        alert(
+            "Mesh này đã có UV. Texture có thể sử dụng UV hiện tại."
+        );
+
+    }else{
+
+        alert(
+            "Mesh chưa có UV. Cần thêm bộ UV unwrap ở phiên bản tiếp theo."
+        );
+    }
+}
+
+function saveHistory(){
+
+    if(!selectedMesh) return;
+
+    const state={
+        mesh:selectedMesh.uuid,
+        material:selectedMesh.material.clone()
+    };
+
+    history =
+        history.slice(0,historyIndex+1);
+
+    history.push(state);
+
+    historyIndex=history.length-1;
+
+    if(history.length>30)
+        history.shift();
+}
+
+function undo(){
+
+    if(historyIndex<0) return;
+
+    historyIndex--;
+
+    if(historyIndex<0) return;
+
+    restoreHistory(history[historyIndex]);
+}
+
+function redo(){
+
+    if(historyIndex>=history.length-1)
+        return;
+
+    historyIndex++;
+
+    restoreHistory(history[historyIndex]);
+}
+
+function restoreHistory(state){
+
+    if(!model) return;
+
+    let mesh=null;
+
+    model.traverse(obj=>{
+
+        if(obj.uuid===state.mesh)
+            mesh=obj;
+    });
+
+    if(!mesh) return;
+
+    mesh.material =
+        state.material.clone();
+
+    selectedMesh=mesh;
+
+    updateSelectionUI();
+}
+
+function saveProject(){
+
+    const project={
+        version:1,
+        modelName:
+            document.getElementById("modelName").textContent,
+        selected:
+            selectedMesh?.name || null,
+        materials:[]
+    };
+
+    if(model){
+
+        model.traverse(obj=>{
+
+            if(!obj.isMesh) return;
+
+            const m=obj.material;
+
+            project.materials.push({
+                name:obj.name,
+                color:m.color
+                    ? m.color.getHexString()
+                    : "ffffff",
+                roughness:m.roughness ?? .5,
+                metallic:m.metalness ?? 0
+            });
+        });
+    }
+
+    const blob =
+        new Blob(
+            [JSON.stringify(project,null,2)],
+            {type:"application/json"}
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href=url;
+    a.download="texture-project.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function exportGLB(){
+
+    if(!model){
+
+        alert("Chưa có model.");
+
+        return;
+    }
+
+    const exporter =
+        new GLTFExporter();
+
+    exporter.parse(
+        model,
+        result=>{
+
+            const blob =
+                new Blob(
+                    [result],
+                    {type:"model/gltf-binary"}
+                );
+
+            const url =
+                URL.createObjectURL(blob);
+
+            const a =
+                document.createElement("a");
+
+            a.href=url;
+            a.download="textured-model.glb";
+            a.click();
+
+            URL.revokeObjectURL(url);
+        },
+        error=>{
+            console.error(error);
+            alert("Export thất bại.");
+        },
+        {binary:true}
+    );
+}
+
+function escapeHTML(text){
+
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function animate(){
+
+    requestAnimationFrame(animate);
 
     controls.update();
 
-
-    renderer.render(
-        scene,
-        camera
-    );
-
+    renderer.render(scene,camera);
 }
-
-
-updateLabels();
-
-animate();
 
 </script>
 

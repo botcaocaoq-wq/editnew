@@ -1,632 +1,456 @@
-* {
-    box-sizing: border-box;
+*{
+    box-sizing:border-box;
 }
 
 html,
-body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-
+body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#0d0f12;
+    color:#e7e9ed;
     font-family:
+        Inter,
+        Segoe UI,
         Arial,
-        Helvetica,
         sans-serif;
-
-    background: #101217;
-    color: #e9edf3;
 }
 
-
-/* ==============================
-   TOP BAR
-============================== */
-
-.topbar {
-
-    height: 58px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 0 16px;
-
-    background: #191c22;
-
-    border-bottom:
-        1px solid #30343d;
+button,
+input{
+    font:inherit;
 }
 
-
-.logo {
-
-    font-size: 18px;
-
-    font-weight: 800;
-
-    letter-spacing: 2px;
+button{
+    cursor:pointer;
 }
 
-
-.logo span {
-
-    color: #8d96a5;
-
-    font-weight: 400;
+.topbar{
+    height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    background:#15181d;
+    border-bottom:1px solid #292d34;
 }
 
-
-.toolbar {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
+.logo{
+    font-size:16px;
+    font-weight:800;
+    letter-spacing:1.5px;
+    min-width:170px;
 }
 
-
-/* ==============================
-   BUTTON
-============================== */
-
-.button {
-
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 5px;
-
-    padding:
-        8px
-        13px;
-
-    border-radius: 7px;
-
-    border:
-        1px solid #373d47;
-
-    background: #23272f;
-
-    color: #edf0f5;
-
-    font-size: 13px;
-
-    cursor: pointer;
-
-    user-select: none;
+.logo span{
+    margin-left:4px;
+    color:#8f98a8;
 }
 
-
-.button:hover {
-
-    background: #2d323b;
+.toolbar{
+    display:flex;
+    align-items:center;
+    gap:7px;
 }
 
-
-.button.primary {
-
-    background: #315fd3;
-
-    border-color: #4d75dc;
+.toolbar button{
+    height:34px;
+    padding:0 12px;
+    color:#d9dde5;
+    background:#20242b;
+    border:1px solid #343944;
+    border-radius:6px;
+    transition:.15s;
 }
 
-
-.button.primary:hover {
-
-    background: #3b6ce1;
+.toolbar button:hover{
+    background:#2a2f38;
 }
 
-
-.button.active {
-
-    background: #365eb8;
-
-    border-color: #6687dc;
+.toolbar button.active{
+    background:#3a4250;
+    border-color:#778398;
 }
 
-
-/* ==============================
-   MAIN
-============================== */
-
-.main {
-
-    height:
-        calc(100% - 58px);
-
-    display: grid;
-
-    grid-template-columns:
-        250px
-        minmax(0, 1fr)
-        280px;
+.toolbar .primary{
+    background:#536c9a;
+    border-color:#708ab9;
+    color:white;
 }
 
-
-/* ==============================
-   LEFT PANEL
-============================== */
-
-.leftPanel {
-
-    background: #171a20;
-
-    border-right:
-        1px solid #30343d;
-
-    padding: 14px;
-
-    overflow-y: auto;
+.layout{
+    height:calc(100vh - 58px);
+    display:grid;
+    grid-template-columns:270px 1fr 280px;
 }
 
-
-/* ==============================
-   RIGHT PANEL
-============================== */
-
-.rightPanel {
-
-    background: #171a20;
-
-    border-left:
-        1px solid #30343d;
-
-    padding: 14px;
-
-    overflow-y: auto;
+.panel{
+    background:#15181d;
+    min-width:0;
 }
 
-
-/* ==============================
-   PANEL TITLE
-============================== */
-
-.panelTitle {
-
-    margin:
-        3px 0 14px;
-
-    font-size: 12px;
-
-    font-weight: 700;
-
-    letter-spacing: 1.4px;
-
-    color: #929baa;
+.library{
+    border-right:1px solid #292d34;
+    display:flex;
+    flex-direction:column;
 }
 
-
-/* ==============================
-   SEARCH
-============================== */
-
-.searchBox {
-
-    margin-bottom: 12px;
+.inspector{
+    border-left:1px solid #292d34;
+    overflow-y:auto;
 }
 
-
-.searchBox input {
-
-    width: 100%;
-
-    padding:
-        9px 10px;
-
-    border-radius: 6px;
-
-    border:
-        1px solid #343943;
-
-    background: #20242b;
-
-    color: white;
-
-    outline: none;
-
-    font-size: 12px;
+.panelTitle{
+    height:52px;
+    padding:0 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid #292d34;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1.2px;
 }
 
-
-.searchBox input:focus {
-
-    border-color: #5876c2;
+.panelTitle small{
+    color:#69717e;
+    font-size:9px;
 }
 
-
-.searchBox input::placeholder {
-
-    color: #697382;
+.search{
+    margin:12px;
+    width:calc(100% - 24px);
+    height:35px;
+    padding:0 11px;
+    background:#0e1014;
+    border:1px solid #30343c;
+    border-radius:6px;
+    outline:none;
+    color:#fff;
 }
 
-
-/* ==============================
-   TEXTURE LIBRARY
-============================== */
-
-.textureLibrary {
-
-    width: 100%;
+.search:focus{
+    border-color:#596a86;
 }
 
-
-.empty {
-
-    padding: 30px 8px;
-
-    text-align: center;
-
-    color: #697382;
-
-    font-size: 12px;
-
-    line-height: 1.6;
+.categories{
+    padding:0 10px 10px;
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
 }
 
-
-/* ==============================
-   TEXTURE CARD
-============================== */
-
-.textureCard {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 9px;
-
-    padding: 7px;
-
-    margin-bottom: 7px;
-
-    border:
-        1px solid #303640;
-
-    border-radius: 7px;
-
-    background: #20242b;
-
-    cursor: pointer;
-
-    transition:
-        border-color .15s,
-        background .15s;
+.categories button{
+    background:#20242a;
+    border:1px solid #30353d;
+    color:#8f97a5;
+    border-radius:5px;
+    padding:5px 7px;
+    font-size:9px;
 }
 
-
-.textureCard:hover {
-
-    background: #272c34;
-
-    border-color: #5a78c7;
+.categories button.active{
+    color:white;
+    border-color:#67758a;
+    background:#303743;
 }
 
-
-.texturePreview {
-
-    width: 48px;
-
-    height: 48px;
-
-    flex-shrink: 0;
-
-    object-fit: cover;
-
-    border-radius: 5px;
-
-    background: #0d0f13;
+.textureList{
+    padding:4px 10px 12px;
+    overflow:auto;
+    flex:1;
 }
 
-
-.textureInfo {
-
-    min-width: 0;
+.textureCard{
+    display:flex;
+    gap:9px;
+    padding:7px;
+    margin-bottom:6px;
+    background:#1b1f25;
+    border:1px solid #292e36;
+    border-radius:6px;
+    transition:.15s;
 }
 
-
-.textureName {
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-size: 12px;
+.textureCard:hover{
+    background:#252a32;
+    border-color:#596476;
 }
 
-
-.textureType {
-
-    margin-top: 4px;
-
-    font-size: 9px;
-
-    color: #737e8e;
-
-    letter-spacing: .5px;
+.textureCard img{
+    width:54px;
+    height:54px;
+    border-radius:4px;
+    object-fit:cover;
+    background:#0d0f12;
 }
 
-
-/* ==============================
-   VIEWPORT
-============================== */
-
-.viewport {
-
-    position: relative;
-
-    min-width: 0;
-
-    background: #0c0e12;
+.textureCard div{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
 }
 
-
-#viewer {
-
-    width: 100%;
-
-    height: 100%;
+.textureCard strong{
+    font-size:11px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
-
-#viewer canvas {
-
-    display: block;
-
-    width: 100%;
-
-    height: 100%;
+.textureCard small{
+    margin-top:5px;
+    color:#747d8b;
+    font-size:9px;
+    line-height:13px;
 }
 
-
-/* ==============================
-   STATUS
-============================== */
-
-.status {
-
-    position: absolute;
-
-    top: 12px;
-
-    left: 12px;
-
-    padding:
-        7px 10px;
-
-    border:
-        1px solid #303640;
-
-    border-radius: 6px;
-
-    background: #171a20dd;
-
-    color: #aeb6c2;
-
-    font-size: 11px;
+.loading,
+.empty,
+.error{
+    padding:20px 10px;
+    color:#747c89;
+    text-align:center;
+    font-size:11px;
 }
 
-
-/* ==============================
-   HINT
-============================== */
-
-.controlsHint {
-
-    position: absolute;
-
-    left: 50%;
-
-    bottom: 12px;
-
-    transform:
-        translateX(-50%);
-
-    padding:
-        7px 12px;
-
-    border:
-        1px solid #303640;
-
-    border-radius: 6px;
-
-    background: #171a20dd;
-
-    color: #9ea8b6;
-
-    font-size: 11px;
-
-    white-space: nowrap;
+.error{
+    color:#d98989;
 }
 
-
-/* ==============================
-   SELECTED OBJECT
-============================== */
-
-.selectedObject {
-
-    padding: 10px;
-
-    margin-bottom: 20px;
-
-    border:
-        1px solid #343a45;
-
-    border-radius: 7px;
-
-    background: #20242b;
-
-    color: #c9ced7;
-
-    font-size: 12px;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
+.credit{
+    padding:9px 12px;
+    border-top:1px solid #292d34;
+    color:#666e7a;
+    font-size:9px;
 }
 
-
-/* ==============================
-   MATERIAL PROPERTY
-============================== */
-
-.property {
-
-    margin-bottom: 18px;
+.credit a{
+    color:#aab5c6;
+    text-decoration:none;
 }
 
-
-.propertyHeader {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    margin-bottom: 8px;
-
-    color: #adb5c2;
-
-    font-size: 12px;
+.viewport{
+    position:relative;
+    min-width:0;
+    overflow:hidden;
+    background:#101216;
 }
 
-
-.propertyHeader span:last-child {
-
-    color: #e0e5ec;
-
-    font-variant-numeric:
-        tabular-nums;
+#viewer{
+    width:100%;
+    height:100%;
 }
 
-
-/* ==============================
-   RANGE
-============================== */
-
-input[type="range"] {
-
-    width: 100%;
-
-    height: 4px;
-
-    margin: 0;
-
-    accent-color: #5a78d0;
-
-    cursor: pointer;
+#viewer canvas{
+    display:block;
 }
 
-
-/* ==============================
-   REMOVE
-============================== */
-
-.removeButton {
-
-    width: 100%;
-
-    margin-top: 10px;
-
-    padding: 9px;
-
-    border:
-        1px solid #713d44;
-
-    border-radius: 7px;
-
-    background: #3b2226;
-
-    color: #f0dfe1;
-
-    cursor: pointer;
-
-    font-size: 12px;
+.viewerTop{
+    position:absolute;
+    top:12px;
+    left:12px;
+    right:12px;
+    display:flex;
+    justify-content:space-between;
+    pointer-events:none;
 }
 
-
-.removeButton:hover {
-
-    background: #4a272c;
+.viewerTop span{
+    background:rgba(15,17,21,.82);
+    border:1px solid #30343b;
+    padding:7px 10px;
+    border-radius:5px;
+    font-size:10px;
+    color:#9da5b2;
 }
 
-
-/* ==============================
-   SCROLLBAR
-============================== */
-
-::-webkit-scrollbar {
-
-    width: 7px;
+.crosshair{
+    position:absolute;
+    width:1px;
+    height:1px;
+    left:50%;
+    top:50%;
+    pointer-events:none;
 }
 
-
-::-webkit-scrollbar-track {
-
-    background: #15181d;
+.crosshair::before,
+.crosshair::after{
+    content:"";
+    position:absolute;
+    background:#ffffff18;
 }
 
-
-::-webkit-scrollbar-thumb {
-
-    background: #343a45;
-
-    border-radius: 10px;
+.crosshair::before{
+    width:18px;
+    height:1px;
+    left:-9px;
+    top:0;
 }
 
-
-::-webkit-scrollbar-thumb:hover {
-
-    background: #454d5b;
+.crosshair::after{
+    height:18px;
+    width:1px;
+    left:0;
+    top:-9px;
 }
 
+.bottomTools{
+    position:absolute;
+    bottom:12px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:5px;
+}
 
-/* ==============================
-   SMALL SCREEN
-============================== */
+.bottomTools button{
+    border:1px solid #343942;
+    background:rgba(20,23,28,.9);
+    color:#aeb5c0;
+    padding:7px 11px;
+    border-radius:5px;
+    font-size:10px;
+}
 
-@media (max-width: 900px) {
+.bottomTools button:hover{
+    color:white;
+    background:#252a31;
+}
 
-    .main {
+.section{
+    padding:14px;
+    border-bottom:1px solid #292d34;
+}
 
-        grid-template-columns:
-            200px
-            minmax(0, 1fr)
-            230px;
+.section label{
+    display:flex;
+    justify-content:space-between;
+    color:#8f97a4;
+    font-size:10px;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
 
+.section label b{
+    color:#cbd1db;
+    font-weight:500;
+}
+
+input[type="range"]{
+    width:100%;
+    height:4px;
+    accent-color:#7888a1;
+}
+
+.colorRow{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.colorRow input{
+    width:42px;
+    height:28px;
+    padding:2px;
+    border:1px solid #343942;
+    background:#101216;
+}
+
+.colorRow span{
+    font-family:monospace;
+    font-size:10px;
+    color:#9098a5;
+}
+
+.layer{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    height:34px;
+    padding:0 8px;
+    margin-bottom:5px;
+    background:#1d2127;
+    border:1px solid #2d323a;
+    border-radius:5px;
+    font-size:10px;
+}
+
+.layer.selected{
+    border-color:#5e6d84;
+}
+
+.layer span:first-child{
+    color:#7c8798;
+}
+
+.layer span:nth-child(2){
+    flex:1;
+}
+
+.layer button{
+    border:0;
+    background:none;
+    color:#7f8793;
+    font-size:15px;
+}
+
+.wide{
+    width:100%;
+    height:32px;
+    border:1px solid #343942;
+    background:#20242a;
+    color:#b7bec9;
+    border-radius:5px;
+    font-size:10px;
+}
+
+.wide:hover{
+    background:#292e36;
+    color:white;
+}
+
+.danger{
+    color:#d18c8c;
+    border-color:#553737;
+    margin-bottom:7px;
+}
+
+@media(max-width:950px){
+
+    .layout{
+        grid-template-columns:220px 1fr 230px;
     }
 
+    .toolbar button{
+        padding:0 7px;
+    }
+
+    .logo{
+        min-width:120px;
+    }
 }
 
+@media(max-width:700px){
 
-@media (max-width: 700px) {
-
-    .main {
-
-        grid-template-columns:
-            1fr;
-
+    .layout{
+        grid-template-columns:1fr;
     }
 
-    .leftPanel,
-    .rightPanel {
-
-        display: none;
-
+    .library,
+    .inspector{
+        display:none;
     }
 
+    .toolbar{
+        gap:3px;
+    }
+
+    .toolbar button{
+        font-size:9px;
+        padding:0 6px;
+    }
 }
