@@ -46,6 +46,15 @@
 .crackControlRow b{font-size:9px;text-align:right;color:#76a5ff;font-family:Consolas,monospace}
 .crackInspectorButtons{display:grid;grid-template-columns:36px 36px minmax(0,1fr);gap:5px}
 .crackInspectorButtons button{min-height:30px;padding:4px 6px}
+
+/* ===== AI MATERIAL ASSISTANT ===== */
+#aiPanel{display:none;position:fixed;top:62px;left:292px;width:360px;max-width:calc(100vw - 310px);z-index:1000;padding:12px;background:#11161d;border:1px solid #344154;border-radius:9px;box-shadow:0 18px 45px rgba(0,0,0,.45)}
+#aiPanel.active{display:block}
+.ai-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.ai-head strong{font-size:11px;letter-spacing:.8px;color:#eef3f8}.ai-badge{font-size:8px;padding:3px 7px;border-radius:999px;border:1px solid #315fae;background:#172743;color:#86adff}
+#aiPrompt{width:100%;min-height:82px;resize:vertical;padding:9px;border:1px solid #34404f;border-radius:6px;background:#0b0f14;color:#edf2f7;font:inherit;font-size:11px;line-height:1.45;outline:none}#aiPrompt:focus{border-color:#4c83e9}
+.ai-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ai-row select{width:100%;min-height:30px;padding:6px 8px;border:1px solid #34404f;border-radius:5px;background:#171d25;color:#dfe7ef;font:inherit;font-size:10px;outline:none}.ai-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ai-actions button:disabled{opacity:.45;cursor:not-allowed}.ai-primary{background:#2563eb!important;border-color:#3b82f6!important}
+#aiProgress{display:none;margin-top:8px;padding:7px 8px;border:1px solid #2c3746;background:#121a24;border-radius:6px;color:#8999ad;font-size:9px}#aiProgress.show{display:block}.ai-progressbar{height:4px;margin-top:6px;background:#27313d;border-radius:5px;overflow:hidden}.ai-progressbar span{display:block;width:0;height:100%;background:#4c8bf5}
+#aiPreview{display:none;margin-top:8px;border:1px solid #34404f;border-radius:6px;overflow:hidden;background:#090d12}#aiPreview.show{display:block}#aiCanvas{display:block;width:100%;height:auto}#aiStatus{min-height:14px;margin-top:7px;color:#8290a0;font-size:9px}.ai-note{margin-top:6px;color:#677487;font-size:8px;line-height:1.45}@media(max-width:900px){#aiPanel{left:10px;right:10px;width:auto;max-width:none}}
 </style>
 </head>
 
@@ -57,6 +66,7 @@
     <div class="toolbar">
         <button id="uploadModel">＋ Model</button>
         <button id="uploadTexture">＋ Texture</button>
+        <button id="aiMode">✦ AI</button>
         <button id="crackMode" title="Bật chế độ tạo và kéo vết nứt">＋ Crack</button>
         <button id="undoBtn">↶</button>
         <button id="redoBtn">↷</button>
@@ -67,6 +77,16 @@
     <input id="modelInput" type="file" accept=".glb,.gltf,.bin" hidden>
     <input id="textureInput" type="file" accept="image/*" hidden>
 </header>
+<section id="aiPanel" aria-label="AI Material Assistant">
+<div class="ai-head"><strong>AI MATERIAL ASSISTANT</strong><span class="ai-badge">LOCAL • FREE</span></div>
+<textarea id="aiPrompt" placeholder="Ví dụ: đá bê tông cũ màu xanh xám, nhiều vết nứt, phong cách cartoon..."></textarea>
+<div class="ai-row"><select id="aiStyle"><option value="realistic">Realistic</option><option value="cartoon">Cartoon</option><option value="stylized">Stylized</option><option value="lowpoly">Low Poly</option></select><select id="aiResolution"><option value="512">512 × 512</option><option value="1024">1024 × 1024</option></select></div>
+<div class="ai-actions"><button id="aiGenerate" class="ai-primary">Generate</button><button id="aiApply" disabled>Apply</button></div>
+<div id="aiProgress"><span id="aiProgressText">Preparing...</span><div class="ai-progressbar"><span id="aiProgressBar"></span></div></div>
+<div id="aiPreview"><canvas id="aiCanvas" width="512" height="512"></canvas></div>
+<div id="aiStatus"></div><div class="ai-note">Tạo material local theo mô tả bằng thuật toán procedural, không gửi prompt lên server và không dùng credit.</div>
+</section>
+
 
 <main class="layout">
 
@@ -1699,6 +1719,20 @@ function debounce(fn, delay) {
         timer = setTimeout(() => fn(...args), delay);
     };
 }
+
+
+/* ===== LOCAL AI MATERIAL ASSISTANT ===== */
+const aiPanel=document.getElementById("aiPanel"),aiPrompt=document.getElementById("aiPrompt"),aiStyle=document.getElementById("aiStyle"),aiResolution=document.getElementById("aiResolution"),aiGenerate=document.getElementById("aiGenerate"),aiApply=document.getElementById("aiApply"),aiProgress=document.getElementById("aiProgress"),aiProgressText=document.getElementById("aiProgressText"),aiProgressBar=document.getElementById("aiProgressBar"),aiPreview=document.getElementById("aiPreview"),aiCanvas=document.getElementById("aiCanvas"),aiStatus=document.getElementById("aiStatus");
+let aiGeneratedTexture=null,aiSeed=0;
+function aiHashText(text){let h=2166136261;for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);return h>>>0;}
+function aiRand(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+function aiNoise(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,n=(a,b)=>{let s=(a*374761393+b*668265263+aiSeed*982451653)>>>0;s=Math.imul(s^(s>>>13),1274126177)>>>0;return((s^(s>>>16))>>>0)/4294967295;},sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),a=n(ix,iy),b=n(ix+1,iy),c=n(ix,iy+1),d=n(ix+1,iy+1);return a+(b-a)*sx+((c+(d-c)*sx)-(a+(b-a)*sx))*sy;}
+function aiPalette(prompt,style){const p=prompt.toLowerCase();let base=[140,140,140],accent=[190,190,190];if(/wood|gỗ|oak|walnut/.test(p)){base=[105,63,31];accent=[183,122,55];}else if(/metal|steel|iron|rust|kim loại|thép/.test(p)){base=[76,82,89];accent=[177,104,57];}else if(/stone|rock|đá|concrete|bê tông/.test(p)){base=[116,120,124];accent=[190,194,199];}else if(/gold|vàng/.test(p)){base=[145,108,30];accent=[238,193,66];}else if(/blue|xanh dương/.test(p)){base=[45,82,128];accent=[105,160,225];}else if(/green|xanh lá/.test(p)){base=[48,98,63];accent=[111,173,101];}else if(/red|đỏ/.test(p)){base=[125,47,43];accent=[215,93,80];}else if(/purple|tím|magic/.test(p)){base=[75,46,110];accent=[173,108,228];}if(style==="cartoon"){base=base.map(v=>Math.min(255,Math.round(v*1.12)));accent=accent.map(v=>Math.min(255,Math.round(v*1.12)));}if(style==="lowpoly")base=base.map(v=>Math.round(v*.92));return{base,accent};}
+function aiDrawTexture(){const size=Math.min(1024,Math.max(128,Number(aiResolution.value)||512));aiCanvas.width=size;aiCanvas.height=size;const ctx=aiCanvas.getContext("2d",{alpha:false}),prompt=aiPrompt.value.trim()||"stone material",style=aiStyle.value;aiSeed=aiHashText(prompt+"|"+style);const rnd=aiRand(aiSeed),pal=aiPalette(prompt,style),p=prompt.toLowerCase(),isWood=/wood|gỗ|oak|walnut/.test(p),isMetal=/metal|steel|iron|rust|kim loại|thép/.test(p),isCracked=/crack|cracked|nứt/.test(p),img=ctx.createImageData(size,size),d=img.data;for(let y=0;y<size;y++){const v=y/size;for(let x=0;x<size;x++){const u=x/size,n=.58*aiNoise(u*5.5,v*5.5)+.28*aiNoise(u*16,v*16)+.14*aiNoise(u*42,v*42);let r=pal.base[0]*(.75+.35*n),g=pal.base[1]*(.75+.35*n),b=pal.base[2]*(.75+.35*n);if(isWood){const grain=.5+.5*Math.sin(v*size/8+n*10);r*=.72+.52*grain;g*=.72+.45*grain;b*=.68+.35*grain;}if(isMetal){const band=.5+.5*Math.sin(u*45+n*12);r+=pal.accent[0]*.13*band;g+=pal.accent[1]*.13*band;b+=pal.accent[2]*.13*band;}if(style==="cartoon"){r=Math.round(r/18)*18;g=Math.round(g/18)*18;b=Math.round(b/18)*18;}const i=(y*size+x)*4;d[i]=Math.max(0,Math.min(255,r));d[i+1]=Math.max(0,Math.min(255,g));d[i+2]=Math.max(0,Math.min(255,b));d[i+3]=255;}if(y%24===0){const pct=Math.round(y/size*100);aiProgressText.textContent=`Generating ${pct}%`;aiProgressBar.style.width=pct+"%";}}ctx.putImageData(img,0,0);if(isCracked){ctx.save();ctx.strokeStyle="rgba(18,18,18,.58)";ctx.lineWidth=Math.max(1,size/430);ctx.lineCap="round";const count=Math.max(6,Math.round(size/78));for(let j=0;j<count;j++){let x=rnd()*size,y=rnd()*size;ctx.beginPath();ctx.moveTo(x,y);const seg=5+Math.floor(rnd()*6);for(let k=0;k<seg;k++){x+=(rnd()-.5)*76;y+=(rnd()-.5)*76;ctx.lineTo(x,y);if(rnd()<.3){ctx.moveTo(x,y);ctx.lineTo(x+(rnd()-.5)*45,y+(rnd()-.5)*45);ctx.moveTo(x,y);}}ctx.stroke();}ctx.restore();}aiGeneratedTexture=aiCanvas;}
+function aiSetBusy(on,text="",pct=0){aiProgress.classList.toggle("show",on);aiProgressText.textContent=text;aiProgressBar.style.width=pct+"%";}
+document.getElementById("aiMode").onclick=()=>{const on=!aiPanel.classList.contains("active");aiPanel.classList.toggle("active",on);document.getElementById("aiMode").classList.toggle("active",on);if(on)aiPrompt.focus();};
+aiGenerate.onclick=async()=>{aiGenerate.disabled=true;aiApply.disabled=true;aiPreview.classList.remove("show");aiSetBusy(true,"Generating locally...",0);await new Promise(r=>requestAnimationFrame(r));try{aiDrawTexture();aiPreview.classList.add("show");aiApply.disabled=false;aiStatus.textContent="Đã tạo material local. Chọn mesh rồi bấm Apply.";}catch(err){console.error(err);aiStatus.textContent="Không tạo được material.";}finally{aiSetBusy(false);aiGenerate.disabled=false;}};
+aiApply.onclick=()=>{if(!aiGeneratedTexture)return;if(!selectedMesh){alert("Hãy click chọn mesh trước.");return;}saveHistory();const mat=ensureEditableMaterial(selectedMesh),tex=new THREE.CanvasTexture(aiGeneratedTexture);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);mat.map=tex;mat.needsUpdate=true;applyUV();updateSelectionUI();aiStatus.textContent="Đã Apply material vào mesh.";};
 
 function animate() {
     requestAnimationFrame(animate);
