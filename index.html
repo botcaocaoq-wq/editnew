@@ -244,6 +244,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
+import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 
 const API = "https://api.polyhaven.com";
 const ASSET_CACHE_KEY = "textureStudio_polyhaven_assets_v3";
@@ -271,9 +272,9 @@ let crackDrag = null;
 const crackItems = new Set();
 const crackTextureCache = new Map();
 const crackPresets = [
-    {id:"stone-01", name:"Stone Crack 01", category:"stone", desc:"Tự nhiên, nhánh lớn", color:"#14110e", glow:false, scale:1.00, seed:2},
-    {id:"stone-02", name:"Stone Crack 02", category:"stone", desc:"Nứt đá nhiều nhánh", color:"#121111", glow:false, scale:1.05, seed:7},
-    {id:"stone-03", name:"Stone Crack 03", category:"stone", desc:"Nét mảnh tự nhiên", color:"#17130f", glow:false, scale:.92, seed:13},
+    {id:"stone-01", name:"Stone Crack 01", category:"stone", desc:"Tự nhiên, nhánh lớn", color:"#0b0b0c", glow:false, scale:1.00, seed:2},
+    {id:"stone-02", name:"Stone Crack 02", category:"stone", desc:"Nứt đá nhiều nhánh", color:"#0a0a0b", glow:false, scale:1.05, seed:7},
+    {id:"stone-03", name:"Stone Crack 03", category:"stone", desc:"Nét mảnh tự nhiên", color:"#111011", glow:false, scale:.92, seed:13},
     {id:"stone-deep", name:"Deep Stone", category:"stone", desc:"Khe nứt sâu, tối", color:"#090909", glow:false, scale:1.08, seed:23},
     {id:"impact-01", name:"Impact Crack 01", category:"impact", desc:"Tâm nứt va đập", color:"#0b0c0e", glow:false, scale:1.00, seed:31},
     {id:"impact-02", name:"Impact Crack 02", category:"impact", desc:"Va đập nhiều tia", color:"#101114", glow:false, scale:1.10, seed:37},
@@ -1091,47 +1092,89 @@ function createCrackAtHit(hit) {
     crack.userData.crackRoot = crack;
     crack.userData.meshUuid = hit.object.uuid;
     crack.userData.normal = worldNormal.clone();
+    crack.userData.point = hit.point.clone();
     crack.userData.presetId = preset.id;
-    crack.userData.baseSize = 0.34 * preset.scale;
+    crack.userData.baseSize = 0.42 * preset.scale;
     crack.userData.size = 1;
-    crack.userData.opacity = 0.9;
+    crack.userData.opacity = 0.94;
     crack.userData.spin = 0;
-
-    const geom = new THREE.PlaneGeometry(crack.userData.baseSize, crack.userData.baseSize);
-    const mat = new THREE.MeshBasicMaterial({
+    crack.userData.material = new THREE.MeshBasicMaterial({
         map: makeCrackTexture(preset),
         transparent: true,
         opacity: crack.userData.opacity,
-        alphaTest: 0.015,
+        alphaTest: 0.04,
         depthWrite: false,
         depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1.5,
+        polygonOffsetUnits: -1.5,
         side: THREE.DoubleSide,
         toneMapped: false
     });
 
-    const plane = new THREE.Mesh(geom, mat);
-    plane.userData.crackRoot = crack;
-    crack.add(plane);
-
-    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.003));
-    applyCrackTransform(crack, worldNormal);
     scene.add(crack);
     crackItems.add(crack);
     activeCrack = crack;
+    rebuildCrackDecal(crack, hit.object, hit.point, worldNormal);
     showCrackInspector(crack);
+}
+
+function getCrackEuler(normal, spinDeg = 0) {
+    const n = normal.clone().normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    const spinQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), THREE.MathUtils.degToRad(spinDeg));
+    q.multiply(spinQ);
+    return new THREE.Euler().setFromQuaternion(q, "XYZ");
+}
+
+function rebuildCrackDecal(crack, mesh, point, normal) {
+    if (!crack || !mesh || !mesh.isMesh) return;
+
+    const size = Math.max(0.06, (crack.userData.baseSize || 0.42) * (crack.userData.size || 1));
+    const orientation = getCrackEuler(normal, crack.userData.spin || 0);
+    const decalSize = new THREE.Vector3(size, size, size * 0.32);
+
+    let child = crack.userData.decalMesh;
+    const geometry = new DecalGeometry(mesh, point, orientation, decalSize);
+
+    if (!child) {
+        child = new THREE.Mesh(geometry, crack.userData.material);
+        child.userData.crackRoot = crack;
+        crack.add(child);
+        crack.userData.decalMesh = child;
+    } else {
+        child.geometry.dispose();
+        child.geometry = geometry;
+    }
+
+    child.userData.crackRoot = crack;
+    child.material.opacity = crack.userData.opacity ?? 0.94;
+    crack.position.set(0, 0, 0);
+    crack.rotation.set(0, 0, 0);
+    crack.scale.set(1, 1, 1);
+    crack.userData.point = point.clone();
+    crack.userData.normal = normal.clone().normalize();
+    crack.userData.meshUuid = mesh.uuid;
 }
 
 function applyCrackTransform(crack, normal) {
     if (!crack) return;
     const n = (normal || crack.userData.normal || new THREE.Vector3(0,1,0)).clone().normalize();
     crack.userData.normal = n;
-    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-    const spin = THREE.MathUtils.degToRad(crack.userData.spin || 0);
-    const spinQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), spin);
-    q.multiply(spinQ);
-    crack.quaternion.copy(q);
-    const size = Math.max(0.05, crack.userData.size || 1);
-    crack.scale.setScalar(size);
+
+    const mesh = model ? findMeshByUuid(crack.userData.meshUuid) : null;
+    if (mesh && crack.userData.point) {
+        rebuildCrackDecal(crack, mesh, crack.userData.point, n);
+    }
+}
+
+function findMeshByUuid(uuid) {
+    if (!model || !uuid) return null;
+    let found = null;
+    model.traverse(obj => {
+        if (!found && obj.isMesh && obj.uuid === uuid) found = obj;
+    });
+    return found;
 }
 
 function getHitWorldNormal(hit) {
@@ -1170,9 +1213,9 @@ function moveCrack(event) {
     const crack = crackDrag.crack;
     const worldNormal = getHitWorldNormal(hit);
     crack.userData.meshUuid = hit.object.uuid;
+    crack.userData.point = hit.point.clone();
     crack.userData.normal = worldNormal.clone();
-    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.002));
-    applyCrackTransform(crack, worldNormal);
+    rebuildCrackDecal(crack, hit.object, hit.point, worldNormal);
 }
 
 function endCrackDrag() {
