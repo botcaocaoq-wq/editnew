@@ -60,8 +60,7 @@
 
         <div class="credit">
             Powered by
-            <a href="https://polyhaven.com" target="_blank">Poly Haven</a><br>
-            Uses the model's existing UVs.
+            <a href="https://polyhaven.com" target="_blank">Poly Haven</a>
         </div>
     </aside>
 
@@ -169,409 +168,889 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
 
-const API="https://api.polyhaven.com";
-const ASSET_CACHE_KEY="textureStudio_polyhaven_assets_v3";
-const MAX_LIBRARY_ITEMS=60;
-const MAX_LOCAL_TEXTURE_SIZE=2048;
+const API = "https://api.polyhaven.com";
+const ASSET_CACHE_KEY = "textureStudio_polyhaven_assets_v3";
+const MAX_LIBRARY_ITEMS = 60;
+const MAX_LOCAL_TEXTURE_SIZE = 2048;
 
-let scene,camera,renderer,controls;
-let model=null,selectedMesh=null,selectedMaterialIndex=0;
-const raycaster=new THREE.Raycaster();
-const mouse=new THREE.Vector2();
-const textureCache=new Map();
-const pendingTextureLoads=new Map();
-const polyFilesCache=new Map();
-let polyAssets=[];
-let history=[],historyIndex=-1;
-let wireframe=false,gridVisible=true;
+let scene, camera, renderer, controls;
+let model = null;
+let selectedMesh = null;
+let selectedMaterialIndex = 0;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const textureCache = new Map();
+const pendingTextureLoads = new Map();
+const polyFilesCache = new Map();
+let polyAssets = [];
+let history = [];
+let historyIndex = -1;
+let wireframe = false;
+let gridVisible = true;
+let textureApplyToken = 0;
 
-const viewer=document.getElementById("viewer");
-const textureList=document.getElementById("textureList");
+const viewer = document.getElementById("viewer");
+const textureList = document.getElementById("textureList");
 
 init();
 loadPolyHavenFast();
 
-function init(){
-    scene=new THREE.Scene();
-    scene.background=new THREE.Color(0x101216);
-    camera=new THREE.PerspectiveCamera(45,Math.max(viewer.clientWidth,1)/Math.max(viewer.clientHeight,1),.01,5000);
-    camera.position.set(3,2,5);
-    renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:false,powerPreference:"high-performance"});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
-    renderer.setSize(Math.max(viewer.clientWidth,1),Math.max(viewer.clientHeight,1),false);
-    renderer.outputColorSpace=THREE.SRGBColorSpace;
-    viewer.appendChild(renderer.domElement);
-    controls=new OrbitControls(camera,renderer.domElement);
-    controls.enableDamping=true;
-    controls.dampingFactor=.08;
-    scene.add(new THREE.HemisphereLight(0xffffff,0x202020,2));
-    const key=new THREE.DirectionalLight(0xffffff,3); key.position.set(4,8,5); scene.add(key);
-    const fill=new THREE.DirectionalLight(0x8aaaff,1); fill.position.set(-4,2,-4); scene.add(fill);
-    window.addEventListener("resize",resize);
-    renderer.domElement.addEventListener("pointerdown",selectObject);
-    document.getElementById("uploadModel").onclick=()=>document.getElementById("modelInput").click();
-    document.getElementById("uploadTexture").onclick=()=>document.getElementById("textureInput").click();
-    document.getElementById("modelInput").addEventListener("change",loadModel);
-    document.getElementById("textureInput").addEventListener("change",uploadTexture);
-    document.getElementById("searchBox").addEventListener("input",debounce(filterTextures,120));
-    document.querySelectorAll("[data-cat]").forEach(btn=>btn.onclick=()=>{
-        document.querySelectorAll("[data-cat]").forEach(x=>x.classList.remove("active"));
-        btn.classList.add("active"); renderLibrary();
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x101216);
+
+    camera = new THREE.PerspectiveCamera(
+        45,
+        Math.max(viewer.clientWidth, 1) / Math.max(viewer.clientHeight, 1),
+        0.01,
+        5000
+    );
+    camera.position.set(3, 2, 5);
+
+    renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        preserveDrawingBuffer: false,
+        powerPreference: "high-performance"
     });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setSize(Math.max(viewer.clientWidth, 1), Math.max(viewer.clientHeight, 1), false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    viewer.appendChild(renderer.domElement);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x202020, 2));
+    const key = new THREE.DirectionalLight(0xffffff, 3);
+    key.position.set(4, 8, 5);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x8aaaff, 1);
+    fill.position.set(-4, 2, -4);
+    scene.add(fill);
+
+    window.addEventListener("resize", resize);
+    renderer.domElement.addEventListener("pointerdown", selectObject);
+
+    document.getElementById("uploadModel").onclick = () => document.getElementById("modelInput").click();
+    document.getElementById("uploadTexture").onclick = () => document.getElementById("textureInput").click();
+    document.getElementById("modelInput").addEventListener("change", loadModel);
+    document.getElementById("textureInput").addEventListener("change", uploadTexture);
+    document.getElementById("searchBox").addEventListener("input", debounce(filterTextures, 100));
+
+    document.querySelectorAll("[data-cat]").forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll("[data-cat]").forEach(x => x.classList.remove("active"));
+            btn.classList.add("active");
+            renderLibrary();
+        };
+    });
+
     bindMaterialControls();
-    document.getElementById("wireBtn").onclick=toggleWire;
-    document.getElementById("gridBtn").onclick=toggleGrid;
-    document.getElementById("focusBtn").onclick=focusModel;
-    document.getElementById("removeTexture").onclick=removeTexture;
-    document.getElementById("resetMaterial").onclick=resetMaterial;
-    document.getElementById("undoBtn").onclick=undo;
-    document.getElementById("redoBtn").onclick=redo;
-    document.getElementById("saveProject").onclick=saveProject;
-    document.getElementById("exportGLB").onclick=exportGLB;
-    document.getElementById("newLayer").onclick=addLayer;
+    document.getElementById("wireBtn").onclick = toggleWire;
+    document.getElementById("gridBtn").onclick = toggleGrid;
+    document.getElementById("focusBtn").onclick = focusModel;
+    document.getElementById("removeTexture").onclick = removeTexture;
+    document.getElementById("resetMaterial").onclick = resetMaterial;
+    document.getElementById("undoBtn").onclick = undo;
+    document.getElementById("redoBtn").onclick = redo;
+    document.getElementById("saveProject").onclick = saveProject;
+    document.getElementById("exportGLB").onclick = exportGLB;
+    document.getElementById("newLayer").onclick = addLayer;
+
     renderLibrary();
     animate();
 }
 
-function resize(){
-    const w=Math.max(viewer.clientWidth,1),h=Math.max(viewer.clientHeight,1);
-    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false);
+function resize() {
+    const w = Math.max(viewer.clientWidth, 1);
+    const h = Math.max(viewer.clientHeight, 1);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
 }
 
-async function loadPolyHavenFast(){
-    try{
-        const cached=JSON.parse(localStorage.getItem(ASSET_CACHE_KEY)||"null");
-        if(cached?.assets?.length){ polyAssets=cached.assets; renderLibrary(); }
-    }catch(e){ console.warn("Poly Haven cache error",e); }
-    try{
-        const response=await fetch(API+"/assets",{cache:"force-cache"});
-        if(!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data=await response.json();
-        polyAssets=Object.entries(data).filter(([id,a])=>a&&a.type===1).map(([id,a])=>({
-            id,name:a.name||id,category:a.category||"",tags:Array.isArray(a.tags)?a.tags:[],thumbnail_url:a.thumbnail_url||""
-        }));
-        try{localStorage.setItem(ASSET_CACHE_KEY,JSON.stringify({time:Date.now(),assets:polyAssets}));}catch(_){ }
+async function loadPolyHavenFast() {
+    // Hiện thư viện từ cache ngay nếu có.
+    try {
+        const cached = JSON.parse(localStorage.getItem(ASSET_CACHE_KEY) || "null");
+        if (cached?.assets?.length) {
+            polyAssets = cached.assets;
+            renderLibrary();
+        }
+    } catch (error) {
+        console.warn("Poly Haven cache error:", error);
+    }
+
+    // Tải metadata mới ở nền, không chặn model upload.
+    try {
+        const response = await fetch(API + "/assets", { cache: "force-cache" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        polyAssets = Object.entries(data)
+            .filter(([, asset]) => asset && asset.type === 1)
+            .map(([id, asset]) => ({
+                id,
+                name: asset.name || id,
+                category: asset.category || "",
+                tags: Array.isArray(asset.tags) ? asset.tags : [],
+                thumbnail_url: asset.thumbnail_url || ""
+            }));
+
+        try {
+            localStorage.setItem(
+                ASSET_CACHE_KEY,
+                JSON.stringify({ time: Date.now(), assets: polyAssets })
+            );
+        } catch (_) {}
+
         renderLibrary();
-    }catch(error){
-        console.warn("Poly Haven load failed",error);
-        if(!polyAssets.length) textureList.innerHTML='<div class="error">Không tải được Poly Haven.<br>Bạn vẫn có thể upload texture riêng.</div>';
+    } catch (error) {
+        console.warn("Poly Haven load failed:", error);
+        if (!polyAssets.length) {
+            textureList.innerHTML = '<div class="error">Không tải được Poly Haven.<br>Bạn vẫn có thể upload texture riêng.</div>';
+        }
     }
 }
 
-function filterTextures(){renderLibrary();}
-
-function renderLibrary(){
-    const query=document.getElementById("searchBox").value.toLowerCase().trim();
-    const category=document.querySelector("[data-cat].active")?.dataset.cat||"all";
-    const items=polyAssets.filter(asset=>{
-        const t=`${asset.name} ${asset.category} ${(asset.tags||[]).join(" ")}`.toLowerCase();
-        return (!query||t.includes(query))&&(category==="all"||t.includes(category));
-    }).slice(0,MAX_LIBRARY_ITEMS);
-    textureList.innerHTML="";
-    if(!items.length){ textureList.innerHTML=`<div class="empty">${polyAssets.length?"No texture found":"Đang tải thư viện..."}</div>`; return; }
-    const frag=document.createDocumentFragment();
-    for(const asset of items){
-        const card=document.createElement("div"); card.className="textureCard";
-        const img=document.createElement("img"); img.loading="lazy"; img.decoding="async"; img.src=asset.thumbnail_url; img.alt=asset.name;
-        const info=document.createElement("div"),strong=document.createElement("strong"),small=document.createElement("small");
-        strong.textContent=asset.name; small.textContent=asset.category||"PBR"; info.append(strong,small); card.append(img,info);
-        card.onclick=()=>applyPolyMaterial(asset,card); frag.appendChild(card);
-    }
-    textureList.appendChild(frag);
+function filterTextures() {
+    renderLibrary();
 }
 
-async function applyPolyMaterial(asset,card){
-    if(!selectedMesh){alert("Hãy click vào một mesh trước.");return;}
-    if(card?.dataset.loading==="1") return;
+function renderLibrary() {
+    const query = document.getElementById("searchBox").value.toLowerCase().trim();
+    const category = document.querySelector("[data-cat].active")?.dataset.cat || "all";
 
-    const targetMesh=selectedMesh;
-    const targetMaterialIndex=selectedMaterialIndex;
-    const applyId=(window.__textureApplyId=(window.__textureApplyId||0)+1);
+    const items = polyAssets
+        .filter(asset => {
+            const text = `${asset.name} ${asset.category} ${(asset.tags || []).join(" ")}`.toLowerCase();
+            return (!query || text.includes(query)) && (category === "all" || text.includes(category));
+        })
+        .slice(0, MAX_LIBRARY_ITEMS);
 
-    if(card){card.dataset.loading="1";card.classList.add("loading");}
+    textureList.innerHTML = "";
 
-    try{
-        // Chỉ lấy metadata/URL trước. Không chờ toàn bộ PBR mới hiển thị.
-        const files=await getPolyFiles(asset.id);
-        const tf=findTextureFiles(files);
-        if(!tf.diff&&!tf.rough&&!tf.normal&&!tf.ao&&!tf.metal) throw new Error("No PBR maps");
+    if (!items.length) {
+        textureList.innerHTML = `<div class="empty">${polyAssets.length ? "No texture found" : "Đang tải thư viện..."}</div>`;
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (const asset of items) {
+        const card = document.createElement("div");
+        card.className = "textureCard";
+        card.dataset.assetId = asset.id;
+
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.src = asset.thumbnail_url;
+        img.alt = asset.name;
+
+        const info = document.createElement("div");
+        const strong = document.createElement("strong");
+        const small = document.createElement("small");
+        strong.textContent = asset.name;
+        small.textContent = asset.category || "PBR";
+        info.append(strong, small);
+        card.append(img, info);
+
+        card.onclick = () => applyPolyMaterial(asset, card);
+        fragment.appendChild(card);
+    }
+    textureList.appendChild(fragment);
+}
+
+async function applyPolyMaterial(asset, card) {
+    if (!selectedMesh) {
+        alert("Hãy click vào một mesh trước.");
+        return;
+    }
+    if (card?.dataset.loading === "1") return;
+
+    const targetMesh = selectedMesh;
+    const targetMaterialIndex = selectedMaterialIndex;
+    const applyId = ++textureApplyToken;
+    const material = ensureEditableMaterial(targetMesh);
+
+    if (card) {
+        card.dataset.loading = "1";
+        card.classList.add("loading");
+    }
+
+    try {
+        const files = await getPolyFiles(asset.id);
+        const textureFiles = findTextureFiles(files);
+        if (!Object.values(textureFiles).some(Boolean)) throw new Error("Không tìm thấy PBR maps.");
 
         saveHistory();
-        const material=ensureEditableMaterial(targetMesh);
 
-        // Ưu tiên Base Color: tải xong là gắn ngay.
-        if(tf.diff){
-            const diff=await loadCachedTexture(tf.diff,THREE.SRGBColorSpace);
-            if(window.__textureApplyId===applyId && selectedMesh===targetMesh && selectedMaterialIndex===targetMaterialIndex){
-                material.map=diff;
-                material.needsUpdate=true;
+        // Base Color được ưu tiên. Gắn ngay khi xong, không đợi PBR khác.
+        if (textureFiles.diff) {
+            const diff = await loadCachedTexture(textureFiles.diff, THREE.SRGBColorSpace);
+            if (isCurrentApply(applyId, targetMesh, targetMaterialIndex)) {
+                material.map = diff;
+                material.needsUpdate = true;
                 applyUVToMaterial(material);
                 updateSelectionUI();
+            } else {
+                return;
             }
         }
 
-        // PBR maps còn lại tải nền, không khóa UI.
-        const jobs=[];
-        if(tf.rough) jobs.push(loadCachedTexture(tf.rough,THREE.NoColorSpace).then(tex=>({type:"rough",tex})));
-        if(tf.normal) jobs.push(loadCachedTexture(tf.normal,THREE.NoColorSpace).then(tex=>({type:"normal",tex})));
-        if(tf.ao) jobs.push(loadCachedTexture(tf.ao,THREE.NoColorSpace).then(tex=>({type:"ao",tex})));
-        if(tf.metal) jobs.push(loadCachedTexture(tf.metal,THREE.NoColorSpace).then(tex=>({type:"metal",tex})));
+        // Các map còn lại chạy song song ở nền.
+        const jobs = [];
+        if (textureFiles.rough) jobs.push(loadCachedTexture(textureFiles.rough, THREE.NoColorSpace).then(tex => ({ type: "rough", tex })));
+        if (textureFiles.normal) jobs.push(loadCachedTexture(textureFiles.normal, THREE.NoColorSpace).then(tex => ({ type: "normal", tex })));
+        if (textureFiles.ao) jobs.push(loadCachedTexture(textureFiles.ao, THREE.NoColorSpace).then(tex => ({ type: "ao", tex })));
+        if (textureFiles.metal) jobs.push(loadCachedTexture(textureFiles.metal, THREE.NoColorSpace).then(tex => ({ type: "metal", tex })));
 
-        Promise.all(jobs).then(maps=>{
-            if(window.__textureApplyId!==applyId || selectedMesh!==targetMesh || selectedMaterialIndex!==targetMaterialIndex) return;
-            for(const {type,tex} of maps){
-                if(type==="rough") material.roughnessMap=tex;
-                if(type==="normal") material.normalMap=tex;
-                if(type==="ao"){material.aoMap=tex;ensureUV2(targetMesh);}
-                if(type==="metal") material.metalnessMap=tex;
-            }
-            material.needsUpdate=true;
-            applyUVToMaterial(material);
-            updateSelectionUI();
-        }).catch(error=>console.warn("Background PBR map error:",error));
-    }catch(error){
-        console.error(error);
-        alert("Không thể tải material này.");
-    }finally{
-        if(card){card.dataset.loading="0";card.classList.remove("loading");}
+        Promise.all(jobs)
+            .then(maps => {
+                if (!isCurrentApply(applyId, targetMesh, targetMaterialIndex)) return;
+                for (const { type, tex } of maps) {
+                    if (type === "rough") material.roughnessMap = tex;
+                    if (type === "normal") material.normalMap = tex;
+                    if (type === "ao") {
+                        material.aoMap = tex;
+                        ensureUV2(targetMesh);
+                    }
+                    if (type === "metal") material.metalnessMap = tex;
+                }
+                material.needsUpdate = true;
+                applyUVToMaterial(material);
+                updateSelectionUI();
+            })
+            .catch(error => console.warn("Background PBR map error:", error));
+    } catch (error) {
+        console.error("Material load error:", error);
+        if (isCurrentApply(applyId, targetMesh, targetMaterialIndex)) {
+            alert("Không thể tải material này.");
+        }
+    } finally {
+        if (card) {
+            card.dataset.loading = "0";
+            card.classList.remove("loading");
+        }
     }
 }
 
-async function getPolyFiles
+function isCurrentApply(id, mesh, materialIndex) {
+    return id === textureApplyToken && selectedMesh === mesh && selectedMaterialIndex === materialIndex;
+}
 
-async function getPolyFiles(assetId){
-    if(polyFilesCache.has(assetId)) return polyFilesCache.get(assetId);
-    const key=`polyFiles:${assetId}`;
-    try{const c=sessionStorage.getItem(key);if(c){const p=JSON.parse(c);polyFilesCache.set(assetId,p);return p;}}catch(_){ }
-    const response=await fetch(`${API}/files/${encodeURIComponent(assetId)}`,{cache:"force-cache"});
-    if(!response.ok) throw new Error(`HTTP ${response.status}`);
-    const files=await response.json(); polyFilesCache.set(assetId,files);
-    try{sessionStorage.setItem(key,JSON.stringify(files));}catch(_){ }
+async function getPolyFiles(assetId) {
+    if (polyFilesCache.has(assetId)) return polyFilesCache.get(assetId);
+
+    const sessionKey = `polyFiles:${assetId}`;
+    try {
+        const cached = sessionStorage.getItem(sessionKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            polyFilesCache.set(assetId, parsed);
+            return parsed;
+        }
+    } catch (_) {}
+
+    const response = await fetch(`${API}/files/${encodeURIComponent(assetId)}`, { cache: "force-cache" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const files = await response.json();
+    polyFilesCache.set(assetId, files);
+    try { sessionStorage.setItem(sessionKey, JSON.stringify(files)); } catch (_) {}
     return files;
 }
 
-function loadCachedTexture(url,colorSpace){
-    const key=`${url}|${colorSpace}`;
-    if(textureCache.has(key)) return Promise.resolve(textureCache.get(key));
-    if(pendingTextureLoads.has(key)) return pendingTextureLoads.get(key);
-    const promise=new Promise((resolve,reject)=>new THREE.TextureLoader().load(url,tex=>{
-        prepareTexture(tex,colorSpace); textureCache.set(key,tex); pendingTextureLoads.delete(key); resolve(tex);
-    },undefined,error=>{pendingTextureLoads.delete(key);reject(error);}));
-    pendingTextureLoads.set(key,promise); return promise;
-}
+function loadCachedTexture(url, colorSpace) {
+    const key = `${url}|${colorSpace}`;
+    if (textureCache.has(key)) return Promise.resolve(textureCache.get(key));
+    if (pendingTextureLoads.has(key)) return pendingTextureLoads.get(key);
 
-function prepareTexture(tex,colorSpace){
-    tex.colorSpace=colorSpace; tex.wrapS=THREE.RepeatWrapping; tex.wrapT=THREE.RepeatWrapping;
-    tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);
-}
-
-function findTextureFiles(obj){
-    const candidates={diff:[],rough:[],normal:[],ao:[],metal:[]};
-    function put(kind,url,key){
-        if(!url||!candidates[kind]) return;
-        candidates[kind].push({url,lower:`${key} ${url}`.toLowerCase()});
-    }
-    function walk(value){
-        if(!value||typeof value!=="object") return;
-        for(const key in value){
-            const v=value[key];
-            if(!v||typeof v!=="object") continue;
-            if(v.url){
-                const s=`${key} ${v.url}`.toLowerCase();
-                if(s.includes("diff")||s.includes("albedo")||s.includes("basecolor")) put("diff",v.url,key);
-                if(s.includes("rough")) put("rough",v.url,key);
-                if(s.includes("nor_gl")||s.includes("normal")) put("normal",v.url,key);
-                if(s.includes("ao")) put("ao",v.url,key);
-                if(s.includes("metal")) put("metal",v.url,key);
+    const promise = new Promise((resolve, reject) => {
+        const loader = new THREE.TextureLoader();
+        loader.load(
+            url,
+            texture => {
+                prepareTexture(texture, colorSpace);
+                textureCache.set(key, texture);
+                pendingTextureLoads.delete(key);
+                resolve(texture);
+            },
+            undefined,
+            error => {
+                pendingTextureLoads.delete(key);
+                reject(error);
             }
-            walk(v);
+        );
+    });
+
+    pendingTextureLoads.set(key, promise);
+    return promise;
+}
+
+function prepareTexture(texture, colorSpace) {
+    texture.colorSpace = colorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+}
+
+function findTextureFiles(obj) {
+    const candidates = { diff: [], rough: [], normal: [], ao: [], metal: [] };
+
+    function put(type, url, key) {
+        if (!url) return;
+        const lower = `${key} ${url}`.toLowerCase();
+        candidates[type].push({ url, lower });
+    }
+
+    function walk(value) {
+        if (!value || typeof value !== "object") return;
+        for (const key in value) {
+            const v = value[key];
+            if (v && typeof v === "object") {
+                if (v.url) {
+                    const s = `${key} ${v.url}`.toLowerCase();
+                    if (s.includes("diff") || s.includes("albedo") || s.includes("basecolor")) put("diff", v.url, key);
+                    if (s.includes("rough")) put("rough", v.url, key);
+                    if (s.includes("nor_gl") || s.includes("normal")) put("normal", v.url, key);
+                    if (s.includes("ao")) put("ao", v.url, key);
+                    if (s.includes("metal")) put("metal", v.url, key);
+                }
+                walk(v);
+            }
         }
     }
-    function pick(list){
-        if(!list.length) return null;
-        const score=item=>{
-            const s=item.lower;
-            if(/(^|[^0-9])512([^0-9]|$)/.test(s)) return 5;
-            if(/(^|[^0-9])1k([^0-9]|$)/.test(s)) return 10;
-            if(/(^|[^0-9])2k([^0-9]|$)/.test(s)) return 20;
-            if(/(^|[^0-9])4k([^0-9]|$)/.test(s)) return 40;
-            if(/(^|[^0-9])8k([^0-9]|$)/.test(s)) return 80;
-            if(/(^|[^0-9])16k([^0-9]|$)/.test(s)) return 160;
+
+    function pick(list) {
+        if (!list.length) return null;
+        const score = item => {
+            const s = item.lower;
+            if (/(^|[^0-9])512([^0-9]|$)/.test(s)) return 5;
+            if (/(^|[^0-9])1k([^0-9]|$)/.test(s)) return 10;
+            if (/(^|[^0-9])2k([^0-9]|$)/.test(s)) return 20;
+            if (/(^|[^0-9])4k([^0-9]|$)/.test(s)) return 40;
+            if (/(^|[^0-9])8k([^0-9]|$)/.test(s)) return 80;
+            if (/(^|[^0-9])16k([^0-9]|$)/.test(s)) return 160;
             return 30;
         };
-        return [...list].sort((a,b)=>score(a)-score(b))[0].url;
+        return [...list].sort((a, b) => score(a) - score(b))[0].url;
     }
+
     walk(obj);
-    return {diff:pick(candidates.diff),rough:pick(candidates.rough),normal:pick(candidates.normal),ao:pick(candidates.ao),metal:pick(candidates.metal)};
+    return {
+        diff: pick(candidates.diff),
+        rough: pick(candidates.rough),
+        normal: pick(candidates.normal),
+        ao: pick(candidates.ao),
+        metal: pick(candidates.metal)
+    };
 }
 
-function ensureEditableMaterial
-
-function ensureEditableMaterial(mesh){
-    if(Array.isArray(mesh.material)){
-        if(!mesh.userData.textureStudioCloned){mesh.material=mesh.material.map(m=>m.clone());mesh.userData.textureStudioCloned=true;}
-        return mesh.material[selectedMaterialIndex]||mesh.material[0];
+function ensureEditableMaterial(mesh) {
+    if (Array.isArray(mesh.material)) {
+        if (!mesh.userData.textureStudioCloned) {
+            mesh.material = mesh.material.map(m => m.clone());
+            mesh.userData.textureStudioCloned = true;
+        }
+        return mesh.material[selectedMaterialIndex] || mesh.material[0];
     }
-    if(!mesh.userData.textureStudioCloned){mesh.material=mesh.material.clone();mesh.userData.textureStudioCloned=true;}
+
+    if (!mesh.userData.textureStudioCloned) {
+        mesh.material = mesh.material.clone();
+        mesh.userData.textureStudioCloned = true;
+    }
     return mesh.material;
 }
 
-function getSelectedMaterial(){
-    if(!selectedMesh?.material) return null;
-    return Array.isArray(selectedMesh.material)?(selectedMesh.material[selectedMaterialIndex]||selectedMesh.material[0]||null):selectedMesh.material;
+function getSelectedMaterial() {
+    if (!selectedMesh?.material) return null;
+    if (Array.isArray(selectedMesh.material)) {
+        return selectedMesh.material[selectedMaterialIndex] || selectedMesh.material[0] || null;
+    }
+    return selectedMesh.material;
 }
 
-function loadModel(event){
-    const file=event.target.files[0]; if(!file)return;
-    const url=URL.createObjectURL(file),loader=new GLTFLoader();
-    loader.load(url,gltf=>{
-        disposeModel(model); model=gltf.scene; selectedMesh=null; selectedMaterialIndex=0; scene.add(model);
-        model.traverse(obj=>{if(!obj.isMesh)return;obj.castShadow=false;obj.receiveShadow=false;const ms=Array.isArray(obj.material)?obj.material:[obj.material];ms.forEach(m=>{if(m?.map)m.map.colorSpace=THREE.SRGBColorSpace;});});
-        centerModel(); document.getElementById("modelName").textContent=file.name; document.getElementById("selectionInfo").textContent="Nothing selected"; document.getElementById("selectedName").textContent="NONE"; URL.revokeObjectURL(url);
-    },undefined,error=>{console.error(error);URL.revokeObjectURL(url);alert("Không thể đọc model.");});
-    event.target.value="";
+function loadModel(event) {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    const loader = new GLTFLoader();
+
+    loader.load(
+        url,
+        gltf => {
+            disposeModel(model);
+            model = gltf.scene;
+            selectedMesh = null;
+            selectedMaterialIndex = 0;
+            textureApplyToken++;
+            scene.add(model);
+
+            model.traverse(obj => {
+                if (!obj.isMesh) return;
+                obj.castShadow = false;
+                obj.receiveShadow = false;
+                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                mats.forEach(mat => {
+                    if (mat?.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+                });
+            });
+
+            centerModel();
+            document.getElementById("modelName").textContent = file.name;
+            document.getElementById("selectionInfo").textContent = "Nothing selected";
+            document.getElementById("selectedName").textContent = "NONE";
+            URL.revokeObjectURL(url);
+        },
+        undefined,
+        error => {
+            console.error(error);
+            URL.revokeObjectURL(url);
+            alert("Không thể đọc model.");
+        }
+    );
 }
 
-function disposeModel(root){
-    if(!root)return;
-    const cached=new Set(textureCache.values());
-    root.traverse(obj=>{if(!obj.isMesh)return;if(obj.geometry)obj.geometry.dispose();const ms=Array.isArray(obj.material)?obj.material:[obj.material];ms.forEach(mat=>{if(!mat)return;["map","normalMap","roughnessMap","metalnessMap","aoMap","emissiveMap","alphaMap"].forEach(k=>{const t=mat[k];if(t&&!cached.has(t))t.dispose();});mat.dispose();});});
+function disposeModel(root) {
+    if (!root) return;
+
+    root.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.geometry?.dispose();
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(mat => {
+            if (!mat) return;
+            mat.dispose();
+        });
+    });
     scene.remove(root);
 }
 
-function centerModel(){
-    if(!model)return; const box=new THREE.Box3().setFromObject(model),center=box.getCenter(new THREE.Vector3()); model.position.sub(center);
-    const size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z,.1),distance=max*2.5; camera.position.set(distance*.8,distance*.6,distance);controls.target.set(0,0,0);controls.update();
+function centerModel() {
+    if (!model) return;
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+    const size = box.getSize(new THREE.Vector3());
+    const max = Math.max(size.x, size.y, size.z, 0.1);
+    const distance = max * 2.5;
+    camera.position.set(distance * 0.8, distance * 0.6, distance);
+    controls.target.set(0, 0, 0);
+    controls.update();
 }
 
-function selectObject(event){
-    if(!model)return; const rect=renderer.domElement.getBoundingClientRect();mouse.x=((event.clientX-rect.left)/rect.width)*2-1;mouse.y=-((event.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);
-    const hits=raycaster.intersectObject(model,true);if(!hits.length)return;const hit=hits[0];if(hit.object.isMesh){selectedMesh=hit.object;selectedMaterialIndex=hit.face?.materialIndex??0;updateSelectionUI();}
+function selectObject(event) {
+    if (!model) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObject(model, true);
+    if (!hits.length) return;
+
+    const hit = hits[0];
+    if (!hit.object.isMesh) return;
+    selectedMesh = hit.object;
+    selectedMaterialIndex = hit.face?.materialIndex ?? 0;
+    textureApplyToken++;
+    updateSelectionUI();
 }
 
-function updateSelectionUI(){
-    if(!selectedMesh)return; document.getElementById("selectedName").textContent=selectedMesh.name||"MESH";document.getElementById("selectionInfo").textContent=selectedMesh.name||"Selected mesh";
-    const m=getSelectedMaterial();if(!m)return;
-    document.getElementById("roughness").value=m.roughness??.5;document.getElementById("roughnessValue").textContent=Number(m.roughness??.5).toFixed(2);
-    document.getElementById("metallic").value=m.metalness??0;document.getElementById("metallicValue").textContent=Number(m.metalness??0).toFixed(2);
-    if(m.color){const hex="#"+m.color.getHexString();document.getElementById("baseColor").value=hex;document.getElementById("baseColorValue").textContent=hex;}
-    if(m.map){document.getElementById("scale").value=m.map.repeat.x;document.getElementById("scaleValue").textContent=Number(m.map.repeat.x).toFixed(2);const d=Math.round(THREE.MathUtils.radToDeg(m.map.rotation));document.getElementById("rotation").value=d;document.getElementById("rotationValue").textContent=d+"°";document.getElementById("offsetX").value=m.map.offset.x;document.getElementById("offsetY").value=m.map.offset.y;document.getElementById("offsetXValue").textContent=Number(m.map.offset.x).toFixed(2);document.getElementById("offsetYValue").textContent=Number(m.map.offset.y).toFixed(2);}
+function updateSelectionUI() {
+    if (!selectedMesh) return;
+    document.getElementById("selectedName").textContent = selectedMesh.name || "MESH";
+    document.getElementById("selectionInfo").textContent = selectedMesh.name || "Selected mesh";
+
+    const m = getSelectedMaterial();
+    if (!m) return;
+
+    document.getElementById("roughness").value = m.roughness ?? 0.5;
+    document.getElementById("roughnessValue").textContent = Number(m.roughness ?? 0.5).toFixed(2);
+    document.getElementById("metallic").value = m.metalness ?? 0;
+    document.getElementById("metallicValue").textContent = Number(m.metalness ?? 0).toFixed(2);
+
+    if (m.color) {
+        const hex = "#" + m.color.getHexString();
+        document.getElementById("baseColor").value = hex;
+        document.getElementById("baseColorValue").textContent = hex;
+    }
+
+    if (m.map) {
+        document.getElementById("scale").value = m.map.repeat.x;
+        document.getElementById("scaleValue").textContent = Number(m.map.repeat.x).toFixed(2);
+        const degrees = Math.round(THREE.MathUtils.radToDeg(m.map.rotation));
+        document.getElementById("rotation").value = degrees;
+        document.getElementById("rotationValue").textContent = degrees + "°";
+        document.getElementById("offsetX").value = m.map.offset.x;
+        document.getElementById("offsetY").value = m.map.offset.y;
+        document.getElementById("offsetXValue").textContent = Number(m.map.offset.x).toFixed(2);
+        document.getElementById("offsetYValue").textContent = Number(m.map.offset.y).toFixed(2);
+    }
 }
 
-function bindMaterialControls(){
-    const scale=document.getElementById("scale"),rotation=document.getElementById("rotation"),offsetX=document.getElementById("offsetX"),offsetY=document.getElementById("offsetY"),roughness=document.getElementById("roughness"),metallic=document.getElementById("metallic"),baseColor=document.getElementById("baseColor");
-    scale.oninput=()=>{document.getElementById("scaleValue").textContent=Number(scale.value).toFixed(2);applyUV();};
-    rotation.oninput=()=>{document.getElementById("rotationValue").textContent=rotation.value+"°";applyUV();};
-    offsetX.oninput=()=>{document.getElementById("offsetXValue").textContent=offsetX.value;applyUV();};
-    offsetY.oninput=()=>{document.getElementById("offsetYValue").textContent=offsetY.value;applyUV();};
-    roughness.oninput=()=>{const m=getSelectedMaterial();if(!m)return;m.roughness=Number(roughness.value);document.getElementById("roughnessValue").textContent=Number(roughness.value).toFixed(2);};
-    metallic.oninput=()=>{const m=getSelectedMaterial();if(!m)return;m.metalness=Number(metallic.value);document.getElementById("metallicValue").textContent=Number(metallic.value).toFixed(2);};
-    baseColor.oninput=e=>{const m=getSelectedMaterial();if(!m)return;m.color.set(e.target.value);document.getElementById("baseColorValue").textContent=e.target.value;};
+function bindMaterialControls() {
+    const scale = document.getElementById("scale");
+    const rotation = document.getElementById("rotation");
+    const offsetX = document.getElementById("offsetX");
+    const offsetY = document.getElementById("offsetY");
+    const roughness = document.getElementById("roughness");
+    const metallic = document.getElementById("metallic");
+    const baseColor = document.getElementById("baseColor");
+
+    scale.oninput = () => {
+        document.getElementById("scaleValue").textContent = Number(scale.value).toFixed(2);
+        applyUV();
+    };
+    rotation.oninput = () => {
+        document.getElementById("rotationValue").textContent = rotation.value + "°";
+        applyUV();
+    };
+    offsetX.oninput = () => {
+        document.getElementById("offsetXValue").textContent = offsetX.value;
+        applyUV();
+    };
+    offsetY.oninput = () => {
+        document.getElementById("offsetYValue").textContent = offsetY.value;
+        applyUV();
+    };
+    roughness.oninput = () => {
+        const m = getSelectedMaterial();
+        if (!m) return;
+        m.roughness = Number(roughness.value);
+        document.getElementById("roughnessValue").textContent = Number(roughness.value).toFixed(2);
+    };
+    metallic.oninput = () => {
+        const m = getSelectedMaterial();
+        if (!m) return;
+        m.metalness = Number(metallic.value);
+        document.getElementById("metallicValue").textContent = Number(metallic.value).toFixed(2);
+    };
+    baseColor.oninput = event => {
+        const m = getSelectedMaterial();
+        if (!m) return;
+        m.color.set(event.target.value);
+        document.getElementById("baseColorValue").textContent = event.target.value;
+    };
 }
 
-function applyUVToMaterial(mat){
-    if(!mat) return;
-    const maps=[mat.map,mat.normalMap,mat.roughnessMap,mat.metalnessMap,mat.aoMap];
-    const s=Number(document.getElementById("scale").value);
-    const r=Number(document.getElementById("rotation").value)*Math.PI/180;
-    const x=Number(document.getElementById("offsetX").value);
-    const y=Number(document.getElementById("offsetY").value);
-    maps.forEach(tex=>{
-        if(!tex) return;
-        tex.wrapS=THREE.RepeatWrapping;
-        tex.wrapT=THREE.RepeatWrapping;
-        tex.repeat.set(s,s);
-        tex.rotation=r;
-        tex.offset.set(x,y);
-        tex.needsUpdate=false;
+function applyUVToMaterial(mat) {
+    if (!mat) return;
+    const maps = [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap, mat.aoMap];
+    const scale = Number(document.getElementById("scale").value);
+    const rotation = Number(document.getElementById("rotation").value) * Math.PI / 180;
+    const x = Number(document.getElementById("offsetX").value);
+    const y = Number(document.getElementById("offsetY").value);
+
+    maps.forEach(tex => {
+        if (!tex) return;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(scale, scale);
+        tex.rotation = rotation;
+        tex.offset.set(x, y);
     });
 }
 
-function applyUV(){
-    const m=getSelectedMaterial();if(!m)return;const maps=[m.map,m.normalMap,m.roughnessMap,m.metalnessMap,m.aoMap];
-    const s=Number(document.getElementById("scale").value),r=Number(document.getElementById("rotation").value)*Math.PI/180,x=Number(document.getElementById("offsetX").value),y=Number(document.getElementById("offsetY").value);
-    maps.forEach(tex=>{if(!tex)return;tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(s,s);tex.rotation=r;tex.offset.set(x,y);});
+function applyUV() {
+    applyUVToMaterial(getSelectedMaterial());
 }
 
-async function uploadTexture(event){
-    const file=event.target.files[0];event.target.value="";if(!file)return;if(!selectedMesh){alert("Hãy chọn mesh trước.");return;}
-    try{const tex=await loadLocalTextureFast(file);saveHistory();const material=ensureEditableMaterial(selectedMesh);material.map=tex;material.needsUpdate=true;updateSelectionUI();}catch(e){console.error(e);alert("Không thể đọc texture.");}
+async function uploadTexture(event) {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!selectedMesh) {
+        alert("Hãy chọn mesh trước.");
+        return;
+    }
+
+    try {
+        const texture = await loadLocalTextureFast(file);
+        saveHistory();
+        const material = ensureEditableMaterial(selectedMesh);
+        material.map = texture;
+        material.needsUpdate = true;
+        applyUVToMaterial(material);
+        updateSelectionUI();
+    } catch (error) {
+        console.error(error);
+        alert("Không thể đọc texture.");
+    }
 }
 
-function loadLocalTextureFast(file){
-    return new Promise((resolve,reject)=>{
-        const objectURL=URL.createObjectURL(file),img=new Image();
-        img.onload=()=>{try{const scale=Math.min(1,MAX_LOCAL_TEXTURE_SIZE/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;canvas.getContext("2d").drawImage(img,0,0,w,h);const tex=new THREE.CanvasTexture(canvas);prepareTexture(tex,THREE.SRGBColorSpace);URL.revokeObjectURL(objectURL);resolve(tex);}catch(e){URL.revokeObjectURL(objectURL);reject(e);}};
-        img.onerror=()=>{URL.revokeObjectURL(objectURL);reject(new Error("Image decode failed"));};img.decoding="async";img.src=objectURL;
+function loadLocalTextureFast(file) {
+    return new Promise((resolve, reject) => {
+        const objectURL = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+            try {
+                const scale = Math.min(1, MAX_LOCAL_TEXTURE_SIZE / Math.max(img.width, img.height));
+                const width = Math.max(1, Math.round(img.width * scale));
+                const height = Math.max(1, Math.round(img.height * scale));
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d", { alpha: true });
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                prepareTexture(texture, THREE.SRGBColorSpace);
+                URL.revokeObjectURL(objectURL);
+                resolve(texture);
+            } catch (error) {
+                URL.revokeObjectURL(objectURL);
+                reject(error);
+            }
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(objectURL);
+            reject(new Error("Image decode failed"));
+        };
+        img.decoding = "async";
+        img.src = objectURL;
     });
 }
 
-function ensureUV2(mesh){const uv=mesh?.geometry?.attributes?.uv;if(uv&&!mesh.geometry.attributes.uv2)mesh.geometry.setAttribute("uv2",uv);}
+function ensureUV2(mesh) {
+    const uv = mesh?.geometry?.attributes?.uv;
+    if (uv && !mesh.geometry.attributes.uv2) {
+        mesh.geometry.setAttribute("uv2", uv);
+    }
+}
 
-function removeTexture(){
-    const material=getSelectedMaterial();
-    if(!material) return;
+function removeTexture() {
+    const material = getSelectedMaterial();
+    if (!material) return;
 
     saveHistory();
-    const oldTextures=[material.map,material.normalMap,material.roughnessMap,material.metalnessMap,material.aoMap].filter(Boolean);
+    ++textureApplyToken;
 
-    // Hủy các map khỏi material ngay lập tức.
-    material.map=null;
-    material.normalMap=null;
-    material.roughnessMap=null;
-    material.metalnessMap=null;
-    material.aoMap=null;
-    material.needsUpdate=true;
+    const oldTextures = [
+        material.map,
+        material.normalMap,
+        material.roughnessMap,
+        material.metalnessMap,
+        material.aoMap
+    ].filter(Boolean);
 
-    // Tăng token để các map đang tải nền không tự gắn lại texture cũ.
-    window.__textureApplyId=(window.__textureApplyId||0)+1;
+    material.map = null;
+    material.normalMap = null;
+    material.roughnessMap = null;
+    material.metalnessMap = null;
+    material.aoMap = null;
+    material.needsUpdate = true;
 
-    // Giải phóng GPU/cache nếu texture không còn được mesh nào dùng.
     oldTextures.forEach(releaseTextureIfUnused);
     updateSelectionUI();
 }
 
-function releaseTextureIfUnused(texture){
-    if(!texture) return;
-    let used=false;
-    if(model){
-        model.traverse(obj=>{
-            if(used||!obj.isMesh||!obj.material) return;
-            const mats=Array.isArray(obj.material)?obj.material:[obj.material];
-            for(const mat of mats){
-                if(!mat) continue;
-                if(mat.map===texture||mat.normalMap===texture||mat.roughnessMap===texture||mat.metalnessMap===texture||mat.aoMap===texture){used=true;break;}
-            }
+function releaseTextureIfUnused(texture) {
+    if (!texture) return;
+
+    let used = false;
+    if (model) {
+        model.traverse(obj => {
+            if (used || !obj.isMesh) return;
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach(mat => {
+                if (!mat || used) return;
+                if (
+                    mat.map === texture ||
+                    mat.normalMap === texture ||
+                    mat.roughnessMap === texture ||
+                    mat.metalnessMap === texture ||
+                    mat.aoMap === texture
+                ) used = true;
+            });
         });
     }
-    if(used) return;
-    for(const [key,tex] of textureCache.entries()) if(tex===texture) textureCache.delete(key);
+    if (used) return;
+
+    for (const [key, cached] of textureCache.entries()) {
+        if (cached === texture) textureCache.delete(key);
+    }
     texture.dispose();
 }
 
-function resetMaterial
+function resetMaterial() {
+    if (!selectedMesh) return;
+    saveHistory();
+    ++textureApplyToken;
 
-function resetMaterial(){if(!selectedMesh)return;saveHistory();if(Array.isArray(selectedMesh.material))selectedMesh.material=selectedMesh.material.map(()=>new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5,metalness:0}));else selectedMesh.material=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5,metalness:0});selectedMesh.userData.textureStudioCloned=true;updateSelectionUI();}
-
-function addLayer(){const layer=document.createElement("div");layer.className="layer";layer.innerHTML='<span>●</span><span>New Layer</span><button>×</button>';layer.querySelector("button").onclick=()=>layer.remove();document.getElementById("layers").appendChild(layer);}
-function toggleWire(){if(!model)return;wireframe=!wireframe;model.traverse(obj=>{if(!obj.isMesh)return;(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>{if(m)m.wireframe=wireframe;});});}
-function toggleGrid(){gridVisible=!gridVisible;}
-function focusModel(){if(model)centerModel();}
-
-function saveHistory(){const material=getSelectedMaterial();if(!selectedMesh||!material)return;history=history.slice(0,historyIndex+1);history.push({mesh:selectedMesh.uuid,material:material.clone(),materialIndex:selectedMaterialIndex});historyIndex=history.length-1;if(history.length>30){history.shift();historyIndex--;}}
-function undo(){if(historyIndex<0)return;restoreHistory(history[historyIndex]);historyIndex--;}
-function redo(){if(historyIndex>=history.length-1)return;historyIndex++;restoreHistory(history[historyIndex]);}
-function restoreHistory(state){if(!model)return;let mesh=null;model.traverse(obj=>{if(obj.uuid===state.mesh)mesh=obj;});if(!mesh)return;selectedMaterialIndex=state.materialIndex??0;if(Array.isArray(mesh.material))mesh.material[selectedMaterialIndex]=state.material.clone();else mesh.material=state.material.clone();selectedMesh=mesh;updateSelectionUI();}
-
-function saveProject(){
-    const project={version:2,modelName:document.getElementById("modelName").textContent,selected:selectedMesh?.name||null,materials:[]};
-    if(model)model.traverse(obj=>{if(!obj.isMesh)return;(Array.isArray(obj.material)?obj.material:[obj.material]).forEach((m,index)=>project.materials.push({name:obj.name,materialIndex:index,color:m.color?m.color.getHexString():"ffffff",roughness:m.roughness??.5,metallic:m.metalness??0,hasBaseTexture:!!m.map,hasNormal:!!m.normalMap,hasRoughness:!!m.roughnessMap,hasMetallic:!!m.metalnessMap,hasAO:!!m.aoMap}));});
-    downloadBlob(new Blob([JSON.stringify(project,null,2)],{type:"application/json"}),"texture-project.json");
+    if (Array.isArray(selectedMesh.material)) {
+        selectedMesh.material = selectedMesh.material.map(() => new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.5,
+            metalness: 0
+        }));
+    } else {
+        selectedMesh.material = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.5,
+            metalness: 0
+        });
+    }
+    selectedMesh.userData.textureStudioCloned = true;
+    updateSelectionUI();
 }
-function exportGLB(){if(!model){alert("Chưa có model.");return;}new GLTFExporter().parse(model,result=>downloadBlob(new Blob([result],{type:"model/gltf-binary"}),"textured-model.glb"),error=>{console.error(error);alert("Export thất bại.");},{binary:true});}
-function downloadBlob(blob,filename){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function debounce(fn,delay){let timer=0;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),delay);};}
-function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
+
+function addLayer() {
+    const layer = document.createElement("div");
+    layer.className = "layer";
+    layer.innerHTML = '<span>●</span><span>New Layer</span><button>×</button>';
+    layer.querySelector("button").onclick = () => layer.remove();
+    document.getElementById("layers").appendChild(layer);
+}
+
+function toggleWire() {
+    if (!model) return;
+    wireframe = !wireframe;
+    model.traverse(obj => {
+        if (!obj.isMesh) return;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => { if (m) m.wireframe = wireframe; });
+    });
+}
+
+function toggleGrid() {
+    gridVisible = !gridVisible;
+}
+
+function focusModel() {
+    if (model) centerModel();
+}
+
+function saveHistory() {
+    const material = getSelectedMaterial();
+    if (!selectedMesh || !material) return;
+
+    history = history.slice(0, historyIndex + 1);
+    history.push({
+        mesh: selectedMesh.uuid,
+        material: material.clone(),
+        materialIndex: selectedMaterialIndex
+    });
+    historyIndex = history.length - 1;
+
+    if (history.length > 30) {
+        history.shift();
+        historyIndex--;
+    }
+}
+
+function undo() {
+    if (historyIndex < 0) return;
+    restoreHistory(history[historyIndex]);
+    historyIndex--;
+}
+
+function redo() {
+    if (historyIndex >= history.length - 1) return;
+    historyIndex++;
+    restoreHistory(history[historyIndex]);
+}
+
+function restoreHistory(state) {
+    if (!model) return;
+    let mesh = null;
+    model.traverse(obj => {
+        if (obj.uuid === state.mesh) mesh = obj;
+    });
+    if (!mesh) return;
+
+    selectedMaterialIndex = state.materialIndex ?? 0;
+    if (Array.isArray(mesh.material)) {
+        mesh.material[selectedMaterialIndex] = state.material.clone();
+    } else {
+        mesh.material = state.material.clone();
+    }
+    selectedMesh = mesh;
+    ++textureApplyToken;
+    updateSelectionUI();
+}
+
+function saveProject() {
+    const project = {
+        version: 2,
+        modelName: document.getElementById("modelName").textContent,
+        selected: selectedMesh?.name || null,
+        materials: []
+    };
+
+    if (model) {
+        model.traverse(obj => {
+            if (!obj.isMesh) return;
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach((m, index) => project.materials.push({
+                name: obj.name,
+                materialIndex: index,
+                color: m.color ? m.color.getHexString() : "ffffff",
+                roughness: m.roughness ?? 0.5,
+                metallic: m.metalness ?? 0,
+                hasBaseTexture: !!m.map,
+                hasNormal: !!m.normalMap,
+                hasRoughness: !!m.roughnessMap,
+                hasMetallic: !!m.metalnessMap,
+                hasAO: !!m.aoMap
+            }));
+        });
+    }
+
+    downloadBlob(
+        new Blob([JSON.stringify(project, null, 2)], { type: "application/json" }),
+        "texture-project.json"
+    );
+}
+
+function exportGLB() {
+    if (!model) {
+        alert("Chưa có model.");
+        return;
+    }
+
+    new GLTFExporter().parse(
+        model,
+        result => downloadBlob(
+            new Blob([result], { type: "model/gltf-binary" }),
+            "textured-model.glb"
+        ),
+        error => {
+            console.error(error);
+            alert("Export thất bại.");
+        },
+        { binary: true }
+    );
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function debounce(fn, delay) {
+    let timer = 0;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
 </script>
 
 </body>
