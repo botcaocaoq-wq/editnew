@@ -1,4 +1,4 @@
-**
+/**
  * Hàm xuất hệ thống hạt thành file GLB có chứa Animation hỗ trợ Blender
  * @param {THREE.Object3D} particleSystem - Hệ thống hạt hiện tại của bạn
  * @param {number} duration - Thời gian chạy hiệu ứng (ví dụ: 2.0s)
@@ -13,7 +13,7 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
     // 1. Khởi tạo một Group ảo để chứa dữ liệu Mesh tĩnh đã bake
     const bakeGroup = new THREE.Group();
     bakeGroup.name = "Baked_Particle_Effect";
-    
+
     // Giả định hệ thống hạt của bạn lưu mảng các hạt trong particleSystem.particles
     const sourceParticles = particleSystem.particles || [];
     if (sourceParticles.length === 0) {
@@ -24,7 +24,7 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
     const totalFrames = Math.ceil(duration * fps);
     const frameTimeDelta = 1 / fps;
     const times = []; // Mảng lưu các mốc thời gian (0s, 0.033s, 0.066s...)
-    
+
     // Cấu trúc lưu trữ chuỗi khóa chuyển động cho từng hạt
     const particleTracksData = sourceParticles.map((p, index) => {
         return {
@@ -42,16 +42,16 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
         times.push(currentTime);
 
         // Giả lập trạng thái hạt tại thời điểm currentTime
-        // Lưu ý: Gọi hàm cập nhật logic hạt của bạn ở đây nếu có (ví dụ: particleSystem.updateAtTime(currentTime))
+        // Lưu ý: Gợi hàm cập nhật logic hạt của bạn ở đây nếu có (ví dụ: particleSystem.updateAtTime(currentTime))
         
         sourceParticles.forEach((particle, idx) => {
             const track = particleTracksData[idx];
-            
+
             // Lấy tọa độ, kích thước, độ mờ hiện tại của hạt (Tùy thuộc vào cấu trúc của bạn)
             const posX = particle.position ? particle.position.x : 0;
             const posY = particle.position ? particle.position.y : 0;
             const posZ = particle.position ? particle.position.z : 0;
-            
+
             const sclX = particle.scale ? (particle.scale.x || particle.scale) : 1;
             const sclY = particle.scale ? (particle.scale.y || particle.scale) : 1;
             const sclZ = particle.scale ? (particle.scale.z || particle.scale) : 1;
@@ -72,8 +72,8 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
     particleTracksData.forEach((trackData) => {
         // Tạo Mesh đại diện cho hạt (Sử dụng BoxGeometry nhỏ hoặc PlaneGeometry)
         const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-        const material = new THREE.MeshStandardMaterial({ 
-            color: 0xffffff, 
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
             transparent: true,
             opacity: 1
         });
@@ -82,7 +82,7 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
         dummyMesh.name = trackData.name;
         bakeGroup.add(dummyMesh);
 
-        // Tạo các AnimationTrack cho vị trí và kích thước vật lý
+        // Tạo AnimationTrack cho vị trí và kích thước vật lý sang Blender
         const posTrack = new THREE.VectorKeyframeTrack(
             `${dummyMesh.name}.position`, 
             times, 
@@ -94,39 +94,32 @@ async function exportParticlesToGLB(particleSystem, duration, fps = 30) {
             trackData.scales
         );
 
-        tracks.push(posTrack, scaleTrack);
-        
         // Lưu ý: Độ mờ (Opacity/Material) trong GLTFExporter đôi khi không map hoàn hảo sang Blender.
         // Bạn nên ưu tiên điều khiển chuyển động tịnh tiến và phóng to/thu nhỏ trước.
+        tracks.push(posTrack, scaleTrack);
     });
 
-    // Gom tất cả tracks thành một đoạn hoạt ảnh duy nhất đặt tên là 'ParticleAction'
+    // Gom tất cả các tracks thành một đoạn hoạt ảnh duy nhất tên là 'ParticleAction'
     const animationClip = new THREE.AnimationClip('ParticleAction', duration, tracks);
-    clips.push(animationClip);
+    clips.push(animationClip)
 
     // 4. Tiến hành gọi GLTFExporter để xuất khối bake này ra file GLB
     if (typeof THREE.GLTFExporter !== 'undefined') {
         const exporter = new THREE.GLTFExporter();
-        
-        exporter.parse(
-            bakeGroup,
-            function (gltf) {
-                // Xử lý tải file về máy dưới dạng nhị phân (.glb)
-                const blob = new Blob([gltf], { type: 'application/octet-stream' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'baked_effect_with_animation.glb';
-                link.click();
-                console.log("Xuất file GLB chứa hoạt ảnh thành công!");
-            },
-            function (error) {
-                console.error("Lỗi trong quá trình xuất GLTF/GLB:", error);
-            },
-            { 
-                binary: true,       // Bắt buộc bằng true để ra định dạng GLB chứa luôn cấu trúc
-                animations: clips   // Nhúng mảng chứa các clip hoạt ảnh đã nướng vào file
-            }
-        );
+        exporter.parse(bakeGroup, function (gltf) {
+            // Xử lý tải file về máy dưới dạng nhị phân (.glb)
+            const blob = new Blob([gltf], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'baked_effect_with_animation.glb';
+            link.click();
+            console.log("Xuất file GLB chứa hoạt ảnh thành công!");
+        }, function (error) {
+            console.error("Lỗi trong quá trình xuất GLTF/GLB:", error);
+        }, {
+            binary: true,
+            animations: clips
+        });
     } else {
         console.error("Chưa import thư viện THREE.GLTFExporter vào ứng dụng web của bạn.");
         alert("Lỗi: Thiếu module GLTFExporter.");
