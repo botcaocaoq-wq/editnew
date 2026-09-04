@@ -55,6 +55,16 @@
 .ai-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ai-row select{width:100%;min-height:30px;padding:6px 8px;border:1px solid #34404f;border-radius:5px;background:#171d25;color:#dfe7ef;font:inherit;font-size:10px;outline:none}.ai-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ai-actions button:disabled{opacity:.45;cursor:not-allowed}.ai-primary{background:#2563eb!important;border-color:#3b82f6!important}
 #aiProgress{display:none;margin-top:8px;padding:7px 8px;border:1px solid #2c3746;background:#121a24;border-radius:6px;color:#8999ad;font-size:9px}#aiProgress.show{display:block}.ai-progressbar{height:4px;margin-top:6px;background:#27313d;border-radius:5px;overflow:hidden}.ai-progressbar span{display:block;width:0;height:100%;background:#4c8bf5}
 #aiPreview{display:none;margin-top:8px;border:1px solid #34404f;border-radius:6px;overflow:hidden;background:#090d12}#aiPreview.show{display:block}#aiCanvas{display:block;width:100%;height:auto}#aiStatus{min-height:14px;margin-top:7px;color:#8290a0;font-size:9px}.ai-note{margin-top:6px;color:#677487;font-size:8px;line-height:1.45}@media(max-width:900px){#aiPanel{left:10px;right:10px;width:auto;max-width:none}}
+
+/* ===== CARTOON TEXTURE LIBRARY ===== */
+#cartoonPanel{display:none;position:fixed;top:62px;left:292px;width:430px;max-width:calc(100vw - 310px);max-height:78vh;overflow:hidden;z-index:1001;padding:11px;background:#11161d;border:1px solid #3b4b67;border-radius:9px;box-shadow:0 20px 55px rgba(0,0,0,.48)}
+#cartoonPanel.active{display:block}
+.cartoon-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#eef3f8;font-size:11px;letter-spacing:.8px}.cartoon-head button{width:26px;min-height:26px;padding:0}
+.cartoon-sub{margin:5px 0 9px;color:#77859a;font-size:9px}
+.cartoon-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;max-height:calc(78vh - 74px);overflow:auto;padding-right:2px}
+.cartoon-card{background:#171d25;border:1px solid #303b4d;border-radius:7px;overflow:hidden;cursor:pointer}.cartoon-card:hover{border-color:#5b86cf;background:#1c2633}.cartoon-card.active{border-color:#4c8bf5;box-shadow:0 0 0 1px rgba(76,139,245,.18) inset}
+.cartoon-card img{width:100%;aspect-ratio:1/1;display:block;object-fit:cover;background:#090d12}.cartoon-card strong{display:block;padding:5px 6px 6px;color:#e7edf4;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){#cartoonPanel{left:10px;right:10px;width:auto;max-width:none}.cartoon-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 
@@ -87,6 +97,11 @@
 <div id="aiStatus"></div><div class="ai-note">Tạo material local theo mô tả bằng thuật toán procedural, không gửi prompt lên server và không dùng credit.</div>
 </section>
 
+<section id="cartoonPanel" aria-label="Cartoon Texture Library">
+  <div class="cartoon-head"><strong>CARTOON TEXTURE LIBRARY</strong><button id="closeCartoonPanel" type="button">×</button></div>
+  <div class="cartoon-sub">Chọn preset để xem preview, rồi Apply vào mesh.</div>
+  <div id="cartoonPresetList" class="cartoon-grid"></div>
+</section>
 
 <main class="layout">
 
@@ -106,6 +121,7 @@
             <button data-cat="metal">METAL</button>
             <button data-cat="concrete">CONCRETE</button>
             <button data-cat="ground">GROUND</button>
+            <button data-cat="cartoon">CARTOON</button>
         </div>
 
         <div id="crackCategories" class="crackCategories" hidden>
@@ -479,6 +495,11 @@ function filterTextures() {
 function renderLibrary() {
     const query = document.getElementById("searchBox").value.toLowerCase().trim();
     const category = document.querySelector("[data-cat].active")?.dataset.cat || "all";
+    if(category === "cartoon") {
+        renderCartoonLibrary();
+        if (cartoonPanel) cartoonPanel.classList.add("active");
+        return;
+    }
 
     const items = polyAssets
         .filter(asset => {
@@ -1721,6 +1742,87 @@ function debounce(fn, delay) {
 }
 
 
+/* ===== CARTOON TEXTURE LIBRARY ===== */
+const cartoonPanel = document.getElementById("cartoonPanel");
+const cartoonPresetList = document.getElementById("cartoonPresetList");
+const cartoonPresets = [
+    {id:"toon-stone",name:"Toon Stone",prompt:"stylized cartoon stone, warm gray, soft hand-painted texture"},
+    {id:"toon-wood",name:"Toon Wood",prompt:"stylized cartoon wooden planks, warm brown, painted grain"},
+    {id:"toon-metal",name:"Toon Metal",prompt:"stylized cartoon metal, painted steel, soft blue gray"},
+    {id:"toon-concrete",name:"Toon Concrete",prompt:"stylized cartoon concrete, light gray, subtle blocky surface"},
+    {id:"toon-clay",name:"Toon Clay",prompt:"stylized cartoon clay, smooth orange beige, soft handmade surface"},
+    {id:"toon-brick",name:"Toon Brick",prompt:"stylized cartoon brick wall, red orange bricks, dark mortar"},
+    {id:"toon-magic",name:"Toon Magic",prompt:"stylized cartoon magical purple stone, glowing accents"},
+    {id:"toon-ice",name:"Toon Ice",prompt:"stylized cartoon blue ice, crystalline painted surface"},
+    {id:"toon-sand",name:"Toon Sand",prompt:"stylized cartoon sand, warm yellow beige, soft dunes"}
+];
+let selectedCartoonId = "toon-stone";
+const cartoonPreviewCache = new Map();
+function cartoonPreviewDataURL(item){
+    if(cartoonPreviewCache.has(item.id)) return cartoonPreviewCache.get(item.id);
+    const c=document.createElement("canvas"); c.width=180; c.height=180;
+    const ctx=c.getContext("2d");
+    const fakePrompt=item.prompt.toLowerCase();
+    let base=[126,126,126], accent=[194,194,194];
+    if(fakePrompt.includes("wood")){base=[116,70,38];accent=[205,145,76];}
+    else if(fakePrompt.includes("metal")){base=[82,96,111];accent=[179,194,210];}
+    else if(fakePrompt.includes("brick")){base=[150,62,42];accent=[220,120,77];}
+    else if(fakePrompt.includes("clay")){base=[165,100,65];accent=[224,160,112];}
+    else if(fakePrompt.includes("magic")){base=[74,47,118];accent=[190,118,255];}
+    else if(fakePrompt.includes("ice")){base=[85,155,190];accent=[190,240,255];}
+    else if(fakePrompt.includes("sand")){base=[182,148,74];accent=[236,208,130];}
+    else if(fakePrompt.includes("concrete")){base=[145,148,151];accent=[195,198,202];}
+    ctx.fillStyle=`rgb(${base[0]},${base[1]},${base[2]})`; ctx.fillRect(0,0,180,180);
+    for(let y=0;y<180;y+=12){
+        for(let x=0;x<180;x+=12){
+            const n=((x*17+y*31+item.id.length*53)%37)/37;
+            const q=Math.round((base[0]*(.82+n*.24)) / 12) * 12;
+            const w=Math.round((base[1]*(.82+n*.24)) / 12) * 12;
+            const e=Math.round((base[2]*(.82+n*.24)) / 12) * 12;
+            ctx.fillStyle=`rgb(${q},${w},${e})`; ctx.fillRect(x,y,12,12);
+        }
+    }
+    if(fakePrompt.includes("brick")){
+        ctx.strokeStyle="rgba(45,28,24,.7)";ctx.lineWidth=4;
+        for(let y=20;y<180;y+=38){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(180,y);ctx.stroke();}
+        for(let row=0;row<5;row++){const off=row%2?20:0;for(let x=off;x<180;x+=50){ctx.beginPath();ctx.moveTo(x,10+row*38);ctx.lineTo(x,48+row*38);ctx.stroke();}}
+    }
+    if(fakePrompt.includes("magic")){
+        ctx.strokeStyle=`rgba(${accent[0]},${accent[1]},${accent[2]},.8)`;ctx.lineWidth=4;ctx.shadowBlur=12;ctx.shadowColor=`rgb(${accent[0]},${accent[1]},${accent[2]})`;
+        ctx.beginPath();ctx.moveTo(15,155);ctx.lineTo(80,95);ctx.lineTo(120,115);ctx.lineTo(168,30);ctx.stroke();ctx.shadowBlur=0;
+    }
+    cartoonPreviewCache.set(item.id,c.toDataURL("image/png")); return cartoonPreviewCache.get(item.id);
+}
+function renderCartoonLibrary(){
+    cartoonPresetList.innerHTML="";
+    const frag=document.createDocumentFragment();
+    for(const item of cartoonPresets){
+        const card=document.createElement("div");card.className="cartoon-card"+(item.id===selectedCartoonId?" active":"");
+        const img=document.createElement("img");img.src=cartoonPreviewDataURL(item);img.alt=item.name;img.loading="lazy";
+        const title=document.createElement("strong");title.textContent=item.name;
+        card.append(img,title);card.onclick=()=>{selectedCartoonId=item.id;renderCartoonLibrary();applyCartoonPreset(item);};
+        frag.appendChild(card);
+    }
+    cartoonPresetList.appendChild(frag);
+}
+function applyCartoonPreset(item){
+    aiPrompt.value=item.prompt; aiStyle.value="cartoon"; aiGeneratedTexture=null; aiPreview?.classList.remove("show");
+    cartoonPanel.classList.add("active");
+    aiDrawTexture();
+    if(aiPreview) aiPreview.classList.add("show");
+    aiGeneratedTexture=aiCanvas;
+    if(aiApply) aiApply.disabled=false;
+    aiStatus.textContent=`Đã tạo preset ${item.name}. Chọn mesh rồi bấm Apply.`;
+}
+
+document.getElementById("closeCartoonPanel").onclick=()=>cartoonPanel.classList.remove("active");
+const cartoonToolbarButton=document.createElement("button");
+cartoonToolbarButton.id="cartoonMode";
+cartoonToolbarButton.textContent="🎨 Cartoon";
+cartoonToolbarButton.title="Mở Cartoon Texture Library";
+document.querySelector(".toolbar").insertBefore(cartoonToolbarButton,document.getElementById("crackMode"));
+cartoonToolbarButton.onclick=()=>{cartoonPanel.classList.toggle("active");aiPanel.classList.remove("active");document.getElementById("aiMode").classList.remove("active");renderCartoonLibrary();};
+
 /* ===== LOCAL AI MATERIAL ASSISTANT ===== */
 const aiPanel=document.getElementById("aiPanel"),aiPrompt=document.getElementById("aiPrompt"),aiStyle=document.getElementById("aiStyle"),aiResolution=document.getElementById("aiResolution"),aiGenerate=document.getElementById("aiGenerate"),aiApply=document.getElementById("aiApply"),aiProgress=document.getElementById("aiProgress"),aiProgressText=document.getElementById("aiProgressText"),aiProgressBar=document.getElementById("aiProgressBar"),aiPreview=document.getElementById("aiPreview"),aiCanvas=document.getElementById("aiCanvas"),aiStatus=document.getElementById("aiStatus");
 let aiGeneratedTexture=null,aiSeed=0;
@@ -1728,9 +1830,17 @@ function aiHashText(text){let h=2166136261;for(let i=0;i<text.length;i++)h=Math.
 function aiRand(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 function aiNoise(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,n=(a,b)=>{let s=(a*374761393+b*668265263+aiSeed*982451653)>>>0;s=Math.imul(s^(s>>>13),1274126177)>>>0;return((s^(s>>>16))>>>0)/4294967295;},sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),a=n(ix,iy),b=n(ix+1,iy),c=n(ix,iy+1),d=n(ix+1,iy+1);return a+(b-a)*sx+((c+(d-c)*sx)-(a+(b-a)*sx))*sy;}
 function aiPalette(prompt,style){const p=prompt.toLowerCase();let base=[140,140,140],accent=[190,190,190];if(/wood|gỗ|oak|walnut/.test(p)){base=[105,63,31];accent=[183,122,55];}else if(/metal|steel|iron|rust|kim loại|thép/.test(p)){base=[76,82,89];accent=[177,104,57];}else if(/stone|rock|đá|concrete|bê tông/.test(p)){base=[116,120,124];accent=[190,194,199];}else if(/gold|vàng/.test(p)){base=[145,108,30];accent=[238,193,66];}else if(/blue|xanh dương/.test(p)){base=[45,82,128];accent=[105,160,225];}else if(/green|xanh lá/.test(p)){base=[48,98,63];accent=[111,173,101];}else if(/red|đỏ/.test(p)){base=[125,47,43];accent=[215,93,80];}else if(/purple|tím|magic/.test(p)){base=[75,46,110];accent=[173,108,228];}if(style==="cartoon"){base=base.map(v=>Math.min(255,Math.round(v*1.12)));accent=accent.map(v=>Math.min(255,Math.round(v*1.12)));}if(style==="lowpoly")base=base.map(v=>Math.round(v*.92));return{base,accent};}
-function aiDrawTexture(){const size=Math.min(1024,Math.max(128,Number(aiResolution.value)||512));aiCanvas.width=size;aiCanvas.height=size;const ctx=aiCanvas.getContext("2d",{alpha:false}),prompt=aiPrompt.value.trim()||"stone material",style=aiStyle.value;aiSeed=aiHashText(prompt+"|"+style);const rnd=aiRand(aiSeed),pal=aiPalette(prompt,style),p=prompt.toLowerCase(),isWood=/wood|gỗ|oak|walnut/.test(p),isMetal=/metal|steel|iron|rust|kim loại|thép/.test(p),isCracked=/crack|cracked|nứt/.test(p),img=ctx.createImageData(size,size),d=img.data;for(let y=0;y<size;y++){const v=y/size;for(let x=0;x<size;x++){const u=x/size,n=.58*aiNoise(u*5.5,v*5.5)+.28*aiNoise(u*16,v*16)+.14*aiNoise(u*42,v*42);let r=pal.base[0]*(.75+.35*n),g=pal.base[1]*(.75+.35*n),b=pal.base[2]*(.75+.35*n);if(isWood){const grain=.5+.5*Math.sin(v*size/8+n*10);r*=.72+.52*grain;g*=.72+.45*grain;b*=.68+.35*grain;}if(isMetal){const band=.5+.5*Math.sin(u*45+n*12);r+=pal.accent[0]*.13*band;g+=pal.accent[1]*.13*band;b+=pal.accent[2]*.13*band;}if(style==="cartoon"){r=Math.round(r/18)*18;g=Math.round(g/18)*18;b=Math.round(b/18)*18;}const i=(y*size+x)*4;d[i]=Math.max(0,Math.min(255,r));d[i+1]=Math.max(0,Math.min(255,g));d[i+2]=Math.max(0,Math.min(255,b));d[i+3]=255;}if(y%24===0){const pct=Math.round(y/size*100);aiProgressText.textContent=`Generating ${pct}%`;aiProgressBar.style.width=pct+"%";}}ctx.putImageData(img,0,0);if(isCracked){ctx.save();ctx.strokeStyle="rgba(18,18,18,.58)";ctx.lineWidth=Math.max(1,size/430);ctx.lineCap="round";const count=Math.max(6,Math.round(size/78));for(let j=0;j<count;j++){let x=rnd()*size,y=rnd()*size;ctx.beginPath();ctx.moveTo(x,y);const seg=5+Math.floor(rnd()*6);for(let k=0;k<seg;k++){x+=(rnd()-.5)*76;y+=(rnd()-.5)*76;ctx.lineTo(x,y);if(rnd()<.3){ctx.moveTo(x,y);ctx.lineTo(x+(rnd()-.5)*45,y+(rnd()-.5)*45);ctx.moveTo(x,y);}}ctx.stroke();}ctx.restore();}aiGeneratedTexture=aiCanvas;}
+function aiDrawTexture(){const size=Math.min(1024,Math.max(128,Number(aiResolution.value)||512));aiCanvas.width=size;aiCanvas.height=size;const ctx=aiCanvas.getContext("2d",{alpha:false}),prompt=aiPrompt.value.trim()||"stone material",style=aiStyle.value;aiSeed=aiHashText(prompt+"|"+style);const rnd=aiRand(aiSeed),pal=aiPalette(prompt,style),p=prompt.toLowerCase(),isWood=/wood|gỗ|oak|walnut|ván|gỗ lim/.test(p),isMetal=/metal|steel|iron|rust|kim loại|thép/.test(p),isBrick=/brick|gạch/.test(p),isFabric=/fabric|cloth|vải/.test(p),isClay=/clay|đất sét/.test(p),isIce=/ice|băng/.test(p),isSand=/sand|cát/.test(p),isMagic=/magic|ma thuật|mystic/.test(p),isCracked=/crack|cracked|nứt/.test(p),img=ctx.createImageData(size,size),d=img.data;for(let y=0;y<size;y++){const v=y/size;for(let x=0;x<size;x++){const u=x/size,n=.58*aiNoise(u*5.5,v*5.5)+.28*aiNoise(u*16,v*16)+.14*aiNoise(u*42,v*42);let r=pal.base[0]*(.75+.35*n),g=pal.base[1]*(.75+.35*n),b=pal.base[2]*(.75+.35*n);if(isWood){const grain=.5+.5*Math.sin(v*size/8+n*10);r*=.72+.52*grain;g*=.72+.45*grain;b*=.68+.35*grain;}if(isMetal){const band=.5+.5*Math.sin(u*45+n*12);r+=pal.accent[0]*.13*band;g+=pal.accent[1]*.13*band;b+=pal.accent[2]*.13*band;}
+if(isBrick){const mortar=((Math.floor(u*9)+Math.floor(v*9))%2===0)?1:.9;r*=mortar;g*=mortar;b*=mortar;}
+if(isFabric){const weave=.5+.5*Math.sin(u*size*.14)*Math.sin(v*size*.14);r*=.9+.16*weave;g*=.9+.16*weave;b*=.9+.16*weave;}
+if(isClay){const smooth=.5+.5*Math.sin(n*10);r*=.9+.12*smooth;g*=.9+.12*smooth;b*=.9+.12*smooth;}
+if(isIce){const frost=.5+.5*Math.sin((u+v)*size*.025+n*6);r+=30*frost;g+=34*frost;b+=42*frost;}
+if(isSand){const grain=.5+.5*Math.sin(u*size*.33+v*size*.17);r+=28*grain;g+=20*grain;b+=8*grain;}
+if(isMagic){const glow=.5+.5*Math.sin(u*25+v*31+n*15);r+=pal.accent[0]*.16*glow;g+=pal.accent[1]*.16*glow;b+=pal.accent[2]*.16*glow;}
+if(style==="cartoon"){r=Math.round(r/18)*18;g=Math.round(g/18)*18;b=Math.round(b/18)*18;}const i=(y*size+x)*4;d[i]=Math.max(0,Math.min(255,r));d[i+1]=Math.max(0,Math.min(255,g));d[i+2]=Math.max(0,Math.min(255,b));d[i+3]=255;}if(y%24===0){const pct=Math.round(y/size*100);aiProgressText.textContent=`Generating ${pct}%`;aiProgressBar.style.width=pct+"%";}}ctx.putImageData(img,0,0);if(isCracked){ctx.save();ctx.strokeStyle="rgba(18,18,18,.58)";ctx.lineWidth=Math.max(1,size/430);ctx.lineCap="round";const count=Math.max(6,Math.round(size/78));for(let j=0;j<count;j++){let x=rnd()*size,y=rnd()*size;ctx.beginPath();ctx.moveTo(x,y);const seg=5+Math.floor(rnd()*6);for(let k=0;k<seg;k++){x+=(rnd()-.5)*76;y+=(rnd()-.5)*76;ctx.lineTo(x,y);if(rnd()<.3){ctx.moveTo(x,y);ctx.lineTo(x+(rnd()-.5)*45,y+(rnd()-.5)*45);ctx.moveTo(x,y);}}ctx.stroke();}ctx.restore();}aiGeneratedTexture=aiCanvas;}
 function aiSetBusy(on,text="",pct=0){aiProgress.classList.toggle("show",on);aiProgressText.textContent=text;aiProgressBar.style.width=pct+"%";}
-document.getElementById("aiMode").onclick=()=>{const on=!aiPanel.classList.contains("active");aiPanel.classList.toggle("active",on);document.getElementById("aiMode").classList.toggle("active",on);if(on)aiPrompt.focus();};
+renderCartoonLibrary();
+document.getElementById("aiMode").onclick=()=>{const on=!aiPanel.classList.contains("active");aiPanel.classList.toggle("active",on);cartoonPanel.classList.remove("active");document.getElementById("aiMode").classList.toggle("active",on);if(on)aiPrompt.focus();};
 aiGenerate.onclick=async()=>{aiGenerate.disabled=true;aiApply.disabled=true;aiPreview.classList.remove("show");aiSetBusy(true,"Generating locally...",0);await new Promise(r=>requestAnimationFrame(r));try{aiDrawTexture();aiPreview.classList.add("show");aiApply.disabled=false;aiStatus.textContent="Đã tạo material local. Chọn mesh rồi bấm Apply.";}catch(err){console.error(err);aiStatus.textContent="Không tạo được material.";}finally{aiSetBusy(false);aiGenerate.disabled=false;}};
 aiApply.onclick=()=>{if(!aiGeneratedTexture)return;if(!selectedMesh){alert("Hãy click chọn mesh trước.");return;}saveHistory();const mat=ensureEditableMaterial(selectedMesh),tex=new THREE.CanvasTexture(aiGeneratedTexture);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);mat.map=tex;mat.needsUpdate=true;applyUV();updateSelectionUI();aiStatus.textContent="Đã Apply material vào mesh.";};
 
