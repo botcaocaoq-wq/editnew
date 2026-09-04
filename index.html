@@ -17,6 +17,35 @@
 
 <style>
 #crackMode.active { background:#7f1d1d; border-color:#ef4444; color:#fff; }
+.crackLibraryHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px 4px;font-size:10px;letter-spacing:.7px;font-weight:800;color:#b9c6d8;}
+.crackLibraryHint{font-size:9px;color:#687587;font-weight:500;letter-spacing:0;text-transform:none;}
+.crackLibraryHead b{color:#6fa0ff;margin-left:3px;font-weight:700;}
+.crackPresetCard{display:flex;align-items:center;gap:8px;width:100%;min-height:60px;margin-bottom:5px;padding:6px;border:1px solid #303640;border-radius:6px;background:#171b21;cursor:pointer;overflow:hidden;}
+.crackPresetCard:hover{background:#20262e;border-color:#4b5664;}
+.crackPresetCard.active{border-color:#648fe3;background:#1a2536;box-shadow:0 0 0 1px rgba(100,143,227,.15) inset;}
+.crackPresetCard img{width:54px;height:54px;flex:0 0 54px;border-radius:5px;background:#0d1014;border:1px solid #343b46;object-fit:cover;}
+.crackPresetMeta{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.crackPresetMeta strong{font-size:10px;color:#eef3f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.crackPresetMeta small{font-size:8px;color:#7b8797;line-height:1.25;}
+
+/* CRACK LIBRARY PRO */
+.crackCategories{display:flex;flex-wrap:wrap;gap:5px;padding:0 9px 8px}
+.crackCategories button{min-height:24px;padding:4px 7px;border-radius:5px;font-size:9px;letter-spacing:.2px}
+.crackCategories button.active{background:#254f9b;border-color:#5d8ff0;color:#fff}
+.textureList.crack-library-active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:6px;padding:6px 7px 10px;overflow-y:auto}
+.textureList.crack-library-active .crackPresetCard{min-width:0;min-height:0;height:auto;margin:0;padding:5px;display:flex;flex-direction:column;align-items:stretch;gap:5px;border-radius:7px;transition:transform .12s ease,border-color .12s ease,background .12s ease,box-shadow .12s ease}
+.textureList.crack-library-active .crackPresetCard:hover{transform:translateY(-1px)}
+.textureList.crack-library-active .crackPresetCard.active{border-color:#4e8cff;box-shadow:0 0 0 1px rgba(78,140,255,.18) inset,0 0 12px rgba(58,122,255,.12)}
+.textureList.crack-library-active .crackPresetCard img{width:100%;height:auto;aspect-ratio:1/1;flex:0 0 auto;object-fit:cover;border-radius:6px;background:#0a0d12}
+.textureList.crack-library-active .crackPresetMeta{padding:0 2px 2px;gap:2px}
+.textureList.crack-library-active .crackPresetMeta strong{font-size:9px}
+.textureList.crack-library-active .crackPresetMeta small{font-size:7.5px;min-height:18px}
+.crackInspector{border-color:#263b64;background:#111722}
+.crackControlRow{display:grid;grid-template-columns:54px minmax(0,1fr) 34px;align-items:center;gap:7px;margin-bottom:8px;color:#aeb9c8;font-size:9px}
+.crackControlRow input{width:100%}
+.crackControlRow b{font-size:9px;text-align:right;color:#76a5ff;font-family:Consolas,monospace}
+.crackInspectorButtons{display:grid;grid-template-columns:36px 36px minmax(0,1fr);gap:5px}
+.crackInspectorButtons button{min-height:30px;padding:4px 6px}
 </style>
 </head>
 
@@ -57,6 +86,21 @@
             <button data-cat="metal">METAL</button>
             <button data-cat="concrete">CONCRETE</button>
             <button data-cat="ground">GROUND</button>
+        </div>
+
+        <div id="crackCategories" class="crackCategories" hidden>
+            <button data-crack-cat="all" class="active">ALL</button>
+            <button data-crack-cat="stone">STONE</button>
+            <button data-crack-cat="impact">IMPACT</button>
+            <button data-crack-cat="metal">METAL</button>
+            <button data-crack-cat="magic">MAGIC</button>
+            <button data-crack-cat="ice">ICE</button>
+            <button data-crack-cat="glass">GLASS</button>
+        </div>
+
+        <div id="crackLibraryHead" class="crackLibraryHead" hidden>
+            <span>CRACK LIBRARY <b id="crackCount">24</b></span>
+            <span class="crackLibraryHint">Chọn mẫu rồi click model</span>
         </div>
 
         <div id="textureList" class="textureList">
@@ -163,6 +207,34 @@
             </button>
         </div>
 
+        <div id="crackInspector" class="section crackInspector" hidden>
+            <label>CRACK PROPERTIES <b id="crackPresetName">NONE</b></label>
+
+            <div class="crackControlRow">
+                <span>Opacity</span>
+                <input id="crackOpacity" type="range" min="0.05" max="1" step="0.01" value="0.9">
+                <b id="crackOpacityValue">0.90</b>
+            </div>
+
+            <div class="crackControlRow">
+                <span>Size</span>
+                <input id="crackSize" type="range" min="0.35" max="2.4" step="0.01" value="1">
+                <b id="crackSizeValue">1.00</b>
+            </div>
+
+            <div class="crackControlRow">
+                <span>Rotation</span>
+                <input id="crackRotation" type="range" min="-180" max="180" step="1" value="0">
+                <b id="crackRotationValue">0°</b>
+            </div>
+
+            <div class="crackInspectorButtons">
+                <button id="crackRotateLeft">↶</button>
+                <button id="crackRotateRight">↷</button>
+                <button id="removeCrack" class="danger">Delete Crack</button>
+            </div>
+        </div>
+
     </aside>
 
 </main>
@@ -197,6 +269,36 @@ let crackMode = false;
 let activeCrack = null;
 let crackDrag = null;
 const crackItems = new Set();
+const crackTextureCache = new Map();
+const crackPresets = [
+    {id:"stone-01", name:"Stone Crack 01", category:"stone", desc:"Tự nhiên, nhánh lớn", color:"#14110e", glow:false, scale:1.00, seed:2},
+    {id:"stone-02", name:"Stone Crack 02", category:"stone", desc:"Nứt đá nhiều nhánh", color:"#121111", glow:false, scale:1.05, seed:7},
+    {id:"stone-03", name:"Stone Crack 03", category:"stone", desc:"Nét mảnh tự nhiên", color:"#17130f", glow:false, scale:.92, seed:13},
+    {id:"stone-deep", name:"Deep Stone", category:"stone", desc:"Khe nứt sâu, tối", color:"#090909", glow:false, scale:1.08, seed:23},
+    {id:"impact-01", name:"Impact Crack 01", category:"impact", desc:"Tâm nứt va đập", color:"#0b0c0e", glow:false, scale:1.00, seed:31},
+    {id:"impact-02", name:"Impact Crack 02", category:"impact", desc:"Va đập nhiều tia", color:"#101114", glow:false, scale:1.10, seed:37},
+    {id:"impact-hole", name:"Impact Burst", category:"impact", desc:"Nứt bung từ tâm", color:"#08090b", glow:false, scale:.98, seed:43},
+    {id:"metal-01", name:"Metal Damage 01", category:"metal", desc:"Nứt kim loại mạnh", color:"#181511", glow:false, scale:.96, seed:47},
+    {id:"metal-02", name:"Metal Damage 02", category:"metal", desc:"Vết gãy sắc cạnh", color:"#0b0d10", glow:false, scale:1.08, seed:53},
+    {id:"metal-cut", name:"Metal Split", category:"metal", desc:"Khe tách dài", color:"#15171a", glow:false, scale:1.15, seed:59},
+    {id:"magic-01", name:"Magic Crack 01", category:"magic", desc:"Nứt năng lượng", color:"#26082f", glow:true, glowColor:"rgba(213,84,255,.75)", scale:1.00, seed:61},
+    {id:"magic-02", name:"Magic Crack 02", category:"magic", desc:"Nhánh năng lượng", color:"#170a26", glow:true, glowColor:"rgba(161,88,255,.72)", scale:.95, seed:67},
+    {id:"magic-void", name:"Void Crack", category:"magic", desc:"Khe tối phát sáng", color:"#08070d", glow:true, glowColor:"rgba(105,82,255,.7)", scale:1.08, seed:71},
+    {id:"lava-01", name:"Lava Crack", category:"magic", desc:"Khe nứt dung nham", color:"#260b04", glow:true, glowColor:"rgba(255,74,0,.9)", scale:1.00, seed:31},
+    {id:"lava-deep", name:"Lava Deep", category:"magic", desc:"Lava sâu, sáng lõi", color:"#210703", glow:true, glowColor:"rgba(255,96,5,.95)", scale:1.12, seed:79},
+    {id:"ice-01", name:"Ice Crack 01", category:"ice", desc:"Nứt băng sáng lạnh", color:"#d6f6ff", glow:true, glowColor:"rgba(108,215,255,.75)", scale:.98, seed:41},
+    {id:"ice-02", name:"Ice Crack 02", category:"ice", desc:"Mạng nứt băng", color:"#c6efff", glow:true, glowColor:"rgba(93,203,255,.65)", scale:1.08, seed:83},
+    {id:"ice-spider", name:"Frozen Spider", category:"ice", desc:"Nứt băng dạng mạng", color:"#ccefff", glow:true, glowColor:"rgba(128,224,255,.62)", scale:.93, seed:89},
+    {id:"glass-01", name:"Glass Crack 01", category:"glass", desc:"Kính sắc và mảnh", color:"#eaf8ff", glow:false, scale:.88, seed:53},
+    {id:"glass-02", name:"Glass Star", category:"glass", desc:"Kính vỡ dạng sao", color:"#dff8ff", glow:false, scale:.96, seed:97},
+    {id:"glass-spider", name:"Glass Spider", category:"glass", desc:"Kính nứt dạng mạng", color:"#ecfbff", glow:false, scale:1.02, seed:101},
+    {id:"fine-01", name:"Fine Crack", category:"stone", desc:"Nét siêu mảnh", color:"#0f1114", glow:false, scale:.82, seed:107},
+    {id:"branch-01", name:"Branch Crack", category:"stone", desc:"Một nhánh chính dài", color:"#11100f", glow:false, scale:1.24, seed:113},
+    {id:"web-01", name:"Spider Crack", category:"stone", desc:"Mạng nứt dày", color:"#111113", glow:false, scale:1.00, seed:127}
+];
+let selectedCrackPreset = "stone-01";
+let selectedCrackCategory = "all";
+let crackPreviewCache = new Map();
 
 const viewer = document.getElementById("viewer");
 const textureList = document.getElementById("textureList");
@@ -240,6 +342,18 @@ function init() {
 
     window.addEventListener("resize", resize);
     renderer.domElement.addEventListener("pointerdown", selectObject);
+    renderer.domElement.addEventListener("pointermove", moveCrack);
+    renderer.domElement.addEventListener("pointerup", endCrackDrag);
+    renderer.domElement.addEventListener("pointercancel", endCrackDrag);
+    renderer.domElement.addEventListener("wheel", event => {
+        if (!crackMode || !activeCrack) return;
+        const factor = event.deltaY < 0 ? 1.08 : 0.92;
+        activeCrack.userData.size = THREE.MathUtils.clamp((activeCrack.userData.size || 1) * factor, .35, 2.4);
+        document.getElementById("crackSize").value = activeCrack.userData.size;
+        document.getElementById("crackSizeValue").textContent = activeCrack.userData.size.toFixed(2);
+        applyCrackTransform(activeCrack);
+        event.preventDefault();
+    }, {passive:false});
 
     document.getElementById("uploadModel").onclick = () => document.getElementById("modelInput").click();
     document.getElementById("uploadTexture").onclick = () => document.getElementById("textureInput").click();
@@ -251,7 +365,17 @@ function init() {
         btn.onclick = () => {
             document.querySelectorAll("[data-cat]").forEach(x => x.classList.remove("active"));
             btn.classList.add("active");
-            renderLibrary();
+            if (crackMode) renderCrackLibrary();
+            else renderLibrary();
+        };
+    });
+
+    document.querySelectorAll("[data-crack-cat]").forEach(btn => {
+        btn.onclick = () => {
+            selectedCrackCategory = btn.dataset.crackCat;
+            document.querySelectorAll("[data-crack-cat]").forEach(x => x.classList.remove("active"));
+            btn.classList.add("active");
+            renderCrackLibrary();
         };
     });
 
@@ -267,8 +391,10 @@ function init() {
     document.getElementById("exportGLB").onclick = exportGLB;
     document.getElementById("crackMode").onclick = toggleCrackMode;
     document.getElementById("newLayer").onclick = addLayer;
+    bindCrackControls();
 
     renderLibrary();
+    renderCrackLibrary();
     animate();
 }
 
@@ -325,7 +451,8 @@ async function loadPolyHavenFast() {
 }
 
 function filterTextures() {
-    renderLibrary();
+    if (crackMode) renderCrackLibrary();
+    else renderLibrary();
 }
 
 function renderLibrary() {
@@ -718,76 +845,293 @@ function selectObject(event) {
 function toggleCrackMode() {
     crackMode = !crackMode;
     const btn = document.getElementById("crackMode");
+    const head = document.getElementById("crackLibraryHead");
+    const categories = document.getElementById("crackCategories");
+    const search = document.getElementById("searchBox");
+
     btn.classList.toggle("active", crackMode);
     renderer.domElement.style.cursor = crackMode ? "crosshair" : "default";
-    if (!crackMode) {
+
+    if (crackMode) {
+        head.hidden = false;
+        categories.hidden = false;
+        search.placeholder = "Search cracks...";
+        textureList.classList.add("crack-library-active");
+        renderCrackLibrary();
+        showCrackInspector(activeCrack);
+    } else {
+        head.hidden = true;
+        categories.hidden = true;
+        search.placeholder = "Search wood, stone, metal...";
+        textureList.classList.remove("crack-library-active");
+        renderLibrary();
         activeCrack = null;
         crackDrag = null;
+        showCrackInspector(null);
+        controls.enabled = true;
     }
 }
 
-function makeCrackTexture() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, 256, 256);
-    ctx.strokeStyle = "rgba(20,20,20,0.95)";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+function renderCrackLibrary() {
+    if (!crackMode) return;
+    const list = document.getElementById("textureList");
+    list.classList.add("crack-library-active");
+    list.innerHTML = "";
 
-    const drawBranch = (points, width = 7) => {
-        ctx.lineWidth = width;
+    const query = document.getElementById("searchBox").value.toLowerCase().trim();
+    const items = crackPresets.filter(p => {
+        const text = `${p.name} ${p.category} ${p.desc}`.toLowerCase();
+        const matchesSearch = !query || text.includes(query);
+        const matchesCategory = selectedCrackCategory === "all" || p.category === selectedCrackCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const frag = document.createDocumentFragment();
+    for (const preset of items) {
+        const card = document.createElement("div");
+        card.className = "crackPresetCard" + (preset.id === selectedCrackPreset ? " active" : "");
+        const img = document.createElement("img");
+        img.src = getCrackPreviewURL(preset);
+        img.alt = preset.name;
+        img.loading = "lazy";
+        img.decoding = "async";
+
+        const meta = document.createElement("div");
+        meta.className = "crackPresetMeta";
+        const title = document.createElement("strong");
+        title.textContent = preset.name;
+        const desc = document.createElement("small");
+        desc.textContent = preset.desc;
+        meta.append(title, desc);
+        card.append(img, meta);
+
+        card.onclick = () => {
+            selectedCrackPreset = preset.id;
+            renderCrackLibrary();
+        };
+        frag.appendChild(card);
+    }
+
+    if (!items.length) {
+        list.innerHTML = '<div class="empty" style="grid-column:1/-1">No crack found</div>';
+        return;
+    }
+    list.appendChild(frag);
+    const count = document.getElementById("crackCount");
+    if (count) count.textContent = `${items.length}/${crackPresets.length}`;
+}
+
+function getCrackPreviewURL(preset) {
+    if (crackPreviewCache.has(preset.id)) return crackPreviewCache.get(preset.id);
+    const url = makeCrackPreview(preset).toDataURL("image/png");
+    crackPreviewCache.set(preset.id, url);
+    return url;
+}
+
+function makeCrackPreview(preset) {
+    return makeCrackCanvas(220, 220, preset, true);
+}
+
+function makeCrackCanvas(width, height, preset, preview=false) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, width, height);
+
+    const cx = width * 0.5;
+    const cy = height * 0.5;
+    const rng = mulberry32(preset.seed || 1);
+
+    const drawPath = (points, baseWidth, glow=false) => {
+        if (glow) {
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.strokeStyle = preset.glowColor || "rgba(255,90,15,.35)";
+            ctx.lineWidth = baseWidth * 3.2;
+            ctx.shadowBlur = baseWidth * 3.4;
+            ctx.shadowColor = preset.glowColor || "rgba(255,78,0,.75)";
+            trace(points);
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.strokeStyle = preset.color;
+        ctx.lineWidth = baseWidth;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        trace(points);
+        ctx.restore();
+    };
+
+    const trace = (points) => {
         ctx.beginPath();
         ctx.moveTo(points[0][0], points[0][1]);
         for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
         ctx.stroke();
     };
 
-    drawBranch([[126,128],[108,110],[112,84],[95,61],[100,35]], 8);
-    drawBranch([[110,111],[84,106],[62,90],[39,94]], 6);
-    drawBranch([[112,85],[138,72],[156,49],[183,42]], 6);
-    drawBranch([[96,61],[79,48],[57,44]], 5);
-    drawBranch([[138,72],[145,94],[172,111],[190,129]], 5);
-    drawBranch([[145,94],[134,121],[149,145],[164,164]], 5);
-    drawBranch([[62,90],[56,113],[36,128]], 4);
+    const branch = (angle, length, turns=4, width=4, offset=0) => {
+        const pts = [[cx, cy]];
+        let x = cx, y = cy;
+        for (let i = 1; i <= turns; i++) {
+            const t = i / turns;
+            const a = angle + Math.sin(i * 2.2 + preset.seed) * 0.18;
+            const step = length / turns;
+            x += Math.cos(a) * step;
+            y += Math.sin(a) * step;
+            pts.push([x + offset * (rng() - .5), y + offset * (rng() - .5)]);
+        }
+        drawPath(pts, width * (1 - tScaleNoise(rng)), preset.glow);
+        return pts;
+    };
 
+    const branches = [];
+    const isSpider = preset.id.includes("spider") || preset.id === "web-01";
+    const isImpact = preset.category === "impact" || preset.id.includes("impact");
+    const isFine = preset.id.includes("fine") || preset.category === "glass";
+    const count = isSpider ? 11 : isImpact ? 13 : isFine ? 9 : 8;
+    const lenBase = Math.min(width, height) * ((preset.id.includes("deep") || preset.id.includes("lava-deep")) ? .46 : .38) * preset.scale;
+
+    if (isImpact) {
+        ctx.save();
+        ctx.fillStyle = preset.color;
+        ctx.beginPath(); ctx.arc(cx, cy, width * .055, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    }
+
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i / count) + (rng() - .5) * .35;
+        const length = lenBase * (.72 + rng() * .55);
+        const widthBase = preset.id === "thin" || preset.id === "glass" ? width * .013 : width * .022;
+        const pts = branch(angle, length, isSpider ? 5 : 4 + Math.floor(rng() * 2), widthBase, width * .022);
+        branches.push({pts, angle});
+
+        if (preset.id !== "impact" || i % 2 === 0) {
+            const leafCount = isSpider ? 2 : 1;
+            for (let j = 1; j <= leafCount; j++) {
+                const idx = Math.max(1, Math.floor((pts.length - 1) * (0.35 + rng() * .45)));
+                const p = pts[idx];
+                const side = rng() > .5 ? 1 : -1;
+                const a = angle + side * (Math.PI * .42 + (rng() - .5) * .25);
+                const l = width * (.09 + rng() * .13);
+                const sub = [[p[0], p[1]], [p[0] + Math.cos(a)*l*.55, p[1] + Math.sin(a)*l*.55], [p[0] + Math.cos(a)*l, p[1] + Math.sin(a)*l]];
+                drawPath(sub, widthBase * .62, preset.glow);
+            }
+        }
+    }
+
+    if (preset.id === "deep" || preset.id === "stone") {
+        ctx.save();
+        ctx.globalAlpha = .28;
+        ctx.strokeStyle = "rgba(255,255,255,.16)";
+        ctx.lineWidth = width * .006;
+        ctx.lineCap = "round";
+        for (const b of branches) {
+            const p = b.pts.map(([x,y]) => [x+1.2, y+1.2]);
+            trace(p);
+        }
+        ctx.restore();
+    }
+
+    if (preview) {
+        const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,width*.52);
+        grad.addColorStop(0,"rgba(255,255,255,.03)");
+        grad.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,width,height);
+    }
+
+    return canvas;
+}
+
+function tScaleNoise(v) {
+    return v * .22;
+}
+
+function mulberry32(a) {
+    return function() {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+function getCrackPreset() {
+    return crackPresets.find(p => p.id === selectedCrackPreset) || crackPresets[0];
+}
+
+function makeCrackTexture(preset = getCrackPreset()) {
+    if (crackTextureCache.has(preset.id)) {
+        const cached = crackTextureCache.get(preset.id);
+        cached.needsUpdate = true;
+        return cached;
+    }
+
+    const canvas = makeCrackCanvas(512, 512, preset, false);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = true;
+    crackTextureCache.set(preset.id, tex);
     return tex;
 }
 
 function createCrackAtHit(hit) {
     const crack = new THREE.Group();
     const worldNormal = getHitWorldNormal(hit);
-    crack.name = "Crack";
+    const preset = getCrackPreset();
+
+    crack.name = preset.name;
     crack.userData.crackRoot = crack;
     crack.userData.meshUuid = hit.object.uuid;
     crack.userData.normal = worldNormal.clone();
+    crack.userData.presetId = preset.id;
+    crack.userData.baseSize = 0.34 * preset.scale;
+    crack.userData.size = 1;
+    crack.userData.opacity = 0.9;
+    crack.userData.spin = 0;
 
-    const size = 0.22;
-    const geom = new THREE.PlaneGeometry(size, size);
+    const geom = new THREE.PlaneGeometry(crack.userData.baseSize, crack.userData.baseSize);
     const mat = new THREE.MeshBasicMaterial({
-        map: makeCrackTexture(),
+        map: makeCrackTexture(preset),
         transparent: true,
+        opacity: crack.userData.opacity,
+        alphaTest: 0.015,
         depthWrite: false,
         depthTest: true,
         side: THREE.DoubleSide,
         toneMapped: false
     });
+
     const plane = new THREE.Mesh(geom, mat);
     plane.userData.crackRoot = crack;
     crack.add(plane);
 
-    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.002));
-    orientCrackToNormal(crack, worldNormal);
+    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.003));
+    applyCrackTransform(crack, worldNormal);
     scene.add(crack);
     crackItems.add(crack);
     activeCrack = crack;
+    showCrackInspector(crack);
+}
+
+function applyCrackTransform(crack, normal) {
+    if (!crack) return;
+    const n = (normal || crack.userData.normal || new THREE.Vector3(0,1,0)).clone().normalize();
+    crack.userData.normal = n;
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    const spin = THREE.MathUtils.degToRad(crack.userData.spin || 0);
+    const spinQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), spin);
+    q.multiply(spinQ);
+    crack.quaternion.copy(q);
+    const size = Math.max(0.05, crack.userData.size || 1);
+    crack.scale.setScalar(size);
 }
 
 function getHitWorldNormal(hit) {
@@ -797,14 +1141,13 @@ function getHitWorldNormal(hit) {
 }
 
 function orientCrackToNormal(crack, normal) {
-    const n = normal.clone().normalize();
-    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-    crack.quaternion.copy(q);
+    applyCrackTransform(crack, normal);
 }
 
 function beginCrackDrag(crack, event) {
     if (!crack || !model) return;
     activeCrack = crack;
+    showCrackInspector(crack);
     crackDrag = { crack, pointerId: event.pointerId };
     renderer.domElement.setPointerCapture?.(event.pointerId);
     controls.enabled = false;
@@ -829,7 +1172,7 @@ function moveCrack(event) {
     crack.userData.meshUuid = hit.object.uuid;
     crack.userData.normal = worldNormal.clone();
     crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.002));
-    orientCrackToNormal(crack, worldNormal);
+    applyCrackTransform(crack, worldNormal);
 }
 
 function endCrackDrag() {
@@ -842,24 +1185,79 @@ function endCrackDrag() {
     }
 }
 
-renderer?.domElement?.addEventListener?.("pointermove", moveCrack);
-renderer?.domElement?.addEventListener?.("pointerup", endCrackDrag);
-renderer?.domElement?.addEventListener?.("pointercancel", endCrackDrag);
-
 window.addEventListener("keydown", event => {
-    if (event.key !== "Delete" || !activeCrack) return;
+    if (event.key === "Delete" && activeCrack) {
+        deleteActiveCrack();
+        return;
+    }
+    if (!crackMode || !activeCrack) return;
+    if (event.key.toLowerCase() === "q") rotateActiveCrack(-10);
+    if (event.key.toLowerCase() === "e") rotateActiveCrack(10);
+});
+
+function bindCrackControls() {
+    const opacity = document.getElementById("crackOpacity");
+    const size = document.getElementById("crackSize");
+    const rotation = document.getElementById("crackRotation");
+    opacity.oninput = () => {
+        if (!activeCrack) return;
+        activeCrack.userData.opacity = Number(opacity.value);
+        activeCrack.traverse(obj => { if (obj.isMesh && obj.material) obj.material.opacity = activeCrack.userData.opacity; });
+        document.getElementById("crackOpacityValue").textContent = Number(opacity.value).toFixed(2);
+    };
+    size.oninput = () => {
+        if (!activeCrack) return;
+        activeCrack.userData.size = Number(size.value);
+        applyCrackTransform(activeCrack);
+        document.getElementById("crackSizeValue").textContent = Number(size.value).toFixed(2);
+    };
+    rotation.oninput = () => {
+        if (!activeCrack) return;
+        activeCrack.userData.spin = Number(rotation.value);
+        applyCrackTransform(activeCrack);
+        document.getElementById("crackRotationValue").textContent = rotation.value + "°";
+    };
+    document.getElementById("crackRotateLeft").onclick = () => rotateActiveCrack(-15);
+    document.getElementById("crackRotateRight").onclick = () => rotateActiveCrack(15);
+    document.getElementById("removeCrack").onclick = () => deleteActiveCrack();
+}
+
+function rotateActiveCrack(delta) {
+    if (!activeCrack) return;
+    activeCrack.userData.spin = THREE.MathUtils.clamp((activeCrack.userData.spin || 0) + delta, -180, 180);
+    document.getElementById("crackRotation").value = activeCrack.userData.spin;
+    document.getElementById("crackRotationValue").textContent = activeCrack.userData.spin + "°";
+    applyCrackTransform(activeCrack);
+}
+
+function showCrackInspector(crack) {
+    const panel = document.getElementById("crackInspector");
+    if (!panel) return;
+    panel.hidden = !crackMode || !crack;
+    if (!crack) return;
+    const preset = crackPresets.find(p => p.id === crack.userData.presetId);
+    document.getElementById("crackPresetName").textContent = preset?.name || "CRACK";
+    document.getElementById("crackOpacity").value = crack.userData.opacity ?? .9;
+    document.getElementById("crackOpacityValue").textContent = Number(crack.userData.opacity ?? .9).toFixed(2);
+    document.getElementById("crackSize").value = crack.userData.size ?? 1;
+    document.getElementById("crackSizeValue").textContent = Number(crack.userData.size ?? 1).toFixed(2);
+    document.getElementById("crackRotation").value = crack.userData.spin ?? 0;
+    document.getElementById("crackRotationValue").textContent = (crack.userData.spin ?? 0) + "°";
+}
+
+function deleteActiveCrack() {
+    if (!activeCrack) return;
     const crack = activeCrack;
     crackItems.delete(crack);
     crack.traverse(obj => {
         obj.geometry?.dispose();
-        if (obj.material) {
-            obj.material.map?.dispose();
-            obj.material.dispose();
-        }
+        if (obj.material) obj.material.dispose();
     });
     scene.remove(crack);
     activeCrack = null;
-});
+    crackDrag = null;
+    showCrackInspector(null);
+}
 
 function updateSelectionUI() {
     if (!selectedMesh) return;
@@ -1180,7 +1578,8 @@ function saveProject() {
         version: 2,
         modelName: document.getElementById("modelName").textContent,
         selected: selectedMesh?.name || null,
-        materials: []
+        materials: [],
+        cracks: []
     };
 
     if (model) {
@@ -1199,6 +1598,17 @@ function saveProject() {
                 hasMetallic: !!m.metalnessMap,
                 hasAO: !!m.aoMap
             }));
+        });
+    }
+
+    for (const crack of crackItems) {
+        project.cracks.push({
+            presetId: crack.userData.presetId,
+            meshUuid: crack.userData.meshUuid,
+            size: crack.userData.size ?? 1,
+            opacity: crack.userData.opacity ?? .9,
+            rotation: crack.userData.spin ?? 0,
+            position: [crack.position.x, crack.position.y, crack.position.z]
         });
     }
 
