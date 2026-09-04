@@ -69,6 +69,14 @@
 .partIcon{flex:0 0 auto;color:#7596ca;font-size:10px}.partName{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
 .partMeta{flex:0 0 auto;color:#677384;font-size:8px}
 @media(max-width:900px){.partsPanel{left:10px;right:10px;width:auto;max-width:none}}
+
+/* ===== LIBRARY PERFORMANCE ===== */
+.categories{max-height:108px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#39414d transparent;}
+.categories::-webkit-scrollbar{width:5px}.categories::-webkit-scrollbar-thumb{background:#39414d;border-radius:6px}
+.textureList.library-virtual{position:relative;overflow-y:auto;overflow-x:hidden;contain:strict;overscroll-behavior:contain;}
+.library-virtual-spacer{position:relative;width:100%;pointer-events:none;}
+.library-virtual-card{position:absolute;left:0;right:0;height:74px;}
+.library-virtual-card .textureCard{height:69px;margin:0;}
 </style>
 </head>
 
@@ -133,7 +141,13 @@
             <button data-cat="brick">BRICK</button>
             <button data-cat="rubber">RUBBER</button>
             <button data-cat="water">WATER</button>
-        </div>
+        
+            <button data-cat="plastic">PLASTIC</button>
+            <button data-cat="crystal">CRYSTAL</button>
+            <button data-cat="lava">LAVA</button>
+            <button data-cat="clay">CLAY</button>
+            <button data-cat="carpet">CARPET</button>
+            <button data-cat="paper">PAPER</button></div>
 
         <div id="crackCategories" class="crackCategories" hidden>
             <button data-crack-cat="all" class="active">ALL</button>
@@ -295,7 +309,7 @@ import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 
 const API = "https://api.polyhaven.com";
 const ASSET_CACHE_KEY = "textureStudio_polyhaven_assets_v3";
-const MAX_LIBRARY_ITEMS = 60;
+const MAX_LIBRARY_ITEMS = 250;
 const MAX_LOCAL_TEXTURE_SIZE = 2048;
 
 let scene, camera, renderer, controls;
@@ -350,6 +364,9 @@ let crackPreviewCache = new Map();
 
 const viewer = document.getElementById("viewer");
 const textureList = document.getElementById("textureList");
+
+// Only visible library cards are created.
+let libraryVirtualState = { items: [], cardHeight: 74, overscan: 6, raf: 0, token: 0 };
 
 function init() {
     scene = new THREE.Scene();
@@ -542,7 +559,10 @@ function makeLocalMaterialPreview(kind){
         glass:[[165,205,230],[235,250,255]], fabric:[[90,100,114],[165,175,188]],
         leather:[[75,43,25],[156,92,48]], ceramic:[[195,195,188],[242,242,235]],
         marble:[[170,170,166],[238,238,232]], brick:[[122,57,39],[198,108,73]],
-        rubber:[[28,30,32],[74,77,81]], water:[[38,103,135],[112,200,230]]
+        rubber:[[28,30,32],[74,77,81]], water:[[38,103,135],[112,200,230]],
+        plastic:[[72,90,120],[180,205,235]], crystal:[[90,145,205],[225,250,255]],
+        lava:[[94,28,10],[235,74,18]], clay:[[142,84,57],[205,132,92]],
+        carpet:[[60,58,55],[130,125,118]], paper:[[175,174,168],[232,230,220]]
     };
     const pal=palettes[kind]||palettes.ceramic;
     for(let y=0;y<220;y++) for(let x=0;x<220;x++){
@@ -588,10 +608,48 @@ const localLibraryPresets=[
     {id:"local-marble",name:"White Marble",category:"marble",tags:["marble","stone"],thumbnail_url:"",local:true,roughness:.30},
     {id:"local-brick",name:"Red Brick",category:"brick",tags:["brick","wall"],thumbnail_url:"",local:true,roughness:.78},
     {id:"local-rubber",name:"Rubber",category:"rubber",tags:["rubber","matte"],thumbnail_url:"",local:true,roughness:.92},
-    {id:"local-water",name:"Water Surface",category:"water",tags:["water","wet"],thumbnail_url:"",local:true,roughness:.06}
+    {id:"local-water",name:"Water Surface",category:"water",tags:["water","wet"],thumbnail_url:"",local:true,roughness:.06},
+    {id:"local-dark-wood",name:"Dark Wood",category:"wood",tags:["wood","dark","oak"],thumbnail_url:"",local:true,roughness:.63},
+    {id:"local-pine",name:"Pine Wood",category:"wood",tags:["wood","pine","planks"],thumbnail_url:"",local:true,roughness:.68},
+    {id:"local-granite",name:"Granite",category:"stone",tags:["stone","granite"],thumbnail_url:"",local:true,roughness:.48},
+    {id:"local-pebble",name:"Pebble Stone",category:"stone",tags:["stone","pebble","rock"],thumbnail_url:"",local:true,roughness:.76},
+    {id:"local-steel",name:"Brushed Steel",category:"metal",tags:["metal","steel","brushed"],thumbnail_url:"",local:true,roughness:.28,metalness:.92},
+    {id:"local-copper",name:"Copper",category:"metal",tags:["metal","copper"],thumbnail_url:"",local:true,roughness:.34,metalness:.88},
+    {id:"local-rust",name:"Rusty Metal",category:"metal",tags:["metal","rust","old"],thumbnail_url:"",local:true,roughness:.74,metalness:.64},
+    {id:"local-asphalt",name:"Asphalt",category:"ground",tags:["asphalt","road","ground"],thumbnail_url:"",local:true,roughness:.83},
+    {id:"local-sand",name:"Desert Sand",category:"ground",tags:["sand","desert","ground"],thumbnail_url:"",local:true,roughness:.91},
+    {id:"local-snow",name:"Snow",category:"ground",tags:["snow","ice","ground"],thumbnail_url:"",local:true,roughness:.86},
+    {id:"local-mud",name:"Wet Mud",category:"ground",tags:["mud","wet","earth"],thumbnail_url:"",local:true,roughness:.67},
+    {id:"local-frosted-glass",name:"Frosted Glass",category:"glass",tags:["glass","frosted"],thumbnail_url:"",local:true,roughness:.20},
+    {id:"local-cracked-glass",name:"Cracked Glass",category:"glass",tags:["glass","crack","broken"],thumbnail_url:"",local:true,roughness:.10},
+    {id:"local-denim",name:"Denim",category:"fabric",tags:["fabric","denim","cloth"],thumbnail_url:"",local:true,roughness:.94},
+    {id:"local-wool",name:"Wool",category:"fabric",tags:["fabric","wool","soft"],thumbnail_url:"",local:true,roughness:.98},
+    {id:"local-velvet",name:"Velvet",category:"fabric",tags:["fabric","velvet"],thumbnail_url:"",local:true,roughness:.86},
+    {id:"local-black-leather",name:"Black Leather",category:"leather",tags:["leather","black"],thumbnail_url:"",local:true,roughness:.54},
+    {id:"local-old-leather",name:"Old Leather",category:"leather",tags:["leather","aged"],thumbnail_url:"",local:true,roughness:.71},
+    {id:"local-blue-ceramic",name:"Blue Ceramic",category:"ceramic",tags:["ceramic","blue","glaze"],thumbnail_url:"",local:true,roughness:.18},
+    {id:"local-porcelain",name:"Porcelain",category:"ceramic",tags:["ceramic","porcelain"],thumbnail_url:"",local:true,roughness:.16},
+    {id:"local-black-marble",name:"Black Marble",category:"marble",tags:["marble","black"],thumbnail_url:"",local:true,roughness:.27},
+    {id:"local-green-marble",name:"Green Marble",category:"marble",tags:["marble","green"],thumbnail_url:"",local:true,roughness:.31},
+    {id:"local-old-brick",name:"Old Brick",category:"brick",tags:["brick","old"],thumbnail_url:"",local:true,roughness:.88},
+    {id:"local-white-brick",name:"White Brick",category:"brick",tags:["brick","white"],thumbnail_url:"",local:true,roughness:.81},
+    {id:"local-tire-rubber",name:"Tire Rubber",category:"rubber",tags:["rubber","tire"],thumbnail_url:"",local:true,roughness:.96},
+    {id:"local-silicone",name:"Silicone",category:"rubber",tags:["rubber","silicone"],thumbnail_url:"",local:true,roughness:.72},
+    {id:"local-glossy-plastic",name:"Glossy Plastic",category:"plastic",tags:["plastic","glossy"],thumbnail_url:"",local:true,roughness:.19},
+    {id:"local-matte-plastic",name:"Matte Plastic",category:"plastic",tags:["plastic","matte"],thumbnail_url:"",local:true,roughness:.67},
+    {id:"local-crystal",name:"Crystal",category:"crystal",tags:["crystal","gem"],thumbnail_url:"",local:true,roughness:.12},
+    {id:"local-lava-rock",name:"Lava Rock",category:"lava",tags:["lava","volcanic"],thumbnail_url:"",local:true,roughness:.82},
+    {id:"local-clay",name:"Clay",category:"clay",tags:["clay","earth"],thumbnail_url:"",local:true,roughness:.89},
+    {id:"local-carpet",name:"Carpet",category:"carpet",tags:["carpet","floor"],thumbnail_url:"",local:true,roughness:.95},
+    {id:"local-paper",name:"Paper",category:"paper",tags:["paper","matte"],thumbnail_url:"",local:true,roughness:.93},
+    {id:"local-cardboard",name:"Cardboard",category:"paper",tags:["cardboard","box"],thumbnail_url:"",local:true,roughness:.92}
 ];
 localLibraryPresets[0].thumbnail_url=createHumanSkinPreview();
-for(const preset of localLibraryPresets){if(!preset.thumbnail_url)preset.thumbnail_url=makeLocalMaterialPreview(preset.category);}
+function getLocalThumbnail(asset){
+    if(asset.thumbnail_url) return asset.thumbnail_url;
+    asset.thumbnail_url=makeLocalMaterialPreview(asset.category);
+    return asset.thumbnail_url;
+}
 
 // Start the app only after the local library preset is initialized.
 // This prevents a Temporal Dead Zone error during the first renderLibrary() call.
@@ -603,17 +661,20 @@ async function applyLocalLibraryMaterial(asset) {
     const targetMesh = selectedMesh;
     const material = ensureEditableMaterial(targetMesh);
     saveHistory();
+    const sourceURL = getLocalThumbnail(asset);
     const tex = await new Promise(resolve => {
         const img = new Image();
         img.onload = () => resolve(new THREE.CanvasTexture(img));
-        img.src = asset.thumbnail_url;
+        img.onerror = () => resolve(null);
+        img.src = sourceURL;
     });
+    if (!tex) return;
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
     tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
     material.map = tex;
     material.roughness = asset.roughness ?? .58;
-    material.metalness = 0;
+    material.metalness = asset.metalness ?? 0;
     material.transparent = asset.category === "glass";
     material.opacity = asset.category === "glass" ? .55 : 1;
     material.depthWrite = asset.category !== "glass";
@@ -621,50 +682,85 @@ async function applyLocalLibraryMaterial(asset) {
     updateSelectionUI();
 }
 
-function renderLibrary() {
-    const query = document.getElementById("searchBox").value.toLowerCase().trim();
-    const category = document.querySelector("[data-cat].active")?.dataset.cat || "all";
+function getFilteredLibraryItems(){
+    const query=document.getElementById("searchBox").value.toLowerCase().trim();
+    const category=document.querySelector("[data-cat].active")?.dataset.cat || "all";
+    return [...localLibraryPresets,...polyAssets].filter(asset=>{
+        const text=`${asset.name} ${asset.category} ${(asset.tags||[]).join(" ")}`.toLowerCase();
+        return (!query || text.includes(query)) && (category==="all" || text.includes(category));
+    }).slice(0,MAX_LIBRARY_ITEMS);
+}
 
-    const allItems = [...localLibraryPresets, ...polyAssets];
-    const items = allItems
-        .filter(asset => {
-            const text = `${asset.name} ${asset.category} ${(asset.tags || []).join(" ")}`.toLowerCase();
-            return (!query || text.includes(query)) && (category === "all" || text.includes(category));
-        })
-        .slice(0, MAX_LIBRARY_ITEMS);
-
-    textureList.innerHTML = "";
-
-    if (!items.length) {
-        textureList.innerHTML = `<div class="empty">${polyAssets.length ? "No texture found" : "Đang tải thư viện..."}</div>`;
+function renderLibrary(){
+    const list=document.getElementById("textureList");
+    if(crackMode) return renderCrackLibrary();
+    const items=getFilteredLibraryItems();
+    libraryVirtualState.items=items;
+    libraryVirtualState.token++;
+    list.classList.add("library-virtual");
+    list.classList.remove("crack-library-active");
+    list.innerHTML="";
+    list.scrollTop=0;
+    if(!items.length){
+        list.classList.remove("library-virtual");
+        list.innerHTML='<div class="empty">No texture found</div>';
         return;
     }
-
-    const fragment = document.createDocumentFragment();
-    for (const asset of items) {
-        const card = document.createElement("div");
-        card.className = "textureCard";
-        card.dataset.assetId = asset.id;
-
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.src = asset.thumbnail_url;
-        img.alt = asset.name;
-
-        const info = document.createElement("div");
-        const strong = document.createElement("strong");
-        const small = document.createElement("small");
-        strong.textContent = asset.name;
-        small.textContent = asset.category || "PBR";
-        info.append(strong, small);
-        card.append(img, info);
-
-        card.onclick = () => asset.local ? applyLocalLibraryMaterial(asset) : applyPolyMaterial(asset, card);
-        fragment.appendChild(card);
-    }
-    textureList.appendChild(fragment);
+    const spacer=document.createElement("div");
+    spacer.className="library-virtual-spacer";
+    spacer.style.height=`${items.length*libraryVirtualState.cardHeight}px`;
+    list.appendChild(spacer);
+    renderVisibleLibraryCards();
 }
+
+function makeLibraryCard(asset,index){
+    const wrap=document.createElement("div");
+    wrap.className="library-virtual-card";
+    wrap.style.transform=`translateY(${index*libraryVirtualState.cardHeight}px)`;
+    const card=document.createElement("div");
+    card.className="textureCard";
+    card.dataset.assetId=asset.id;
+    const img=document.createElement("img");
+    img.loading="lazy";
+    img.decoding="async";
+    img.alt=asset.name||"Texture";
+    img.src=asset.local ? getLocalThumbnail(asset) : (asset.thumbnail_url||"");
+    const info=document.createElement("div");
+    const strong=document.createElement("strong");
+    const small=document.createElement("small");
+    strong.textContent=asset.name||asset.id;
+    small.textContent=asset.category||"PBR";
+    info.append(strong,small);
+    card.append(img,info);
+    card.onclick=()=>asset.local?applyLocalLibraryMaterial(asset):applyPolyMaterial(asset,card);
+    wrap.appendChild(card);
+    return wrap;
+}
+
+function renderVisibleLibraryCards(){
+    const list=document.getElementById("textureList");
+    if(!list||crackMode||!list.classList.contains("library-virtual")) return;
+    const items=libraryVirtualState.items;
+    const h=libraryVirtualState.cardHeight;
+    const top=list.scrollTop;
+    const view=Math.max(list.clientHeight,1);
+    const first=Math.max(0,Math.floor(top/h)-libraryVirtualState.overscan);
+    const last=Math.min(items.length,Math.ceil((top+view)/h)+libraryVirtualState.overscan);
+    list.querySelectorAll(".library-virtual-card").forEach(el=>el.remove());
+    const frag=document.createDocumentFragment();
+    for(let i=first;i<last;i++) frag.appendChild(makeLibraryCard(items[i],i));
+    list.appendChild(frag);
+}
+
+function onLibraryScroll(){
+    if(libraryVirtualState.raf) return;
+    libraryVirtualState.raf=requestAnimationFrame(()=>{
+        libraryVirtualState.raf=0;
+        renderVisibleLibraryCards();
+    });
+}
+
+textureList.addEventListener("scroll",onLibraryScroll,{passive:true});
 
 async function applyPolyMaterial(asset, card) {
     if (!selectedMesh) {
@@ -1322,6 +1418,7 @@ function toggleCrackMode() {
 function renderCrackLibrary() {
     if (!crackMode) return;
     const list = document.getElementById("textureList");
+    list.classList.remove("library-virtual");
     list.classList.add("crack-library-active");
     list.innerHTML = "";
 
