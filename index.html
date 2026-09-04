@@ -56,6 +56,13 @@
 #aiProgress{display:none;margin-top:8px;padding:7px 8px;border:1px solid #2c3746;background:#121a24;border-radius:6px;color:#8999ad;font-size:9px}#aiProgress.show{display:block}.ai-progressbar{height:4px;margin-top:6px;background:#27313d;border-radius:5px;overflow:hidden}.ai-progressbar span{display:block;width:0;height:100%;background:#4c8bf5}
 #aiPreview{display:none;margin-top:8px;border:1px solid #34404f;border-radius:6px;overflow:hidden;background:#090d12}#aiPreview.show{display:block}#aiCanvas{display:block;width:100%;height:auto}#aiStatus{min-height:14px;margin-top:7px;color:#8290a0;font-size:9px}.ai-note{margin-top:6px;color:#677487;font-size:8px;line-height:1.45}@media(max-width:900px){#aiPanel{left:10px;right:10px;width:auto;max-width:none}}
 
+
+/* ===== SEPARATE PARTS TOOL ===== */
+.separateBtn{border-color:#3f6cae;background:#18243a}
+.separateBtn:hover{background:#203456;border-color:#5b8fe5}
+.separateBtn.busy{opacity:.6;pointer-events:none}
+#separateStatus{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1200;padding:8px 12px;border:1px solid #3e536f;border-radius:7px;background:rgba(13,18,25,.94);color:#b8c8dc;font-size:10px;box-shadow:0 10px 28px rgba(0,0,0,.35);pointer-events:none}
+#separateStatus.show{display:block}
 </style>
 </head>
 
@@ -67,6 +74,7 @@
     <div class="toolbar">
         <button id="uploadModel">＋ Model</button>
         <button id="uploadTexture">＋ Texture</button>
+        <button id="separateBtn" class="separateBtn" title="Tách mesh thành các phần độc lập">⇱ Separate</button>
         <button id="aiMode">✦ AI</button>
         <button id="crackMode" title="Bật chế độ tạo và kéo vết nứt">＋ Crack</button>
         <button id="undoBtn">↶</button>
@@ -88,6 +96,8 @@
 <div id="aiStatus"></div>
 <div class="ai-note">AI tạo ảnh thật bằng diffusion chạy local trong trình duyệt. Lần đầu cần tải model; tốc độ phụ thuộc GPU/WebGPU. Không có API credit.</div>
 </section>
+
+<div id="separateStatus"></div>
 
 <main class="layout">
 
@@ -265,6 +275,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
+import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 
 const API = "https://api.polyhaven.com";
@@ -379,6 +390,7 @@ function init() {
 
     document.getElementById("uploadModel").onclick = () => document.getElementById("modelInput").click();
     document.getElementById("uploadTexture").onclick = () => document.getElementById("textureInput").click();
+    document.getElementById("separateBtn").onclick = separateSelectedMesh;
     document.getElementById("modelInput").addEventListener("change", loadModel);
     document.getElementById("textureInput").addEventListener("change", uploadTexture);
     document.getElementById("searchBox").addEventListener("input", debounce(filterTextures, 100));
@@ -729,6 +741,230 @@ function getSelectedMaterial() {
         return selectedMesh.material[selectedMaterialIndex] || selectedMesh.material[0] || null;
     }
     return selectedMesh.material;
+}
+
+function setSeparateStatus(text, show = true) {
+    const el = document.getElementById("separateStatus");
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle("show", show);
+}
+
+function getTriangleMaterialIndex(geometry, triangleIndex) {
+    const indexOffset = triangleIndex * 3;
+    const groups = geometry.groups || [];
+    for (const group of groups) {
+        const start = group.start;
+        const end = group.start + group.count;
+        if (indexOffset >= start && indexOffset < end) return group.materialIndex || 0;
+    }
+    return 0;
+}
+
+function unionFind(size) {
+    const parent = new Int32Array(size);
+    const rank = new Uint8Array(size);
+    for (let i = 0; i < size; i++) parent[i] = i;
+
+    function find(x) {
+        let root = x;
+        while (parent[root] !== root) root = parent[root];
+        while (parent[x] !== x) {
+            const next = parent[x];
+            parent[x] = root;
+            x = next;
+        }
+        return root;
+    }
+
+    function unite(a, b) {
+        a = find(a);
+        b = find(b);
+        if (a === b) return;
+        if (rank[a] < rank[b]) [a, b] = [b, a];
+        parent[b] = a;
+        if (rank[a] === rank[b]) rank[a]++;
+    }
+
+    return { find, unite };
+}
+
+function buildPartGeometry(geometry, triangles) {
+    const sourceAttributes = geometry.attributes;
+    const used = new Map();
+    const sourceVertexIds = [];
+    const localIndices = [];
+    const materialIds = [];
+
+    const indexArray = geometry.index.array;
+
+    const localVertex = globalIndex => {
+        if (used.has(globalIndex)) return used.get(globalIndex);
+        const id = sourceVertexIds.length;
+        used.set(globalIndex, id);
+        sourceVertexIds.push(globalIndex);
+        return id;
+    };
+
+    for (const tri of triangles) {
+        localIndices.push(
+            localVertex(indexArray[tri.offset]),
+            localVertex(indexArray[tri.offset + 1]),
+            localVertex(indexArray[tri.offset + 2])
+        );
+        materialIds.push(tri.materialIndex || 0);
+    }
+
+    const partGeometry = new THREE.BufferGeometry();
+
+    for (const name in sourceAttributes) {
+        const attr = sourceAttributes[name];
+        if (!attr || !attr.array || !Number.isInteger(attr.itemSize)) continue;
+        const ArrayType = attr.array.constructor;
+        const values = new ArrayType(sourceVertexIds.length * attr.itemSize);
+
+        for (let i = 0; i < sourceVertexIds.length; i++) {
+            const src = sourceVertexIds[i] * attr.itemSize;
+            const dst = i * attr.itemSize;
+            for (let j = 0; j < attr.itemSize; j++) values[dst + j] = attr.array[src + j];
+        }
+
+        partGeometry.setAttribute(
+            name,
+            new THREE.BufferAttribute(values, attr.itemSize, attr.normalized)
+        );
+    }
+
+    partGeometry.setIndex(localIndices);
+
+    // Rebuild material groups so a split part can still use multiple source materials.
+    let runStart = 0;
+    let runMaterial = materialIds[0] || 0;
+    for (let i = 1; i <= materialIds.length; i++) {
+        const nextMaterial = i < materialIds.length ? (materialIds[i] || 0) : -1;
+        if (nextMaterial !== runMaterial) {
+            partGeometry.addGroup(runStart * 3, (i - runStart) * 3, runMaterial);
+            runStart = i;
+            runMaterial = nextMaterial;
+        }
+    }
+
+    partGeometry.computeBoundingBox();
+    partGeometry.computeBoundingSphere();
+    return partGeometry;
+}
+
+function separateSelectedMesh() {
+    if (!selectedMesh || !model) {
+        alert("Hãy click chọn mesh trước.");
+        return;
+    }
+
+    const mesh = selectedMesh;
+    if (!mesh.isMesh || !mesh.geometry?.attributes?.position) return;
+
+    const button = document.getElementById("separateBtn");
+    button?.classList.add("busy");
+    setSeparateStatus("Đang tách các phần của mesh...");
+
+    // Run after one frame so the button/status can render before CPU work starts.
+    requestAnimationFrame(() => {
+        try {
+            let geometry = mesh.geometry;
+            let temporaryGeometry = false;
+
+            // Non-indexed geometry has no shared vertex graph. Merge close vertices first.
+            if (!geometry.index) {
+                geometry = mergeVertices(geometry.clone(), 1e-4);
+                temporaryGeometry = true;
+            }
+
+            const indexArray = geometry.index.array;
+            const vertexCount = geometry.attributes.position.count;
+            const triangleCount = Math.floor(indexArray.length / 3);
+
+            if (triangleCount <= 1) {
+                if (temporaryGeometry) geometry.dispose();
+                setSeparateStatus("Mesh này không có đủ mặt để tách.", true);
+                setTimeout(() => setSeparateStatus("", false), 1800);
+                return;
+            }
+
+            const uf = unionFind(vertexCount);
+            for (let t = 0; t < triangleCount; t++) {
+                const o = t * 3;
+                uf.unite(indexArray[o], indexArray[o + 1]);
+                uf.unite(indexArray[o + 1], indexArray[o + 2]);
+            }
+
+            const components = new Map();
+            for (let t = 0; t < triangleCount; t++) {
+                const o = t * 3;
+                const root = uf.find(indexArray[o]);
+                if (!components.has(root)) components.set(root, []);
+                components.get(root).push({
+                    offset: o,
+                    materialIndex: getTriangleMaterialIndex(geometry, t)
+                });
+            }
+
+            if (components.size <= 1) {
+                if (temporaryGeometry) geometry.dispose();
+                setSeparateStatus("Mesh chỉ có 1 phần liên kết.", true);
+                setTimeout(() => setSeparateStatus("", false), 1800);
+                return;
+            }
+
+            const parent = mesh.parent || model;
+            const originalName = mesh.name || "Mesh";
+            const sourceMaterials = Array.isArray(mesh.material)
+                ? mesh.material
+                : [mesh.material];
+
+            const parts = [];
+            let partNumber = 1;
+
+            for (const triangles of components.values()) {
+                const partGeometry = buildPartGeometry(geometry, triangles);
+                const partMaterials = sourceMaterials.map(m => m?.clone ? m.clone() : m);
+                const part = new THREE.Mesh(
+                    partGeometry,
+                    partMaterials.length === 1 ? partMaterials[0] : partMaterials
+                );
+
+                part.name = `${originalName}_Part_${String(partNumber).padStart(2, "0")}`;
+                part.position.copy(mesh.position);
+                part.quaternion.copy(mesh.quaternion);
+                part.scale.copy(mesh.scale);
+                part.renderOrder = mesh.renderOrder;
+                part.castShadow = mesh.castShadow;
+                part.receiveShadow = mesh.receiveShadow;
+                part.userData.separatedFrom = originalName;
+                part.userData.separatedPart = partNumber;
+                part.userData.textureStudioCloned = true;
+
+                parent.add(part);
+                parts.push(part);
+                partNumber++;
+            }
+
+            parent.remove(mesh);
+            mesh.geometry?.dispose();
+
+            selectedMesh = parts[0] || null;
+            selectedMaterialIndex = 0;
+            updateSelectionUI();
+
+            setSeparateStatus(`Đã tách ${parts.length} phần. Mỗi phần giờ là một mesh riêng.`);
+            setTimeout(() => setSeparateStatus("", false), 2600);
+        } catch (error) {
+            console.error("Separate Parts error:", error);
+            setSeparateStatus("Không thể tách mesh này.");
+            setTimeout(() => setSeparateStatus("", false), 2200);
+        } finally {
+            button?.classList.remove("busy");
+        }
+    });
 }
 
 function clearCracks() {
