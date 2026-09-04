@@ -75,7 +75,7 @@
 .categories::-webkit-scrollbar{width:5px}.categories::-webkit-scrollbar-thumb{background:#39414d;border-radius:6px}
 .textureList.library-virtual{position:relative;overflow-y:auto;overflow-x:hidden;contain:strict;overscroll-behavior:contain;}
 .library-virtual-spacer{position:relative;width:100%;pointer-events:none;}
-.library-virtual-card{position:absolute;left:0;right:0;height:74px;}
+.library-virtual-card{position:absolute;top:0;left:0;right:0;height:74px;}
 .library-virtual-card .textureCard{height:69px;margin:0;}
 </style>
 </head>
@@ -1418,6 +1418,8 @@ function toggleCrackMode() {
 function renderCrackLibrary() {
     if (!crackMode) return;
     const list = document.getElementById("textureList");
+    if (!list) return;
+
     list.classList.remove("library-virtual");
     list.classList.add("crack-library-active");
     list.innerHTML = "";
@@ -1430,15 +1432,39 @@ function renderCrackLibrary() {
         return matchesSearch && matchesCategory;
     });
 
+    if (!items.length) {
+        list.innerHTML = '<div class="empty" style="grid-column:1/-1">No crack found</div>';
+        const count = document.getElementById("crackCount");
+        if (count) count.textContent = `0/${crackPresets.length}`;
+        return;
+    }
+
     const frag = document.createDocumentFragment();
     for (const preset of items) {
         const card = document.createElement("div");
         card.className = "crackPresetCard" + (preset.id === selectedCrackPreset ? " active" : "");
+
         const img = document.createElement("img");
-        img.src = getCrackPreviewURL(preset);
         img.alt = preset.name;
         img.loading = "lazy";
         img.decoding = "async";
+        try {
+            img.src = getCrackPreviewURL(preset);
+        } catch (error) {
+            console.warn("Crack preview error:", preset.id, error);
+            const fallback = document.createElement("canvas");
+            fallback.width = 180; fallback.height = 180;
+            const fctx = fallback.getContext("2d");
+            fctx.fillStyle = "#0d1014";
+            fctx.fillRect(0, 0, 180, 180);
+            fctx.strokeStyle = preset.color || "#aaa";
+            fctx.lineWidth = 5;
+            fctx.beginPath();
+            fctx.moveTo(90, 90); fctx.lineTo(145, 45);
+            fctx.moveTo(90, 90); fctx.lineTo(38, 142);
+            fctx.stroke();
+            img.src = fallback.toDataURL("image/png");
+        }
 
         const meta = document.createElement("div");
         meta.className = "crackPresetMeta";
@@ -1447,8 +1473,8 @@ function renderCrackLibrary() {
         const desc = document.createElement("small");
         desc.textContent = preset.desc;
         meta.append(title, desc);
-        card.append(img, meta);
 
+        card.append(img, meta);
         card.onclick = () => {
             selectedCrackPreset = preset.id;
             renderCrackLibrary();
@@ -1456,10 +1482,6 @@ function renderCrackLibrary() {
         frag.appendChild(card);
     }
 
-    if (!items.length) {
-        list.innerHTML = '<div class="empty" style="grid-column:1/-1">No crack found</div>';
-        return;
-    }
     list.appendChild(frag);
     const count = document.getElementById("crackCount");
     if (count) count.textContent = `${items.length}/${crackPresets.length}`;
