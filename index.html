@@ -75,8 +75,19 @@
 .categories::-webkit-scrollbar{width:5px}.categories::-webkit-scrollbar-thumb{background:#39414d;border-radius:6px}
 .textureList.library-virtual{position:relative;overflow-y:auto;overflow-x:hidden;contain:strict;overscroll-behavior:contain;}
 .library-virtual-spacer{position:relative;width:100%;pointer-events:none;}
-.library-virtual-card{position:absolute;top:0;left:0;right:0;height:74px;}
+.library-virtual-card{position:absolute;left:0;right:0;height:74px;}
 .library-virtual-card .textureCard{height:69px;margin:0;}
+
+/* ===== PRO TOOLS ===== */
+.effectStudioBtn{border-color:#5f5bd8;background:#211f3d;color:#e9e7ff;font-weight:800}.effectStudioBtn:hover{background:#2c2852;border-color:#827df0}.effectStudioBtn:active{transform:translateY(1px)}
+.proToolsSection{padding-bottom:12px}
+.proGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.proGrid button{min-height:30px;padding:6px 7px;font-size:9px}
+.proGrid button:hover{border-color:#5878aa;background:#202833}
+.favoriteSelect{width:100%;margin-top:7px;padding:8px 9px;border:1px solid #34404f;border-radius:6px;background:#0b0f14;color:#edf2f7;font:inherit;font-size:9px}
+.proStatus{margin-top:7px;min-height:20px;padding:5px 7px;border-radius:5px;background:#0d1218;border:1px solid #283240;color:#758397;font-size:8px;line-height:1.25}
+.sceneStats{position:absolute;right:18px;top:54px;z-index:25;min-width:190px;max-width:250px;padding:10px 11px;background:rgba(13,17,22,.94);border:1px solid #39485e;border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.35);color:#dce5ee;font-size:10px;line-height:1.55;pointer-events:none}
+.sceneStats strong{color:#82aef7}
 </style>
 </head>
 
@@ -91,6 +102,7 @@
         <button id="separateBtn" class="separateBtn" title="Tách mesh thành các phần độc lập">⇱ Separate</button>
         <button id="partsBtn" class="partsBtn" title="Chọn từng phần của model">☷ Parts</button>
         <button id="crackMode" title="Bật chế độ tạo và kéo vết nứt">＋ Crack</button>
+        <button id="effectStudioBtn" class="effectStudioBtn" title="Mở Effect Studio">✦ Effect Studio</button>
         <button id="undoBtn">↶</button>
         <button id="redoBtn">↷</button>
         <button id="saveProject">Save</button>
@@ -103,6 +115,7 @@
 
 
 <div id="separateStatus"></div>
+<div id="sceneStats" class="sceneStats" hidden></div>
 <div id="partsPanel" class="partsPanel" aria-label="Model Parts">
     <div class="partsHead">
         <strong>MODEL PARTS</strong>
@@ -268,6 +281,27 @@
             </button>
         </div>
 
+        <div class="section proToolsSection">
+            <label>PRO TOOLS</label>
+            <div class="proGrid">
+                <button id="copyMaterialBtn">⧉ Copy Mat</button>
+                <button id="pasteMaterialBtn">▣ Paste Mat</button>
+                <button id="favoriteMaterialBtn">★ Favorite</button>
+                <button id="randomMaterialBtn">✦ Randomize</button>
+                <button id="isolateBtn">◎ Isolate</button>
+                <button id="showAllBtn">◉ Show All</button>
+                <button id="hideSelectedBtn">◌ Hide Part</button>
+                <button id="duplicateMeshBtn">＋ Duplicate</button>
+                <button id="focusSelectedBtn">⌖ Focus Part</button>
+                <button id="statsBtn">▤ Scene Stats</button>
+            </div>
+            <select id="favoriteSelect" class="favoriteSelect">
+                <option value="">No favorite saved</option>
+            </select>
+            <button id="applyFavoriteBtn" class="wide">Apply Favorite</button>
+            <div id="proStatus" class="proStatus">Ready</div>
+        </div>
+
         <div id="crackInspector" class="section crackInspector" hidden>
             <label>CRACK PROPERTIES <b id="crackPresetName">NONE</b></label>
 
@@ -367,6 +401,12 @@ const textureList = document.getElementById("textureList");
 
 // Only visible library cards are created.
 let libraryVirtualState = { items: [], cardHeight: 74, overscan: 6, raf: 0, token: 0 };
+let materialClipboard = null;
+let favoriteMaterials = [];
+let lastAppliedAsset = null;
+let statsVisible = false;
+let isolationActive = false;
+let lastStatsUpdate = 0;
 
 function init() {
     scene = new THREE.Scene();
@@ -446,6 +486,7 @@ function init() {
     });
 
     bindMaterialControls();
+    bindProTools();
     document.getElementById("wireBtn").onclick = toggleWire;
     document.getElementById("focusBtn").onclick = focusModel;
     document.getElementById("removeTexture").onclick = removeTexture;
@@ -653,11 +694,14 @@ function getLocalThumbnail(asset){
 
 // Start the app only after the local library preset is initialized.
 // This prevents a Temporal Dead Zone error during the first renderLibrary() call.
+document.getElementById("effectStudioBtn").onclick=()=>{ window.location.href="index2.html"; };
+
 init();
 loadPolyHavenFast();
 
 async function applyLocalLibraryMaterial(asset) {
     if (!selectedMesh) { alert("Hãy click vào một mesh trước."); return; }
+    lastAppliedAsset = { ...asset };
     const targetMesh = selectedMesh;
     const material = ensureEditableMaterial(targetMesh);
     saveHistory();
@@ -771,6 +815,7 @@ async function applyPolyMaterial(asset, card) {
 
     const targetMesh = selectedMesh;
     const targetMaterialIndex = selectedMaterialIndex;
+    lastAppliedAsset = { ...asset };
     const applyId = ++textureApplyToken;
     const material = ensureEditableMaterial(targetMesh);
 
@@ -1418,8 +1463,6 @@ function toggleCrackMode() {
 function renderCrackLibrary() {
     if (!crackMode) return;
     const list = document.getElementById("textureList");
-    if (!list) return;
-
     list.classList.remove("library-virtual");
     list.classList.add("crack-library-active");
     list.innerHTML = "";
@@ -1432,39 +1475,15 @@ function renderCrackLibrary() {
         return matchesSearch && matchesCategory;
     });
 
-    if (!items.length) {
-        list.innerHTML = '<div class="empty" style="grid-column:1/-1">No crack found</div>';
-        const count = document.getElementById("crackCount");
-        if (count) count.textContent = `0/${crackPresets.length}`;
-        return;
-    }
-
     const frag = document.createDocumentFragment();
     for (const preset of items) {
         const card = document.createElement("div");
         card.className = "crackPresetCard" + (preset.id === selectedCrackPreset ? " active" : "");
-
         const img = document.createElement("img");
+        img.src = getCrackPreviewURL(preset);
         img.alt = preset.name;
         img.loading = "lazy";
         img.decoding = "async";
-        try {
-            img.src = getCrackPreviewURL(preset);
-        } catch (error) {
-            console.warn("Crack preview error:", preset.id, error);
-            const fallback = document.createElement("canvas");
-            fallback.width = 180; fallback.height = 180;
-            const fctx = fallback.getContext("2d");
-            fctx.fillStyle = "#0d1014";
-            fctx.fillRect(0, 0, 180, 180);
-            fctx.strokeStyle = preset.color || "#aaa";
-            fctx.lineWidth = 5;
-            fctx.beginPath();
-            fctx.moveTo(90, 90); fctx.lineTo(145, 45);
-            fctx.moveTo(90, 90); fctx.lineTo(38, 142);
-            fctx.stroke();
-            img.src = fallback.toDataURL("image/png");
-        }
 
         const meta = document.createElement("div");
         meta.className = "crackPresetMeta";
@@ -1473,8 +1492,8 @@ function renderCrackLibrary() {
         const desc = document.createElement("small");
         desc.textContent = preset.desc;
         meta.append(title, desc);
-
         card.append(img, meta);
+
         card.onclick = () => {
             selectedCrackPreset = preset.id;
             renderCrackLibrary();
@@ -1482,6 +1501,10 @@ function renderCrackLibrary() {
         frag.appendChild(card);
     }
 
+    if (!items.length) {
+        list.innerHTML = '<div class="empty" style="grid-column:1/-1">No crack found</div>';
+        return;
+    }
     list.appendChild(frag);
     const count = document.getElementById("crackCount");
     if (count) count.textContent = `${items.length}/${crackPresets.length}`;
@@ -2183,6 +2206,206 @@ function renderPartsList() {
     list.appendChild(frag);
 }
 
+function setProStatus(message) {
+    const el = document.getElementById("proStatus");
+    if (el) el.textContent = message;
+}
+
+function bindProTools() {
+    document.getElementById("copyMaterialBtn").onclick = copyMaterial;
+    document.getElementById("pasteMaterialBtn").onclick = pasteMaterial;
+    document.getElementById("favoriteMaterialBtn").onclick = favoriteMaterial;
+    document.getElementById("randomMaterialBtn").onclick = randomizeMaterial;
+    document.getElementById("isolateBtn").onclick = isolateSelected;
+    document.getElementById("showAllBtn").onclick = showAllParts;
+    document.getElementById("hideSelectedBtn").onclick = hideSelectedPart;
+    document.getElementById("duplicateMeshBtn").onclick = duplicateSelectedMesh;
+    document.getElementById("focusSelectedBtn").onclick = focusSelectedPart;
+    document.getElementById("statsBtn").onclick = toggleSceneStats;
+    document.getElementById("applyFavoriteBtn").onclick = applyFavorite;
+    loadFavorites();
+}
+
+function copyMaterial() {
+    const m = getSelectedMaterial();
+    if (!m) { setProStatus("Chưa chọn material."); return; }
+    materialClipboard = m.clone();
+    setProStatus("Đã copy material.");
+}
+
+function pasteMaterial() {
+    if (!selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    if (!materialClipboard) { setProStatus("Clipboard material đang trống."); return; }
+    saveHistory();
+    const pasted = materialClipboard.clone();
+    if (Array.isArray(selectedMesh.material)) selectedMesh.material[selectedMaterialIndex] = pasted;
+    else selectedMesh.material = pasted;
+    selectedMesh.userData.textureStudioCloned = true;
+    updateSelectionUI();
+    setProStatus("Đã paste material vào part đang chọn.");
+}
+
+function favoriteMaterial() {
+    const m = getSelectedMaterial();
+    if (!m) { setProStatus("Chưa chọn material."); return; }
+    const snap = {
+        id: "fav-" + Date.now(),
+        name: `${selectedMesh?.name || "Material"} — ${new Date().toLocaleTimeString()}`,
+        color: m.color?.getHexString?.() || "ffffff",
+        roughness: m.roughness ?? .5,
+        metalness: m.metalness ?? 0,
+        map: m.map || null,
+        repeat: m.map ? [m.map.repeat.x, m.map.repeat.y] : [1,1],
+        rotation: m.map?.rotation || 0,
+        offset: m.map ? [m.map.offset.x, m.map.offset.y] : [0,0]
+    };
+    favoriteMaterials.unshift(snap);
+    favoriteMaterials = favoriteMaterials.slice(0, 12);
+    try {
+        localStorage.setItem("textureStudio_favorite_names_v1", JSON.stringify(
+            favoriteMaterials.map(x => ({id:x.id,name:x.name,color:x.color,roughness:x.roughness,metalness:x.metalness}))
+        ));
+    } catch (_) {}
+    refreshFavoriteSelect();
+    document.getElementById("favoriteSelect").value = snap.id;
+    setProStatus("★ Đã lưu Favorite trong phiên làm việc.");
+}
+
+function refreshFavoriteSelect() {
+    const select = document.getElementById("favoriteSelect");
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = "";
+    if (!favoriteMaterials.length) {
+        select.innerHTML = '<option value="">No favorite saved</option>';
+        return;
+    }
+    favoriteMaterials.forEach((fav, i) => {
+        const opt = document.createElement("option");
+        opt.value = fav.id;
+        opt.textContent = `${i+1}. ${fav.name}`;
+        select.appendChild(opt);
+    });
+    if (favoriteMaterials.some(x => x.id === current)) select.value = current;
+}
+
+function loadFavorites() {
+    // Restore lightweight favorites only; texture objects stay session-local for performance.
+    try {
+        const raw = JSON.parse(localStorage.getItem("textureStudio_favorite_names_v1") || "[]");
+        favoriteMaterials = raw.map(x => ({...x,map:null,repeat:[1,1],rotation:0,offset:[0,0]}));
+    } catch (_) { favoriteMaterials = []; }
+    refreshFavoriteSelect();
+}
+
+function applyFavorite() {
+    if (!selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    const id = document.getElementById("favoriteSelect").value;
+    const fav = favoriteMaterials.find(x => x.id === id);
+    if (!fav) { setProStatus("Chưa có Favorite."); return; }
+    saveHistory();
+    const m = ensureEditableMaterial(selectedMesh);
+    if (m.color) m.color.set(fav.color || "ffffff");
+    m.roughness = Number(fav.roughness ?? .5);
+    m.metalness = Number(fav.metalness ?? 0);
+    if (fav.map) {
+        m.map = fav.map;
+        m.map.wrapS = THREE.RepeatWrapping; m.map.wrapT = THREE.RepeatWrapping;
+        m.map.repeat.set(fav.repeat?.[0] ?? 1, fav.repeat?.[1] ?? 1);
+        m.map.rotation = fav.rotation ?? 0;
+        m.map.offset.set(fav.offset?.[0] ?? 0, fav.offset?.[1] ?? 0);
+    }
+    m.needsUpdate = true;
+    updateSelectionUI();
+    setProStatus("Đã áp Favorite.");
+}
+
+function randomizeMaterial() {
+    const m = getSelectedMaterial();
+    if (!m) { setProStatus("Hãy chọn mesh trước."); return; }
+    saveHistory();
+    m.color.setHSL(Math.random(), .35 + Math.random()*.55, .35 + Math.random()*.35);
+    m.roughness = Math.random();
+    m.metalness = Math.random() > .55 ? .75 + Math.random()*.25 : Math.random()*.18;
+    m.needsUpdate = true;
+    updateSelectionUI();
+    setProStatus("✦ Đã tạo biến thể material.");
+}
+
+function isolateSelected() {
+    if (!model || !selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    model.traverse(obj => { if (obj.isMesh) obj.visible = obj === selectedMesh; });
+    isolationActive = true;
+    setProStatus("◎ Isolate bật — Show All để khôi phục.");
+}
+
+function showAllParts() {
+    if (!model) return;
+    model.traverse(obj => { if (obj.isMesh) obj.visible = true; });
+    isolationActive = false;
+    setProStatus("◉ Đã hiện lại toàn bộ part.");
+}
+
+function hideSelectedPart() {
+    if (!selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    selectedMesh.visible = false;
+    setProStatus("◌ Đã ẩn part đang chọn.");
+}
+
+function duplicateSelectedMesh() {
+    if (!selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    const clone = selectedMesh.clone(true);
+    clone.position.x += .15;
+    clone.userData = {...selectedMesh.userData, duplicateOf:selectedMesh.uuid, textureStudioCloned:true};
+    if (Array.isArray(clone.material)) clone.material = clone.material.map(m => m?.clone ? m.clone() : m);
+    else if (clone.material?.clone) clone.material = clone.material.clone();
+    clone.name = `${selectedMesh.name || "Mesh"}_Copy`;
+    (selectedMesh.parent || model).add(clone);
+    selectedMesh = clone;
+    selectedMaterialIndex = 0;
+    updateSelectionUI();
+    renderPartsList();
+    setProStatus("＋ Đã duplicate part.");
+}
+
+function focusSelectedPart() {
+    if (!selectedMesh) { setProStatus("Hãy chọn mesh trước."); return; }
+    const box = new THREE.Box3().setFromObject(selectedMesh);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const distance = Math.max(size.x,size.y,size.z,.1) * 2.8;
+    camera.position.copy(center).add(new THREE.Vector3(distance*.8,distance*.55,distance));
+    controls.target.copy(center);
+    controls.update();
+    setProStatus("⌖ Đã focus vào part.");
+}
+
+function toggleSceneStats() {
+    statsVisible = !statsVisible;
+    const el = document.getElementById("sceneStats");
+    if (!el) return;
+    el.hidden = !statsVisible;
+    if (statsVisible) updateSceneStats();
+    setProStatus(statsVisible ? "▤ Scene Stats đang bật." : "Scene Stats đã tắt.");
+}
+
+function updateSceneStats() {
+    const el = document.getElementById("sceneStats");
+    if (!el || !model) return;
+    let meshes=0, triangles=0, materials=0, textures=0;
+    const seen = new Set();
+    model.traverse(obj => {
+        if (!obj.isMesh) return;
+        meshes++;
+        triangles += obj.geometry?.index ? obj.geometry.index.count/3 : (obj.geometry?.attributes?.position?.count || 0)/3;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        materials += mats.length;
+        mats.forEach(m => [m?.map,m?.normalMap,m?.roughnessMap,m?.metalnessMap,m?.aoMap].forEach(t => { if(t&&!seen.has(t)){seen.add(t);textures++;} }));
+    });
+    const calls = renderer?.info?.render?.calls ?? 0;
+    el.innerHTML = `<strong>SCENE STATS</strong><br>Meshes: ${meshes}<br>Triangles: ${Math.round(triangles).toLocaleString()}<br>Materials: ${materials}<br>Unique textures: ${textures}<br>Draw calls: ${calls}`;
+}
+
 function saveHistory() {
     const material = getSelectedMaterial();
     if (!selectedMesh || !material) return;
@@ -2321,6 +2544,10 @@ function animate() {
     requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
+    if (statsVisible) {
+        const now = performance.now();
+        if (now - lastStatsUpdate > 700) { lastStatsUpdate = now; updateSceneStats(); }
+    }
 }
 </script>
 

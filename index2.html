@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Texture Studio — Effect Designer</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0a0d12;color:#e8edf3;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select{font:inherit}button{border:1px solid #303947;background:#151a22;color:#dfe7f0;border-radius:6px;padding:7px 10px;cursor:pointer}button:hover{background:#202731;border-color:#485466}button.active{background:#234f9b;border-color:#5e8ff0}.primary{background:#245fb8;border-color:#4d89e5}.danger{background:#4c1d24;border-color:#8c3b48}
+#app{display:grid;grid-template-rows:48px minmax(0,1fr) 170px;height:100vh}
+#topbar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #232b37;background:#10151c;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:5}
+.logo{font-weight:900;letter-spacing:.8px;font-size:14px;margin-right:12px}.logo span{color:#68a2ff}.toolbar{display:flex;gap:6px;align-items:center;flex:1}.toolbar .spacer{flex:1}
+#workspace{display:grid;grid-template-columns:250px minmax(0,1fr) 290px;min-height:0}
+.panel{min-width:0;min-height:0;background:#10151c;border-right:1px solid #242c36;display:flex;flex-direction:column}.panel.right{border-right:0;border-left:1px solid #242c36}.panel-title{padding:11px 12px 8px;font-size:10px;letter-spacing:1px;color:#9aa7b7;font-weight:800}.subtle{color:#687587;font-size:9px}
+#effectList{overflow:auto;padding:8px}.effect-card{display:flex;align-items:center;gap:8px;border:1px solid #2a3340;background:#151b23;border-radius:7px;padding:7px;margin-bottom:6px;cursor:pointer}.effect-card.active{border-color:#4e85dd;background:#1a2638}.thumb{width:46px;height:46px;border:1px solid #34404e;border-radius:5px;background:#0a0d12;object-fit:contain}.effect-card .name{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.effect-card .meta{font-size:8px;color:#778496;margin-top:3px}
+#center{position:relative;min-width:0;min-height:0;background:radial-gradient(circle at 50% 42%,#1a2230 0,#0c1118 52%,#090c11 100%)}
+#viewer{position:absolute;inset:0}.viewer-label{position:absolute;left:12px;top:10px;padding:5px 7px;border:1px solid #2f3a48;border-radius:5px;background:rgba(10,13,18,.78);font-size:9px;color:#a9b6c6;pointer-events:none}.axis-note{position:absolute;right:10px;top:10px;padding:5px 7px;border:1px solid #2f3a48;border-radius:5px;background:rgba(10,13,18,.78);font-size:9px;color:#8c9bad;pointer-events:none}
+#inspector{overflow:auto;padding-bottom:10px}.section{padding:9px 10px;border-bottom:1px solid #202832}.section h3{margin:0 0 8px;font-size:10px;letter-spacing:.7px;color:#aab6c5}.row{display:grid;grid-template-columns:78px minmax(0,1fr) 48px;gap:6px;align-items:center;margin:6px 0;font-size:9px;color:#9eabbb}.row input[type=range]{width:100%}.value{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#cbd7e6;text-align:right}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mini-grid button{font-size:9px}.filebox{display:flex;gap:6px;align-items:center}.filebox input[type=file]{width:100%;font-size:9px;color:#93a0b1}.select{width:100%;background:#0e1319;color:#dfe7f0;border:1px solid #303947;border-radius:5px;padding:6px 7px;font-size:9px}
+#timeline{background:#0d1218;border-top:1px solid #242c36;display:flex;flex-direction:column;min-height:0}.timeline-head{height:38px;display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #242c36}.timeline-head strong{font-size:10px;letter-spacing:.8px}.timeline-head .grow{flex:1}.timeline-tools{display:flex;gap:5px}.timeline-tools button{padding:5px 8px;font-size:9px}.time-readout{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;color:#8ea0b5;min-width:80px;text-align:right}
+#timelineBody{position:relative;overflow:auto;min-height:0;flex:1}.ruler{height:28px;border-bottom:1px solid #242c36;position:sticky;top:0;background:#10151c;z-index:2}.ruler .tick{position:absolute;top:0;height:100%;border-left:1px solid #2b3440;color:#718095;font-size:8px;padding-left:4px}.track{position:relative;height:62px;border-bottom:1px solid #1f2731;min-width:900px}.track-label{position:sticky;left:0;z-index:3;display:flex;align-items:center;width:100px;height:100%;padding-left:10px;background:rgba(16,21,28,.94);font-size:9px;color:#9aa7b7}.track-line{position:absolute;left:100px;right:0;top:0;height:100%;background:repeating-linear-gradient(to right,transparent 0,transparent 39px,#202833 40px)}.key{position:absolute;top:23px;width:12px;height:12px;background:#ffcc66;border:2px solid #fff2be;transform:rotate(45deg) translateX(-50%);cursor:pointer;z-index:4}.key:hover{filter:brightness(1.25)}#playhead{position:absolute;top:0;bottom:0;width:2px;background:#5e9dff;pointer-events:none;z-index:6;box-shadow:0 0 8px rgba(94,157,255,.7)}#scrub{position:absolute;inset:0;cursor:ew-resize;z-index:5;background:transparent}
+.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #2f3b49;background:#151b23;color:#99a8bb;border-radius:999px;padding:3px 7px;font-size:8px}.hint{font-size:8px;color:#687587;line-height:1.4}.status{font-size:9px;color:#8d9caf;min-height:18px}.check{display:flex;align-items:center;gap:6px;font-size:9px;color:#9eabbb}.check input{accent-color:#4f8ee7}
+@media(max-width:1050px){#workspace{grid-template-columns:210px minmax(0,1fr) 250px}.toolbar button{padding:6px 7px;font-size:9px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header id="topbar">
+  <div class="logo">EFFECT<span>DESIGNER</span></div>
+  <div class="toolbar">
+    <button id="backToStudio">← Texture Studio</button>
+    <button id="addEffect" class="primary">＋ Effect</button>
+    <button id="uploadImage">＋ Image</button>
+    <button id="duplicateEffect">Duplicate</button>
+    <button id="deleteEffect" class="danger">Delete</button>
+    <div class="spacer"></div>
+    <button id="saveEffect">Save JSON</button>
+    <button id="loadEffect">Load JSON</button>
+    <input id="jsonInput" type="file" accept="application/json,.json" hidden>
+  </div>
+</header>
+<section id="workspace">
+  <aside class="panel">
+    <div class="panel-title">EFFECT LIBRARY <span class="subtle">PROTOTYPES</span></div>
+    <div id="effectList"></div>
+  </aside>
+  <main id="center">
+    <div id="viewer"></div>
+    <div class="viewer-label">PART PREVIEW · click Part / Effect để chọn</div>
+    <div class="axis-note">Anchor: <b id="anchorState">CENTER</b></div>
+  </main>
+  <aside class="panel right" id="inspector">
+    <div class="panel-title">EFFECT PROPERTIES <span id="selectedLabel" class="subtle">NONE</span></div>
+    <div class="section">
+      <h3>ASSET</h3>
+      <div class="filebox"><input id="imageInput" type="file" accept="image/*"></div>
+      <div id="assetStatus" class="status" style="margin-top:6px">No image</div>
+    </div>
+    <div class="section">
+      <h3>TRANSFORM</h3>
+      <div class="row"><span>Position X</span><input id="posX" type="range" min="-3" max="3" step="0.01" value="0"><span id="posXV" class="value">0.00</span></div>
+      <div class="row"><span>Position Y</span><input id="posY" type="range" min="-3" max="3" step="0.01" value="0"><span id="posYV" class="value">0.00</span></div>
+      <div class="row"><span>Position Z</span><input id="posZ" type="range" min="-3" max="3" step="0.01" value="0.12"><span id="posZV" class="value">0.12</span></div>
+      <div class="row"><span>Rotation</span><input id="rotation" type="range" min="-180" max="180" step="1" value="0"><span id="rotationV" class="value">0°</span></div>
+      <div class="row"><span>Scale</span><input id="scale" type="range" min="0.05" max="4" step="0.01" value="1"><span id="scaleV" class="value">1.00</span></div>
+      <div class="mini-grid"><button id="centerEffect">Center</button><button id="faceCamera">Face Camera</button></div>
+    </div>
+    <div class="section">
+      <h3>APPEARANCE</h3>
+      <div class="row"><span>Opacity</span><input id="opacity" type="range" min="0" max="1" step="0.01" value="1"><span id="opacityV" class="value">1.00</span></div>
+      <div class="row"><span>Color</span><input id="color" type="color" value="#ffffff"><span id="colorV" class="value">#ffffff</span></div>
+      <div class="row"><span>Brightness</span><input id="brightness" type="range" min="0.2" max="3" step="0.01" value="1"><span id="brightnessV" class="value">1.00</span></div>
+      <div class="row"><span>Blend</span><select id="blend" class="select"><option value="normal">Normal</option><option value="add">Additive</option><option value="screen">Screen</option><option value="multiply">Multiply</option></select><span></span></div>
+    </div>
+    <div class="section">
+      <h3>ANIMATION</h3>
+      <div class="row"><span>Lifetime</span><input id="lifetime" type="range" min="0.1" max="10" step="0.1" value="2"><span id="lifetimeV" class="value">2.0s</span></div>
+      <div class="row"><span>Speed</span><input id="speed" type="range" min="0.1" max="5" step="0.1" value="1"><span id="speedV" class="value">1.0x</span></div>
+      <label class="check"><input id="loop" type="checkbox" checked> Loop timeline</label>
+      <div class="mini-grid" style="margin-top:7px"><button id="keyPosition">◆ Key Position</button><button id="keyTransform">◆ Key All</button></div>
+    </div>
+    <div class="section">
+      <h3>ANCHOR</h3>
+      <div class="mini-grid"><button id="anchorCenter" class="active">Center</button><button id="anchorBottom">Bottom</button><button id="anchorTop">Top</button><button id="anchorCustom">Custom</button></div>
+      <div class="hint" style="margin-top:7px">Anchor là điểm chung để effect bám vào Part, tương tự workflow effect editor.</div>
+    </div>
+    <div class="section">
+      <h3>PLAYBACK</h3>
+      <div class="mini-grid"><button id="playBtn" class="primary">▶ Play</button><button id="stopBtn">■ Stop</button></div>
+      <div id="playStatus" class="status" style="margin-top:7px">Ready</div>
+    </div>
+  </aside>
+</section>
+<section id="timeline">
+  <div class="timeline-head"><strong>TIMELINE</strong><span class="badge">BLENDER STYLE</span><span class="grow"></span><button id="jumpStart">|◀</button><button id="stepBack">◀</button><button id="stepForward">▶</button><button id="jumpEnd">▶|</button><span id="timeReadout" class="time-readout">0.00 / 2.00</span></div>
+  <div id="timelineBody">
+    <div id="ruler" class="ruler"></div>
+    <div id="trackPosition" class="track"><div class="track-label">Position</div><div class="track-line"></div></div>
+    <div id="trackTransform" class="track"><div class="track-label">Scale / Rot</div><div class="track-line"></div></div>
+    <div id="playhead" style="left:100px"></div>
+    <div id="scrub"></div>
+  </div>
+</section>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const $=id=>document.getElementById(id);
+const state={effects:[],selectedId:null,time:0,playing:false,anchor:'center',nextId:1,dragging:false};
+const canvasSize={w:960,h:540};
+let scene,camera,renderer,controls,raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(),part,effectGroup,anchorMarker,clock=new THREE.Clock();
+const MAX_TIME=10;
+
+function defaultEffect(name='Slash Effect'){
+  return {id:state.nextId++,name,image:null,textureData:null,pos:{x:0,y:0,z:0.13},rotation:0,scale:1,opacity:1,color:'#ffffff',brightness:1,blend:'add',lifetime:2,speed:1,loop:true,keyframes:{position:[],transform:[]}};
+}
+function init(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(45,1,.1,100); camera.position.set(3.2,2.3,5.2);
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.6)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.domElement.style.width='100%'; renderer.domElement.style.height='100%'; $('viewer').appendChild(renderer.domElement);
+  controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(0,0,0); controls.minDistance=2; controls.maxDistance=10;
+  scene.add(new THREE.HemisphereLight(0xffffff,0x3a4654,1.8)); const dl=new THREE.DirectionalLight(0xffffff,2.2); dl.position.set(3,4,5); scene.add(dl);
+  part=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.7,.42),new THREE.MeshStandardMaterial({color:0x6c7888,roughness:.65,metalness:.1})); part.position.set(0,0,0); part.name='PART'; scene.add(part);
+  const edge=new THREE.LineSegments(new THREE.EdgesGeometry(part.geometry),new THREE.LineBasicMaterial({color:0x1b2736})); part.add(edge);
+  effectGroup=new THREE.Group(); scene.add(effectGroup);
+  anchorMarker=new THREE.Mesh(new THREE.SphereGeometry(.055,16,16),new THREE.MeshBasicMaterial({color:0xffcc66})); scene.add(anchorMarker);
+  renderer.domElement.addEventListener('pointerdown',onPointerDown); renderer.domElement.addEventListener('pointermove',onPointerMove); renderer.domElement.addEventListener('pointerup',()=>state.dragging=false);
+  window.addEventListener('resize',resize); resize();
+  state.effects.push(defaultEffect('Slash Effect'));state.selectedId=state.effects[0].id; renderLibrary(); syncInspector(); renderTimeline(); animate();
+}
+function resize(){const r=$('viewer').getBoundingClientRect(); if(!r.width||!r.height)return;camera.aspect=r.width/r.height;camera.updateProjectionMatrix();renderer.setSize(r.width,r.height,false);}
+function selected(){return state.effects.find(e=>e.id===state.selectedId)||null}
+function renderLibrary(){const list=$('effectList');list.innerHTML='';for(const e of state.effects){const card=document.createElement('div');card.className='effect-card'+(e.id===state.selectedId?' active':'');const img=document.createElement('img');img.className='thumb';img.src=e.textureData||makePlaceholder();const meta=document.createElement('div');meta.style.minWidth='0';const n=document.createElement('div');n.className='name';n.textContent=e.name;const m=document.createElement('div');m.className='meta';m.textContent=`${e.lifetime.toFixed(1)}s · ${e.blend}`;meta.append(n,m);card.append(img,meta);card.onclick=()=>{state.selectedId=e.id;state.time=0;syncInspector();renderLibrary();renderTimeline();};list.append(card)}}
+function makePlaceholder(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,2,64,64,60);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.15,'rgba(255,190,90,.75)');g.addColorStop(.45,'rgba(80,160,255,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return c.toDataURL('image/png')}
+function addEffect(){const e=defaultEffect('New Effect');state.effects.push(e);state.selectedId=e.id;syncInspector();renderLibrary();renderTimeline();}
+function deleteEffect(){if(state.effects.length<=1)return;const i=state.effects.findIndex(e=>e.id===state.selectedId);if(i<0)return;state.effects.splice(i,1);state.selectedId=state.effects[Math.max(0,i-1)].id;syncInspector();renderLibrary();renderTimeline()}
+function duplicateEffect(){const e=selected();if(!e)return;const c=JSON.parse(JSON.stringify(e));c.id=state.nextId++;c.name=e.name+' Copy';c.keyframes={position:e.keyframes.position.map(k=>({...k,pos:{...k.pos}})),transform:e.keyframes.transform.map(k=>({...k,pos:{...k.pos}}))};state.effects.push(c);state.selectedId=c.id;syncInspector();renderLibrary();renderTimeline()}
+function bindRange(id,path,valueId,format){$(id).addEventListener('input',()=>{const e=selected();if(!e)return;const v=Number($(id).value);path(e,v);$(valueId).textContent=format(v);syncVisual();});}
+bindRange('posX',(e,v)=>e.pos.x=v,'posXV',v=>v.toFixed(2));bindRange('posY',(e,v)=>e.pos.y=v,'posYV',v=>v.toFixed(2));bindRange('posZ',(e,v)=>e.pos.z=v,'posZV',v=>v.toFixed(2));bindRange('rotation',(e,v)=>e.rotation=v,'rotationV',v=>v+'°');bindRange('scale',(e,v)=>e.scale=v,'scaleV',v=>v.toFixed(2));bindRange('opacity',(e,v)=>e.opacity=v,'opacityV',v=>v.toFixed(2));bindRange('brightness',(e,v)=>e.brightness=v,'brightnessV',v=>v.toFixed(2));bindRange('lifetime',(e,v)=>{e.lifetime=v;if(state.time>v)state.time=v},'lifetimeV',v=>v.toFixed(1)+'s');bindRange('speed',(e,v)=>e.speed=v,'speedV',v=>v.toFixed(1)+'x');
+$('color').oninput=e=>{const s=selected();if(!s)return;s.color=e.target.value;$('colorV').textContent=s.color;syncVisual()};$('blend').onchange=e=>{const s=selected();if(!s)return;s.blend=e.target.value;syncVisual();renderLibrary()};$('loop').onchange=e=>{const s=selected();if(s)s.loop=e.target.checked};
+$('centerEffect').onclick=()=>{const e=selected();if(!e)return;e.pos={x:0,y:0,z:.13};syncInspector();syncVisual()};$('faceCamera').onclick=()=>{const obj=effectGroup.children[0];if(obj)obj.quaternion.copy(camera.quaternion)};
+['anchorCenter','anchorBottom','anchorTop','anchorCustom'].forEach(id=>$(id).onclick=()=>{state.anchor=id.replace('anchor','').toLowerCase();document.querySelectorAll('#anchorCenter,#anchorBottom,#anchorTop,#anchorCustom').forEach(b=>b.classList.remove('active'));$(id).classList.add('active');$('anchorState').textContent=state.anchor.toUpperCase();updateAnchor()});
+$('keyPosition').onclick=()=>addKey('position');$('keyTransform').onclick=()=>addKey('transform');
+function syncInspector(){const e=selected();$('selectedLabel').textContent=e?e.name.toUpperCase():'NONE';if(!e)return;setv('posX',e.pos.x);setv('posY',e.pos.y);setv('posZ',e.pos.z);setv('rotation',e.rotation);setv('scale',e.scale);setv('opacity',e.opacity);setv('brightness',e.brightness);setv('lifetime',e.lifetime);setv('speed',e.speed);$('color').value=e.color;$('colorV').textContent=e.color;$('blend').value=e.blend;$('loop').checked=e.loop;$('assetStatus').textContent=e.textureData?'Image loaded':'No image';syncVisual();}
+function setv(id,v){$(id).value=v;$(id+'V').textContent=id==='rotation'?Math.round(v)+'°':id==='lifetime'?Number(v).toFixed(1)+'s':id==='speed'?Number(v).toFixed(1)+'x':Number(v).toFixed(2)}
+function loadImage(file){const e=selected();if(!e||!file)return;const rd=new FileReader();rd.onload=ev=>{e.textureData=ev.target.result;e.image=file.name;e.name=file.name.replace(/\.[^.]+$/,'');state.time=0;syncInspector();renderLibrary();};rd.readAsDataURL(file)}
+$('imageInput').onchange=e=>{loadImage(e.target.files[0]);e.target.value=''};$('uploadImage').onclick=()=>$('imageInput').click();
+function makeSprite(e){let tex;if(e.textureData){tex=new THREE.TextureLoader().load(e.textureData);tex.colorSpace=THREE.SRGBColorSpace;}else{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');const g=x.createRadialGradient(128,128,4,128,128,125);g.addColorStop(0,'#ffffff');g.addColorStop(.15,'#ffd67d');g.addColorStop(.42,'rgba(90,170,255,.8)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,256,256);tex=new THREE.CanvasTexture(c)}
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:e.opacity,color:e.color,blending:e.blend==='add'?THREE.AdditiveBlending:e.blend==='screen'?THREE.ScreenBlending:e.blend==='multiply'?THREE.MultiplyBlending:THREE.NormalBlending,depthWrite:false});const s=new THREE.Sprite(mat);s.scale.set(1.3*e.scale,1.3*e.scale,1);s.position.set(e.pos.x,e.pos.y,e.pos.z);s.userData.effectId=e.id;return s}
+function syncVisual(){effectGroup.clear();const e=selected();if(!e)return;const s=makeSprite(e);s.material.opacity=e.opacity*e.brightness*animationOpacity(e);s.rotation=e.rotation*Math.PI/180;effectGroup.add(s);updateAnchor()}
+function animationOpacity(e){const t=state.time;if(t<0||t>e.lifetime)return 0;const n=t/e.lifetime;return Math.sin(Math.min(1,n)*Math.PI)}
+function updateAnchor(){if(!part)return;const y=state.anchor==='top'?.9:state.anchor==='bottom'?-.9:0;anchorMarker.position.set(part.position.x,part.position.y+y,part.position.z+.25)}
+function addKey(type){const e=selected();if(!e)return;const k={t:Math.max(0,Math.min(e.lifetime,state.time)),pos:{...e.pos},rotation:e.rotation,scale:e.scale,opacity:e.opacity};e.keyframes[type].push(k);e.keyframes[type].sort((a,b)=>a.t-b.t);renderTimeline();}
+function applyKeyframes(e,t){if(e.keyframes.position.length){const p=sample(e.keyframes.position,t);if(p)e.pos={...p.pos}}if(e.keyframes.transform.length){const k=sample(e.keyframes.transform,t);if(k){e.rotation=k.rotation;e.scale=k.scale;e.opacity=k.opacity}}}
+function sample(keys,t){if(!keys.length)return null;if(t<=keys[0].t)return keys[0];if(t>=keys[keys.length-1].t)return keys[keys.length-1];for(let i=0;i<keys.length-1;i++){const a=keys[i],b=keys[i+1];if(t>=a.t&&t<=b.t){const u=(t-a.t)/(b.t-a.t||1);return {pos:{x:THREE.MathUtils.lerp(a.pos.x,b.pos.x,u),y:THREE.MathUtils.lerp(a.pos.y,b.pos.y,u),z:THREE.MathUtils.lerp(a.pos.z,b.pos.z,u)},rotation:THREE.MathUtils.lerp(a.rotation,b.rotation,u),scale:THREE.MathUtils.lerp(a.scale,b.scale,u),opacity:THREE.MathUtils.lerp(a.opacity,b.opacity,u),t}}}return keys[0]}
+function renderTimeline(){const e=selected();const ruler=$('ruler');ruler.innerHTML='';const duration=e?.lifetime||2;const width=Math.max(900,$('timelineBody').clientWidth-20);const scale=width/duration;for(let i=0;i<=Math.ceil(duration*10);i++){const t=i/10;const el=document.createElement('div');el.className='tick';el.style.left=(100+t*scale)+'px';el.textContent=t.toFixed(1);ruler.append(el)}$('trackPosition').querySelectorAll('.key').forEach(x=>x.remove());$('trackTransform').querySelectorAll('.key').forEach(x=>x.remove());const place=(track,k)=>{const d=document.createElement('div');d.className='key';d.style.left=(100+(k.t/duration)*scale)+'px';d.title=`${k.t.toFixed(2)}s`;d.onclick=ev=>{ev.stopPropagation();state.time=k.t;syncVisual();updateReadout();};track.append(d)};if(e){e.keyframes.position.forEach(k=>place($('trackPosition'),k));e.keyframes.transform.forEach(k=>place($('trackTransform'),k));}updatePlayhead();}
+function updateReadout(){const e=selected();$('timeReadout').textContent=`${state.time.toFixed(2)} / ${(e?.lifetime||2).toFixed(2)}`;const body=$('timelineBody');const dur=e?.lifetime||2;const width=Math.max(900,body.clientWidth-20);$('playhead').style.left=(100+state.time/dur*(width/dur*dur))+'px';}
+function updatePlayhead(){updateReadout()}
+$('scrub').addEventListener('pointerdown',e=>{seekFromPointer(e);const move=ev=>seekFromPointer(ev);const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up)});
+function seekFromPointer(ev){const e=selected();if(!e)return;const rect=$('timelineBody').getBoundingClientRect();const duration=e.lifetime;const width=Math.max(900,rect.width-20);const x=Math.max(100,Math.min(width,ev.clientX-rect.left+$('timelineBody').scrollLeft));state.time=Math.max(0,Math.min(duration,(x-100)/(width-100)*duration));syncVisual();updateReadout();}
+$('playBtn').onclick=()=>{state.playing=!state.playing;$('playBtn').textContent=state.playing?'❚❚ Pause':'▶ Play';$('playStatus').textContent=state.playing?'Playing':'Paused'};$('stopBtn').onclick=()=>{state.playing=false;state.time=0;$('playBtn').textContent='▶ Play';$('playStatus').textContent='Stopped';syncVisual();updateReadout()};$('jumpStart').onclick=()=>{state.time=0;syncVisual();updateReadout()};$('jumpEnd').onclick=()=>{const e=selected();state.time=e?.lifetime||2;syncVisual();updateReadout()};$('stepBack').onclick=()=>{state.time=Math.max(0,state.time-.1);syncVisual();updateReadout()};$('stepForward').onclick=()=>{const e=selected();state.time=Math.min(e?.lifetime||2,state.time+.1);syncVisual();updateReadout()};
+$('addEffect').onclick=addEffect;$('deleteEffect').onclick=deleteEffect;$('duplicateEffect').onclick=duplicateEffect;$('backToStudio').onclick=()=>{window.location.href='index.html'};
+$('saveEffect').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,effects:state.effects,selectedId:state.selectedId},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='effect-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('loadEffect').onclick=()=>$('jsonInput').click();$('jsonInput').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(Array.isArray(data.effects)){state.effects=data.effects;state.nextId=Math.max(0,...state.effects.map(x=>x.id||0))+1;state.selectedId=data.selectedId||state.effects[0]?.id||null;renderLibrary();syncInspector();renderTimeline()}}catch(err){alert('Không thể đọc project JSON.')}ev.target.value=''};
+function onPointerDown(ev){const rect=renderer.domElement.getBoundingClientRect();mouse.x=((ev.clientX-rect.left)/rect.width)*2-1;mouse.y=-((ev.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(effectGroup.children.concat(part),true);if(hits.length){const obj=hits[0].object;const id=obj.userData.effectId;if(id){state.selectedId=id;syncInspector();renderLibrary();renderTimeline()}}}
+function onPointerMove(ev){if(!state.dragging)return;}
+function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();if(state.playing){const e=selected();if(e){state.time+=dt*e.speed;if(state.time>e.lifetime){if(e.loop)state.time=0;else{state.time=e.lifetime;state.playing=false;$('playBtn').textContent='▶ Play'}}applyKeyframes(e,state.time);syncVisual();updateReadout()}}controls.update();renderer.render(scene,camera)}
+
+$('lifetime').addEventListener('input',()=>renderTimeline());
+window.addEventListener('resize',()=>{resize();renderTimeline()});
+init();
+</script>
+</body>
+</html>
