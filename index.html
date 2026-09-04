@@ -1,2573 +1,3563 @@
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>Viva Studio — PBR Texture Designer</title>
-
-<script type="importmap">
-{
-  "imports":{
-    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-  }
-}
-</script>
+<title>Viva Studio - Texture Designer</title>
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#0e1014;
-  color:#eee;
-  font-family:Inter,Arial,sans-serif;
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#090a0d;
+    color:#eee;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
 button,input{
-  font:inherit;
+    font:inherit;
 }
 
 button{
-  border:1px solid #363a45;
-  background:#20232b;
-  color:#eee;
-  border-radius:7px;
-  padding:8px 10px;
-  cursor:pointer;
+    cursor:pointer;
 }
 
-button:hover{
-  background:#2c303a;
+.app{
+    width:100%;
+    height:100vh;
+    display:grid;
+    grid-template-rows:58px 1fr;
 }
 
-#app{
-  width:100vw;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
+/* ================= TOP ================= */
 
-/* TOP */
-
-.topbar{
-  height:54px;
-  flex:none;
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:0 13px;
-  background:#181a20;
-  border-bottom:1px solid #2b2e37;
+.top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 16px;
+    background:#0d0f13;
+    border-bottom:1px solid #292d34;
 }
 
 .logo{
-  font-size:18px;
-  font-weight:800;
-  margin-right:10px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-weight:800;
+    font-size:18px;
 }
 
-.logo span{
-  color:#887cff;
+.logoIcon{
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:#7025e5;
 }
 
-.top-separator{
-  width:1px;
-  height:25px;
-  background:#353842;
-  margin:0 5px;
+.logoPurple{
+    color:#a568ff;
 }
 
-.top-status{
-  margin-left:auto;
-  font-size:11px;
-  color:#9296a3;
+.topText{
+    color:#858b95;
+    font-size:12px;
 }
 
-/* WORKSPACE */
-
-.workspace{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:290px minmax(300px,1fr) 300px;
+.topButtons{
+    margin-left:auto;
+    display:flex;
+    gap:7px;
 }
 
-/* PANELS */
-
-.panel{
-  min-height:0;
-  overflow:hidden;
-  background:#17191f;
+.btn{
+    background:#171a1f;
+    color:#eee;
+    border:1px solid #30343c;
+    border-radius:7px;
+    padding:9px 12px;
 }
 
-.left{
-  border-right:1px solid #2b2e37;
+.btn:hover{
+    background:#22262d;
 }
 
-.right{
-  border-left:1px solid #2b2e37;
+.btn.primary{
+    background:#7026df;
+    border-color:#873bf0;
 }
 
-.panel-header{
-  height:48px;
-  display:flex;
-  align-items:center;
-  padding:0 14px;
-  border-bottom:1px solid #292c34;
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.5px;
-  text-transform:uppercase;
+/* ================= MAIN ================= */
+
+.main{
+    min-height:0;
+    display:grid;
+    grid-template-columns:365px minmax(0,1fr) 305px;
 }
 
-/* LIBRARY */
+/* ================= LIBRARY ================= */
 
-.library-tools{
-  padding:10px;
-  border-bottom:1px solid #292c34;
+.library{
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    background:#0d0f13;
+    border-right:1px solid #292d34;
+}
+
+.libraryTop{
+    padding:15px;
+    flex:none;
+}
+
+.title{
+    font-size:14px;
+    font-weight:800;
+    margin-bottom:11px;
 }
 
 .search{
-  width:100%;
-  padding:9px 10px;
-  background:#0f1116;
-  border:1px solid #343741;
-  color:white;
-  outline:none;
-  border-radius:7px;
+    width:100%;
+    padding:10px 12px;
+    background:#171a1f;
+    border:1px solid #2c3037;
+    color:#eee;
+    border-radius:7px;
+    outline:none;
 }
 
-.categories{
-  display:flex;
-  gap:6px;
-  margin-top:8px;
-  overflow-x:auto;
-  scrollbar-width:none;
+.search:focus{
+    border-color:#8135ec;
 }
 
-.categories::-webkit-scrollbar{
-  display:none;
+/* TABS */
+
+.tabs{
+    margin-top:10px;
+    display:flex;
+    overflow-x:auto;
+    overflow-y:hidden;
+    gap:6px;
+    padding-bottom:6px;
+    scrollbar-width:thin;
 }
 
-.category{
-  white-space:nowrap;
-  padding:6px 8px;
-  font-size:10px;
+.tabs::-webkit-scrollbar{
+    height:5px;
 }
 
-.category.active{
-  background:#6255d4;
-  border-color:#7669e9;
+.tabs::-webkit-scrollbar-thumb{
+    background:#383c44;
+    border-radius:20px;
 }
 
-.library{
-  height:calc(100% - 105px);
-  overflow:auto;
-  padding:10px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  align-content:start;
-  gap:9px;
+.tab{
+    flex:none;
+    padding:8px 11px;
+    border:1px solid #2d3138;
+    background:#15181d;
+    color:#bfc3ca;
+    border-radius:6px;
+    font-size:11px;
 }
 
-.library-loading{
-  grid-column:1/-1;
-  text-align:center;
-  color:#858995;
-  padding:25px 10px;
-  font-size:11px;
+.tab:hover{
+    background:#20242b;
 }
 
-.texture-card{
-  overflow:hidden;
-  background:#22252c;
-  border:1px solid #343741;
-  border-radius:8px;
-  cursor:pointer;
-  transition:.12s;
+.tab.active{
+    background:#7026df;
+    border-color:#893cf1;
+    color:white;
 }
 
-.texture-card:hover{
-  border-color:#7b70e9;
-  transform:translateY(-1px);
+/* SUB TABS */
+
+.subTabs{
+    display:flex;
+    gap:5px;
+    margin-top:3px;
+    overflow-x:auto;
+    padding-bottom:5px;
 }
 
-.texture-card.selected{
-  border-color:#9a91ff;
-  box-shadow:0 0 0 1px #7066df;
+.subTab{
+    flex:none;
+    background:#111419;
+    border:1px solid #282c33;
+    color:#8e939c;
+    border-radius:5px;
+    padding:5px 8px;
+    font-size:10px;
 }
 
-.texture-thumb{
-  width:100%;
-  aspect-ratio:1;
-  display:block;
-  object-fit:cover;
-  background:#292c34;
+.subTab.active{
+    color:#bd88ff;
+    border-color:#7332ca;
 }
 
-.texture-name{
-  padding:7px;
-  font-size:10px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.texture-meta{
-  padding:0 7px 7px;
-  font-size:9px;
-  color:#858996;
-}
-
-/* VIEWPORT */
-
-.viewport{
-  min-width:0;
-  min-height:0;
-  position:relative;
-  background:#0c0e12;
-}
-
-#canvas{
-  display:block;
-  width:100%;
-  height:100%;
-}
-
-.viewport-toolbar{
-  position:absolute;
-  top:12px;
-  left:12px;
-  display:flex;
-  gap:6px;
-}
-
-.viewport-toolbar button{
-  font-size:10px;
-  padding:6px 8px;
-  background:#191c23dd;
-  backdrop-filter:blur(5px);
-}
-
-.viewport-info{
-  position:absolute;
-  left:12px;
-  bottom:12px;
-  padding:7px 9px;
-  background:#181b22dd;
-  border:1px solid #30343e;
-  border-radius:6px;
-  font-size:10px;
-  color:#999daa;
-  pointer-events:none;
-}
+/* STATUS */
 
 .status{
-  position:absolute;
-  right:12px;
-  bottom:12px;
-  padding:7px 9px;
-  background:#181b22dd;
-  border:1px solid #30343e;
-  border-radius:6px;
-  font-size:10px;
-  color:#aeb1bb;
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:2px 15px 9px;
+    color:#858b95;
+    font-size:11px;
 }
 
-/* RIGHT */
+.spinner{
+    width:13px;
+    height:13px;
+    border:2px solid #34313d;
+    border-top-color:#963eff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+}
 
-.right-content{
-  height:calc(100% - 48px);
-  overflow:auto;
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+/* SCROLL */
+
+.libraryScroll{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:0 13px 30px;
+}
+
+.libraryScroll::-webkit-scrollbar{
+    width:7px;
+}
+
+.libraryScroll::-webkit-scrollbar-thumb{
+    background:#383c44;
+    border-radius:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+}
+
+/* CARD */
+
+.card{
+    min-width:0;
+    overflow:hidden;
+    border:1px solid #2e3239;
+    background:#15181d;
+    border-radius:6px;
+    cursor:pointer;
+    transition:.12s;
+}
+
+.card:hover{
+    border-color:#8841ef;
+    transform:translateY(-1px);
+}
+
+.card.selected{
+    border-color:#a14cff;
+    box-shadow:0 0 0 1px #a14cff inset;
+}
+
+.imageBox{
+    width:100%;
+    aspect-ratio:1;
+    background:#202329;
+    position:relative;
+    overflow:hidden;
+}
+
+.imageBox img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+}
+
+.cardLoading{
+    position:absolute;
+    inset:0;
+    display:grid;
+    place-items:center;
+    color:#777d87;
+    font-size:9px;
+}
+
+.cardName{
+    padding:7px 7px 2px;
+    font-size:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.cardBottom{
+    display:flex;
+    justify-content:space-between;
+    padding:2px 7px 7px;
+    color:#777d87;
+    font-size:9px;
+}
+
+.k{
+    color:#a968ff;
+}
+
+.sentinel{
+    min-height:55px;
+    display:grid;
+    place-items:center;
+    color:#777d87;
+    font-size:10px;
+}
+
+.noResults{
+    grid-column:1/-1;
+    padding:40px 10px;
+    text-align:center;
+    color:#747a84;
+}
+
+/* ================= VIEWPORT ================= */
+
+.viewport{
+    position:relative;
+    min-width:0;
+    min-height:0;
+    background:#101217;
+}
+
+#canvasWrap{
+    position:absolute;
+    inset:0;
+}
+
+canvas{
+    display:block;
+}
+
+.viewportTop{
+    position:absolute;
+    top:12px;
+    left:12px;
+    display:flex;
+    gap:6px;
+    z-index:5;
+}
+
+.shape{
+    padding:8px 11px;
+    color:#ddd;
+    background:rgba(13,15,19,.9);
+    border:1px solid #343840;
+    border-radius:6px;
+    font-size:11px;
+}
+
+.shape.active{
+    background:#7026df;
+    border-color:#8839ed;
+}
+
+.viewportTools{
+    position:absolute;
+    top:12px;
+    right:12px;
+    display:flex;
+    gap:6px;
+}
+
+.icon{
+    width:38px;
+    height:38px;
+    color:#ddd;
+    background:rgba(13,15,19,.9);
+    border:1px solid #343840;
+    border-radius:7px;
+}
+
+.hint{
+    position:absolute;
+    bottom:12px;
+    left:12px;
+    padding:8px 10px;
+    background:rgba(8,9,12,.75);
+    border:1px solid #30343b;
+    color:#818791;
+    border-radius:6px;
+    font-size:10px;
+    pointer-events:none;
+}
+
+/* ================= RIGHT ================= */
+
+.right{
+    min-height:0;
+    overflow-y:auto;
+    background:#0d0f13;
+    border-left:1px solid #292d34;
 }
 
 .section{
-  padding:13px;
-  border-bottom:1px solid #292c34;
+    padding:15px;
+    border-bottom:1px solid #292d34;
 }
 
-.section-title{
-  font-size:11px;
-  font-weight:800;
-  margin-bottom:10px;
+.sectionTitle{
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:11px;
 }
 
-.selected-name{
-  padding:9px;
-  background:#101218;
-  border:1px solid #30343d;
-  border-radius:6px;
-  font-size:11px;
-  color:#b9bbc4;
-  overflow:hidden;
-  text-overflow:ellipsis;
+.meshList{
+    max-height:170px;
+    overflow:auto;
+    border:1px solid #292d34;
+    border-radius:6px;
 }
 
-.mesh-list{
-  max-height:220px;
-  overflow:auto;
+.mesh{
+    padding:9px;
+    font-size:10px;
+    color:#b8bdc5;
+    border-bottom:1px solid #25282e;
+    cursor:pointer;
 }
 
-.mesh-item{
-  width:100%;
-  display:block;
-  text-align:left;
-  margin-bottom:5px;
-  font-size:10px;
-  padding:7px 8px;
+.mesh:last-child{
+    border-bottom:0;
 }
 
-.mesh-item.selected{
-  background:#5d52cc;
-  border-color:#7468e7;
+.mesh:hover{
+    background:#1b1e24;
 }
 
-.field{
-  margin:13px 0;
+.mesh.active{
+    color:#c48aff;
+    background:#241a31;
 }
 
-.field-label{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
-  font-size:10px;
-  color:#a7aab5;
+.textureInfo{
+    display:grid;
+    grid-template-columns:75px 1fr;
+    gap:10px;
 }
 
-.field-value{
-  color:#e1e2e7;
+.textureInfo img{
+    width:75px;
+    height:75px;
+    object-fit:cover;
+    border:1px solid #353941;
+    border-radius:6px;
+    background:#191c21;
 }
 
-input[type="range"]{
-  width:100%;
-  accent-color:#776ce5;
+.textureName{
+    font-size:13px;
+    font-weight:700;
+    line-height:1.3;
 }
 
-.map-buttons{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
+.muted{
+    color:#818791;
+    font-size:10px;
+    margin-top:5px;
 }
 
-.map-button{
-  font-size:9px;
-  padding:7px;
+.control{
+    margin:14px 0;
 }
 
-.map-button.active{
-  background:#5b50c7;
-  border-color:#776ce9;
+.controlHead{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
+    font-size:11px;
 }
 
-.empty{
-  color:#737783;
-  font-size:10px;
-  line-height:1.5;
+.value{
+    color:#b375ff;
 }
 
-.credit{
-  color:#737783;
-  font-size:9px;
-  line-height:1.5;
+input[type=range]{
+    width:100%;
+    accent-color:#8233e8;
 }
 
-.credit b{
-  color:#aaaeba;
+.full{
+    width:100%;
 }
 
-@media(max-width:950px){
-
-  .workspace{
-    grid-template-columns:235px 1fr;
-  }
-
-  .right{
-    display:none;
-  }
+.actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
 }
 
-@media(max-width:650px){
+.notice{
+    padding:10px;
+    border:1px solid #2b2f36;
+    background:#15181d;
+    color:#808690;
+    border-radius:6px;
+    font-size:10px;
+    line-height:1.55;
+}
 
-  .workspace{
-    grid-template-columns:1fr;
-  }
+/* RESPONSIVE */
 
-  .left{
-    display:none;
-  }
+@media(max-width:1100px){
+    .main{
+        grid-template-columns:310px minmax(0,1fr);
+    }
+
+    .right{
+        display:none;
+    }
+}
+
+@media(max-width:700px){
+    .main{
+        grid-template-columns:1fr;
+    }
+
+    .library{
+        display:none;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div id="app">
+<div class="app">
 
-  <header class="topbar">
+<header class="top">
 
     <div class="logo">
-      Viva <span>Studio</span>
+        <div class="logoIcon">V</div>
+        Viva <span class="logoPurple">Studio</span>
     </div>
 
-    <div class="top-separator"></div>
-
-    <button id="loadModel">
-      📦 Model
-    </button>
-
-    <input
-      id="modelInput"
-      type="file"
-      accept=".glb,.gltf"
-      hidden
-    >
-
-    <button id="uploadTexture">
-      🖼 Texture
-    </button>
-
-    <input
-      id="textureInput"
-      type="file"
-      accept="image/*"
-      hidden
-    >
-
-    <button id="resetMaterial">
-      ↺ Reset
-    </button>
-
-    <div class="top-status" id="topStatus">
-      Texture Library
+    <div class="topText">
+        Texture Library · 3D Preview · Material
     </div>
 
-  </header>
+    <div class="topButtons">
+
+        <button class="btn" id="loadModel">
+            ＋ Model
+        </button>
+
+        <label class="btn">
+            ＋ Texture
+            <input
+                id="upload"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+            >
+        </label>
+
+        <button class="btn" id="reset">
+            Reset
+        </button>
+
+    </div>
+
+</header>
 
 
-  <div class="workspace">
+<div class="main">
 
+<!-- ================= LIBRARY ================= -->
 
-    <!-- ==============================
-         LIBRARY
-    =============================== -->
+<aside class="library">
 
-    <aside class="panel left">
+    <div class="libraryTop">
 
-      <div class="panel-header">
-        Texture Library
-      </div>
-
-      <div class="library-tools">
+        <div class="title">
+            TEXTURE LIBRARY
+        </div>
 
         <input
-          id="search"
-          class="search"
-          placeholder="Search textures..."
+            id="search"
+            class="search"
+            placeholder="Tìm brick, wood, metal..."
+            autocomplete="off"
         >
 
-        <div class="categories">
+        <div class="tabs" id="tabs">
 
-          <button
-            class="category active"
-            data-category="all">
-            All
-          </button>
+            <button class="tab active" data-cat="all">
+                All
+            </button>
 
-          <button
-            class="category"
-            data-category="wood">
-            Wood
-          </button>
+            <button class="tab" data-cat="brick">
+                Brick
+            </button>
 
-          <button
-            class="category"
-            data-category="metal">
-            Metal
-          </button>
+            <button class="tab" data-cat="concrete">
+                Concrete
+            </button>
 
-          <button
-            class="category"
-            data-category="stone">
-            Stone
-          </button>
+            <button class="tab" data-cat="wood">
+                Wood
+            </button>
 
-          <button
-            class="category"
-            data-category="concrete">
-            Concrete
-          </button>
+            <button class="tab" data-cat="metal">
+                Metal
+            </button>
 
-          <button
-            class="category"
-            data-category="ground">
-            Ground
-          </button>
+            <button class="tab" data-cat="stone">
+                Stone
+            </button>
 
-          <button
-            class="category"
-            data-category="fabric">
-            Fabric
-          </button>
+            <button class="tab" data-cat="floor">
+                Floor
+            </button>
+
+            <button class="tab" data-cat="fabric">
+                Fabric
+            </button>
+
+            <button class="tab" data-cat="roof">
+                Roof
+            </button>
+
+            <button class="tab" data-cat="nature">
+                Nature
+            </button>
+
+            <button class="tab" data-cat="wall">
+                Wall
+            </button>
+
+            <button class="tab" data-cat="other">
+                Other
+            </button>
 
         </div>
 
-      </div>
+        <div class="subTabs">
 
-      <div
-        id="library"
-        class="library">
+            <button class="subTab active" data-sort="popular">
+                Popular
+            </button>
 
-        <div class="library-loading">
-          Đang kết nối Poly Haven...
+            <button class="subTab" data-sort="new">
+                New
+            </button>
+
+            <button class="subTab" data-sort="name">
+                A-Z
+            </button>
+
         </div>
 
-      </div>
-
-    </aside>
+    </div>
 
 
-    <!-- ==============================
-         VIEWPORT
-    =============================== -->
+    <div class="status" id="status">
+        <span class="spinner"></span>
+        Đang tải thư viện...
+    </div>
 
-    <main class="viewport">
 
-      <canvas id="canvas"></canvas>
+    <div class="libraryScroll" id="libraryScroll">
 
-      <div class="viewport-toolbar">
+        <div class="grid" id="grid"></div>
 
-        <button id="frameModel">
-          ⛶ Frame
+        <div class="sentinel" id="sentinel">
+            Kéo xuống để tải thêm
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- ================= VIEWPORT ================= -->
+
+<section class="viewport">
+
+    <div id="canvasWrap"></div>
+
+    <div class="viewportTop">
+
+        <button class="shape active" data-shape="sphere">
+            Sphere
         </button>
 
-        <button id="toggleGrid">
-          Grid
+        <button class="shape" data-shape="cube">
+            Cube
         </button>
 
-        <button id="toggleWire">
-          Wire
+        <button class="shape" data-shape="plane">
+            Plane
         </button>
 
-      </div>
+        <button class="shape" data-shape="cylinder">
+            Cylinder
+        </button>
 
-      <div class="viewport-info">
-        Kéo chuột = xoay · Wheel = zoom · Click = chọn mesh
-      </div>
+    </div>
 
-      <div
-        id="status"
-        class="status">
-        Chưa có model
-      </div>
+    <div class="viewportTools">
 
-    </main>
+        <button class="icon" id="gridBtn">
+            #
+        </button>
 
+        <button class="icon" id="lightBtn">
+            ☼
+        </button>
 
-    <!-- ==============================
-         PROPERTIES
-    =============================== -->
+        <button class="icon" id="fullBtn">
+            ⛶
+        </button>
 
-    <aside class="panel right">
+    </div>
 
-      <div class="panel-header">
-        Properties
-      </div>
+    <div class="hint">
+        Click trực tiếp vào mesh · Kéo để xoay · Wheel để zoom
+    </div>
 
-      <div class="right-content">
-
-
-        <section class="section">
-
-          <div class="section-title">
-            Selected Mesh
-          </div>
-
-          <div
-            id="selectedName"
-            class="selected-name">
-            Chưa chọn mesh
-          </div>
-
-        </section>
+</section>
 
 
-        <section class="section">
+<!-- ================= RIGHT ================= -->
 
-          <div class="section-title">
-            Meshes
-          </div>
+<aside class="right">
 
-          <div
-            id="meshList"
-            class="mesh-list">
+    <section class="section">
 
-            <div class="empty">
-              Load model để xem mesh.
+        <div class="sectionTitle">
+            SELECTED MESH
+        </div>
+
+        <div
+            id="meshName"
+            class="textureName">
+            Preview Sphere
+        </div>
+
+    </section>
+
+
+    <section class="section">
+
+        <div class="sectionTitle">
+            MESH LIST
+        </div>
+
+        <div id="meshList" class="meshList"></div>
+
+    </section>
+
+
+    <section class="section">
+
+        <div class="sectionTitle">
+            SELECTED TEXTURE
+        </div>
+
+        <div class="textureInfo">
+
+            <img id="selectedImage">
+
+            <div>
+
+                <div
+                    id="selectedName"
+                    class="textureName">
+                    Chưa chọn
+                </div>
+
+                <div
+                    id="selectedSource"
+                    class="muted">
+                    Click texture bên trái
+                </div>
+
+                <div
+                    id="selectedSize"
+                    class="muted">
+                </div>
+
             </div>
 
-          </div>
+        </div>
 
-        </section>
+        <br>
+
+        <button
+            id="apply"
+            class="btn primary full">
+            Apply to Mesh
+        </button>
+
+    </section>
 
 
-        <section class="section">
+    <section class="section">
 
-          <div class="section-title">
-            Texture
-          </div>
+        <div class="sectionTitle">
+            MATERIAL
+        </div>
 
-          <div class="map-buttons">
+        <div class="control">
 
-            <button
-              id="clearTexture"
-              class="map-button">
-              Clear
+            <div class="controlHead">
+                <span>Tiling</span>
+                <span id="tilingVal" class="value">1.00</span>
+            </div>
+
+            <input
+                id="tiling"
+                type="range"
+                min=".1"
+                max="12"
+                value="1"
+                step=".1"
+            >
+
+        </div>
+
+
+        <div class="control">
+
+            <div class="controlHead">
+                <span>Rotation</span>
+                <span id="rotationVal" class="value">0°</span>
+            </div>
+
+            <input
+                id="rotation"
+                type="range"
+                min="-180"
+                max="180"
+                value="0"
+            >
+
+        </div>
+
+
+        <div class="control">
+
+            <div class="controlHead">
+                <span>Roughness</span>
+                <span id="roughVal" class="value">0.50</span>
+            </div>
+
+            <input
+                id="roughness"
+                type="range"
+                min="0"
+                max="1"
+                value=".5"
+                step=".01"
+            >
+
+        </div>
+
+
+        <div class="control">
+
+            <div class="controlHead">
+                <span>Metalness</span>
+                <span id="metalVal" class="value">0.00</span>
+            </div>
+
+            <input
+                id="metalness"
+                type="range"
+                min="0"
+                max="1"
+                value="0"
+                step=".01"
+            >
+
+        </div>
+
+
+        <div class="control">
+
+            <div class="controlHead">
+                <span>Normal Strength</span>
+                <span id="normalVal" class="value">1.00</span>
+            </div>
+
+            <input
+                id="normal"
+                type="range"
+                min="0"
+                max="3"
+                value="1"
+                step=".05"
+            >
+
+        </div>
+
+    </section>
+
+
+    <section class="section">
+
+        <div class="sectionTitle">
+            CLEANUP
+        </div>
+
+        <div class="actions">
+
+            <button class="btn" id="resetMaterial">
+                Reset Material
             </button>
 
-            <button
-              id="reloadTexture"
-              class="map-button">
-              Reload
+            <button class="btn" id="clearLoaded">
+                Clear Loaded
             </button>
 
-          </div>
+        </div>
 
-        </section>
-
-
-        <section class="section">
-
-          <div class="section-title">
-            Material
-          </div>
+    </section>
 
 
-          <div class="field">
+    <section class="section">
 
-            <div class="field-label">
-              <span>Texture Scale</span>
-              <span
-                id="scaleValue"
-                class="field-value">
-                1.00
-              </span>
-            </div>
+        <div class="sectionTitle">
+            LIBRARY
+        </div>
 
-            <input
-              id="scale"
-              type="range"
-              min=".1"
-              max="20"
-              step=".1"
-              value="1">
+        <div class="notice">
+            Thumbnail được lazy-load.<br><br>
+            Texture PBR chỉ tải khi bạn click.<br><br>
+            Texture cũ được dispose khi thay/reset.<br><br>
+            Nguồn: Poly Haven · CC0.
+        </div>
 
-          </div>
+    </section>
 
-
-          <div class="field">
-
-            <div class="field-label">
-              <span>Roughness</span>
-              <span
-                id="roughnessValue"
-                class="field-value">
-                .50
-              </span>
-            </div>
-
-            <input
-              id="roughness"
-              type="range"
-              min="0"
-              max="1"
-              step=".01"
-              value=".5">
-
-          </div>
-
-
-          <div class="field">
-
-            <div class="field-label">
-              <span>Metalness</span>
-              <span
-                id="metalnessValue"
-                class="field-value">
-                .00
-              </span>
-            </div>
-
-            <input
-              id="metalness"
-              type="range"
-              min="0"
-              max="1"
-              step=".01"
-              value="0">
-
-          </div>
-
-
-          <div class="field">
-
-            <div class="field-label">
-              <span>Normal Strength</span>
-              <span
-                id="normalValue"
-                class="field-value">
-                1.00
-              </span>
-            </div>
-
-            <input
-              id="normal"
-              type="range"
-              min="0"
-              max="3"
-              step=".05"
-              value="1">
-
-          </div>
-
-
-          <div class="field">
-
-            <div class="field-label">
-              <span>Texture Rotation</span>
-              <span
-                id="rotationValue"
-                class="field-value">
-                0°
-              </span>
-            </div>
-
-            <input
-              id="rotation"
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              value="0">
-
-          </div>
-
-        </section>
-
-
-        <section class="section">
-
-          <div class="section-title">
-            Library
-          </div>
-
-          <div class="credit">
-
-            Texture source:
-            <b>Poly Haven</b><br>
-
-            Materials are CC0.<br>
-
-            Viva Studio can browse and load
-            available public assets dynamically.
-
-          </div>
-
-        </section>
-
-      </div>
-
-    </aside>
-
-  </div>
+</aside>
 
 </div>
+</div>
+
+
+<script type="importmap">
+{
+    "imports":{
+        "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+}
+</script>
 
 
 <script type="module">
 
-import * as THREE from "three";
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
 import {
-  OrbitControls
-} from "three/addons/controls/OrbitControls.js";
+    OrbitControls
+}
+from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js";
 
 import {
-  GLTFLoader
-} from "three/addons/loaders/GLTFLoader.js";
+    GLTFLoader
+}
+from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
 
 
-/* =========================================================
-   CONFIG
-========================================================= */
-
-const API =
-  "https://api.polyhaven.com/assets";
-
-
-/* =========================================================
+/* =====================================================
    DOM
-========================================================= */
+===================================================== */
 
-const canvas =
-  document.getElementById("canvas");
+const grid =
+document.getElementById("grid");
 
-const library =
-  document.getElementById("library");
+const libraryScroll =
+document.getElementById("libraryScroll");
 
-const search =
-  document.getElementById("search");
-
-const meshList =
-  document.getElementById("meshList");
-
-const selectedName =
-  document.getElementById("selectedName");
+const sentinel =
+document.getElementById("sentinel");
 
 const status =
-  document.getElementById("status");
+document.getElementById("status");
 
-const topStatus =
-  document.getElementById("topStatus");
+const search =
+document.getElementById("search");
 
 
-/* =========================================================
-   THREE SETUP
-========================================================= */
+/* =====================================================
+   THREE
+===================================================== */
 
-const renderer =
-  new THREE.WebGLRenderer({
-    canvas,
-    antialias:true
-  });
-
-renderer.setPixelRatio(
-  Math.min(window.devicePixelRatio,2)
-);
-
-renderer.outputColorSpace =
-  THREE.SRGBColorSpace;
-
-renderer.toneMapping =
-  THREE.ACESFilmicToneMapping;
-
-renderer.toneMappingExposure = 1;
-
+const wrap =
+document.getElementById("canvasWrap");
 
 const scene =
-  new THREE.Scene();
+new THREE.Scene();
 
 scene.background =
-  new THREE.Color(0x0c0e12);
+new THREE.Color(0x101217);
 
 
 const camera =
-  new THREE.PerspectiveCamera(
+new THREE.PerspectiveCamera(
     45,
     1,
     .01,
     1000
-  );
+);
 
 camera.position.set(
-  4,
-  3,
-  5
+    3.5,
+    2.3,
+    4.5
+);
+
+
+const renderer =
+new THREE.WebGLRenderer({
+    antialias:true,
+    powerPreference:"high-performance"
+});
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+renderer.outputColorSpace =
+THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure =
+1.1;
+
+wrap.appendChild(
+    renderer.domElement
 );
 
 
 const controls =
-  new OrbitControls(
+new OrbitControls(
     camera,
-    canvas
-  );
+    renderer.domElement
+);
 
 controls.enableDamping = true;
-controls.dampingFactor = .08;
 
 
-const hemi =
-  new THREE.HemisphereLight(
+const ambient =
+new THREE.HemisphereLight(
     0xffffff,
-    0x20242c,
+    0x222222,
     2
-  );
+);
 
-scene.add(hemi);
+scene.add(ambient);
 
 
 const light =
-  new THREE.DirectionalLight(
+new THREE.DirectionalLight(
     0xffffff,
     3
-  );
+);
 
 light.position.set(
-  5,
-  8,
-  5
+    4,
+    6,
+    4
 );
 
 scene.add(light);
 
 
 const fill =
-  new THREE.DirectionalLight(
-    0xffffff,
+new THREE.DirectionalLight(
+    0x9999ff,
     1
-  );
+);
 
 fill.position.set(
-  -5,
-  3,
-  -4
+    -4,
+    2,
+    -4
 );
 
 scene.add(fill);
 
 
-const grid =
-  new THREE.GridHelper(
+const ground =
+new THREE.GridHelper(
     20,
     20,
-    0x30343e,
-    0x191c22
-  );
-
-scene.add(grid);
-
-
-/* =========================================================
-   STATE
-========================================================= */
-
-let currentModel = null;
-
-let selectedMesh = null;
-
-let libraryAssets = [];
-
-let selectedAsset = null;
-
-let currentCategory = "all";
-
-let textureCache =
-  new Map();
-
-let wireframe = false;
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-function resize(){
-
-  const width =
-    canvas.clientWidth;
-
-  const height =
-    canvas.clientHeight;
-
-  camera.aspect =
-    width / height;
-
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(
-    width,
-    height,
-    false
-  );
-}
-
-window.addEventListener(
-  "resize",
-  resize
+    0x393d44,
+    0x25282e
 );
 
-resize();
+scene.add(ground);
 
 
-/* =========================================================
-   LOAD MODEL
-========================================================= */
+/* =====================================================
+   MODEL
+===================================================== */
 
-const gltfLoader =
-  new GLTFLoader();
+let root =
+new THREE.Group();
+
+scene.add(root);
+
+let selectedMesh =
+null;
+
+let originalMaterial =
+new WeakMap();
+
+let workingMaterial =
+new WeakMap();
+
+let ownedMaps =
+new WeakMap();
 
 
-document
-  .getElementById("loadModel")
-  .onclick = () => {
+function createPreview(type){
 
-    document
-      .getElementById("modelInput")
-      .click();
+    for(
+        const child
+        of [...root.children]
+    ){
 
-  };
+        disposeObject(child);
 
-
-document
-  .getElementById("modelInput")
-  .addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files[0];
-
-      if(!file) return;
-
-      loadModel(file);
+        root.remove(child);
 
     }
-  );
 
 
-function loadModel(file){
+    let geo;
 
-  const url =
-    URL.createObjectURL(file);
 
-  gltfLoader.load(
+    if(type==="cube"){
 
-    url,
-
-    gltf => {
-
-      if(currentModel){
-
-        scene.remove(
-          currentModel
+        geo =
+        new THREE.BoxGeometry(
+            2.6,
+            2.6,
+            2.6
         );
 
-      }
+    }else if(type==="plane"){
 
-      currentModel =
-        gltf.scene;
+        geo =
+        new THREE.PlaneGeometry(
+            4,
+            4
+        );
 
-      currentModel.traverse(
-        object => {
+        geo.rotateX(
+            -Math.PI/2
+        );
 
-          if(!object.isMesh)
-            return;
+    }else if(type==="cylinder"){
 
-          object.userData.originalMaterial =
-            object.material;
+        geo =
+        new THREE.CylinderGeometry(
+            1.3,
+            1.3,
+            2.6,
+            64
+        );
 
-          object.userData.originalWireframe =
-            getWireframe(object);
+    }else{
+
+        geo =
+        new THREE.SphereGeometry(
+            1.5,
+            64,
+            48
+        );
+
+    }
+
+
+    const mat =
+    new THREE.MeshStandardMaterial({
+        color:0xffffff,
+        roughness:.5,
+        metalness:0
+    });
+
+
+    const mesh =
+    new THREE.Mesh(
+        geo,
+        mat
+    );
+
+    mesh.name =
+    type + " Preview";
+
+
+    originalMaterial.set(
+        mesh,
+        mat.clone()
+    );
+
+
+    root.add(mesh);
+
+    selectedMesh =
+    mesh;
+
+    rebuildMeshList();
+
+    updateMeshName();
+
+}
+
+
+function updateMeshName(){
+
+    document.getElementById(
+        "meshName"
+    ).textContent =
+    selectedMesh
+    ? selectedMesh.name
+    : "No mesh";
+
+}
+
+
+function rebuildMeshList(){
+
+    const list =
+    document.getElementById(
+        "meshList"
+    );
+
+    list.innerHTML = "";
+
+    root.traverse(
+        obj=>{
+
+            if(!obj.isMesh)
+                return;
+
+            const div =
+            document.createElement(
+                "div"
+            );
+
+            div.className =
+            "mesh"
+            +
+            (
+                obj===selectedMesh
+                ? " active"
+                : ""
+            );
+
+            div.textContent =
+            obj.name || "Mesh";
+
+
+            div.addEventListener(
+                "click",
+                ()=>{
+                    selectMesh(obj);
+                }
+            );
+
+
+            list.appendChild(div);
 
         }
-      );
-
-      scene.add(
-        currentModel
-      );
-
-      buildMeshList();
-
-      frameObject(
-        currentModel
-      );
-
-      status.textContent =
-        file.name;
-
-      topStatus.textContent =
-        "Model loaded";
-
-      URL.revokeObjectURL(url);
-
-    },
-
-    undefined,
-
-    error => {
-
-      console.error(error);
-
-      alert(
-        "Không thể load model."
-      );
-
-    }
-
-  );
-}
-
-
-/* =========================================================
-   FRAME MODEL
-========================================================= */
-
-function frameObject(object){
-
-  const box =
-    new THREE.Box3()
-      .setFromObject(object);
-
-  const center =
-    box.getCenter(
-      new THREE.Vector3()
     );
 
-  const size =
-    box.getSize(
-      new THREE.Vector3()
-    );
-
-  object.position.sub(center);
-
-  const max =
-    Math.max(
-      size.x,
-      size.y,
-      size.z
-    );
-
-  const distance =
-    Math.max(
-      max * 2,
-      .5
-    );
-
-  camera.position.set(
-    distance,
-    distance * .7,
-    distance
-  );
-
-  controls.target.set(
-    0,
-    0,
-    0
-  );
-
-  controls.update();
-}
-
-
-document
-  .getElementById("frameModel")
-  .onclick = () => {
-
-    if(currentModel)
-      frameObject(currentModel);
-
-  };
-
-
-/* =========================================================
-   MESH LIST
-========================================================= */
-
-function buildMeshList(){
-
-  meshList.innerHTML = "";
-
-  if(!currentModel){
-
-    meshList.innerHTML =
-      '<div class="empty">Không có mesh.</div>';
-
-    return;
-  }
-
-  let count = 0;
-
-  currentModel.traverse(
-    object => {
-
-      if(!object.isMesh)
-        return;
-
-      count++;
-
-      const button =
-        document.createElement("button");
-
-      button.className =
-        "mesh-item";
-
-      button.textContent =
-        object.name ||
-        `Mesh ${count}`;
-
-      button.onclick =
-        () => selectMesh(object);
-
-      object.userData.meshButton =
-        button;
-
-      meshList.appendChild(
-        button
-      );
-
-    }
-  );
-
-  if(count === 0){
-
-    meshList.innerHTML =
-      '<div class="empty">Model không có mesh.</div>';
-
-  }
 }
 
 
 function selectMesh(mesh){
 
-  if(selectedMesh){
-
-    selectedMesh.userData.highlighted =
-      false;
-
-  }
-
-  selectedMesh =
+    selectedMesh =
     mesh;
 
-  document
-    .querySelectorAll(".mesh-item")
-    .forEach(
-      item =>
-        item.classList.remove(
-          "selected"
-        )
-    );
+    updateMeshName();
 
-  if(mesh.userData.meshButton){
-
-    mesh.userData.meshButton
-      .classList.add("selected");
-
-  }
-
-  selectedName.textContent =
-    mesh.name ||
-    "Unnamed Mesh";
-
-  readMaterial();
+    rebuildMeshList();
 
 }
 
 
-/* =========================================================
-   RAYCAST MESH SELECT
-========================================================= */
+/* =====================================================
+   MODEL LOADER
+===================================================== */
 
-const raycaster =
-  new THREE.Raycaster();
+document
+.getElementById("loadModel")
+.addEventListener(
+"click",
+()=>{
 
-const mouse =
-  new THREE.Vector2();
-
-
-canvas.addEventListener(
-  "pointerdown",
-  event => {
-
-    if(!currentModel)
-      return;
-
-    const rect =
-      canvas.getBoundingClientRect();
-
-    mouse.x =
-      ((event.clientX - rect.left)
-      / rect.width) * 2 - 1;
-
-    mouse.y =
-      -((event.clientY - rect.top)
-      / rect.height) * 2 + 1;
-
-    raycaster.setFromCamera(
-      mouse,
-      camera
+    const input =
+    document.createElement(
+        "input"
     );
 
-    const hits =
-      raycaster.intersectObject(
-        currentModel,
-        true
-      );
+    input.type =
+    "file";
 
-    if(hits.length){
+    input.accept =
+    ".glb,.gltf";
 
-      selectMesh(
-        hits[0].object
-      );
 
-    }
+    input.onchange =
+    async ()=>{
 
-  }
-);
+        const file =
+        input.files?.[0];
 
+        if(!file)
+            return;
 
-/* =========================================================
-   MATERIAL
-========================================================= */
 
-function getMaterial(){
-
-  if(!selectedMesh)
-    return null;
-
-  let material =
-    selectedMesh.material;
-
-  if(Array.isArray(material))
-    material = material[0];
-
-  return material;
-}
-
-
-function ensureStandardMaterial(){
-
-  if(!selectedMesh)
-    return null;
-
-  let material =
-    getMaterial();
-
-  if(
-    material instanceof
-    THREE.MeshStandardMaterial
-  ){
-
-    return material;
-
-  }
-
-  const newMaterial =
-    new THREE.MeshStandardMaterial({
-      color:0xffffff
-    });
-
-  if(material){
-
-    newMaterial.color.copy(
-      material.color ||
-      new THREE.Color(0xffffff)
-    );
-
-  }
-
-  selectedMesh.material =
-    newMaterial;
-
-  return newMaterial;
-}
-
-
-/* =========================================================
-   MATERIAL CONTROLS
-========================================================= */
-
-const scale =
-  document.getElementById("scale");
-
-const roughness =
-  document.getElementById("roughness");
-
-const metalness =
-  document.getElementById("metalness");
-
-const normal =
-  document.getElementById("normal");
-
-const rotation =
-  document.getElementById("rotation");
-
-
-function readMaterial(){
-
-  const material =
-    getMaterial();
-
-  if(!material)
-    return;
-
-  roughness.value =
-    material.roughness ?? .5;
-
-  metalness.value =
-    material.metalness ?? 0;
-
-  updateLabels();
-
-}
-
-
-function updateLabels(){
-
-  document
-    .getElementById("scaleValue")
-    .textContent =
-    Number(scale.value)
-      .toFixed(2);
-
-  document
-    .getElementById("roughnessValue")
-    .textContent =
-    Number(roughness.value)
-      .toFixed(2);
-
-  document
-    .getElementById("metalnessValue")
-    .textContent =
-    Number(metalness.value)
-      .toFixed(2);
-
-  document
-    .getElementById("normalValue")
-    .textContent =
-    Number(normal.value)
-      .toFixed(2);
-
-  document
-    .getElementById("rotationValue")
-    .textContent =
-    `${rotation.value}°`;
-
-}
-
-
-[
-  scale,
-  roughness,
-  metalness,
-  normal,
-  rotation
-].forEach(
-  input => {
-
-    input.addEventListener(
-      "input",
-      updateMaterial
-    );
-
-  }
-);
-
-
-function updateMaterial(){
-
-  const material =
-    ensureStandardMaterial();
-
-  if(!material)
-    return;
-
-  material.roughness =
-    Number(
-      roughness.value
-    );
-
-  material.metalness =
-    Number(
-      metalness.value
-    );
-
-  if(material.map){
-
-    material.map.repeat.set(
-      Number(scale.value),
-      Number(scale.value)
-    );
-
-    material.map.rotation =
-      THREE.MathUtils.degToRad(
-        Number(rotation.value)
-      );
-
-    material.map.center.set(
-      .5,
-      .5
-    );
-
-  }
-
-  if(material.normalMap){
-
-    /*
-      Three.js không có một
-      universal normalStrength
-      cho mọi material version.
-      Scale được dùng qua
-      normalScale.
-    */
-
-    const strength =
-      Number(normal.value);
-
-    material.normalScale.set(
-      strength,
-      strength
-    );
-
-  }
-
-  material.needsUpdate =
-    true;
-
-  updateLabels();
-
-}
-
-
-/* =========================================================
-   POLY HAVEN LIBRARY
-========================================================= */
-
-async function loadLibrary(){
-
-  library.innerHTML = `
-    <div class="library-loading">
-      Đang tải Poly Haven Library...
-    </div>
-  `;
-
-  try{
-
-    const response =
-      await fetch(API);
-
-    if(!response.ok){
-
-      throw new Error(
-        "HTTP " +
-        response.status
-      );
-
-    }
-
-    const data =
-      await response.json();
-
-    libraryAssets =
-      Object.entries(data)
-        .map(
-          ([id,asset]) => ({
-            id,
-            ...asset
-          })
-        )
-        .filter(
-          asset =>
-            isTextureAsset(asset)
+        const url =
+        URL.createObjectURL(
+            file
         );
 
-    renderLibrary();
 
-    topStatus.textContent =
-      `${libraryAssets.length} assets`;
+        try{
 
-  }
-  catch(error){
+            const loader =
+            new GLTFLoader();
 
-    console.error(error);
+            const gltf =
+            await loader.loadAsync(
+                url
+            );
 
-    library.innerHTML = `
-      <div class="library-loading">
-        Không kết nối được Poly Haven API.
-        <br><br>
-        Bạn vẫn có thể Upload Texture.
-      </div>
-    `;
 
-    topStatus.textContent =
-      "Library offline";
-
-  }
-
-}
-
-
-function isTextureAsset(asset){
-
-  const category =
-    String(
-      asset.category || ""
-    ).toLowerCase();
-
-  const type =
-    String(
-      asset.type || ""
-    ).toLowerCase();
-
-  return (
-    type.includes("texture") ||
-    category.includes("texture") ||
-    category.includes("material") ||
-    asset.tags?.some(
-      tag =>
-        [
-          "wood",
-          "metal",
-          "stone",
-          "concrete",
-          "fabric",
-          "ground"
-        ].includes(
-          String(tag).toLowerCase()
-        )
-    )
-  );
-
-}
-
-
-/* =========================================================
-   LIBRARY FILTER
-========================================================= */
-
-function renderLibrary(){
-
-  library.innerHTML = "";
-
-  const query =
-    search.value
-      .trim()
-      .toLowerCase();
-
-  const filtered =
-    libraryAssets.filter(
-      asset => {
-
-        const text = [
-          asset.name,
-          asset.id,
-          asset.category,
-          ...(asset.tags || [])
-        ]
-        .join(" ")
-        .toLowerCase();
-
-        const searchOK =
-          !query ||
-          text.includes(query);
-
-        const categoryOK =
-          currentCategory === "all" ||
-          text.includes(
-            currentCategory
-          );
-
-        return searchOK &&
-          categoryOK;
-
-      }
-    );
-
-  if(!filtered.length){
-
-    library.innerHTML = `
-      <div class="library-loading">
-        Không tìm thấy texture.
-      </div>
-    `;
-
-    return;
-  }
-
-  /*
-    Giới hạn render DOM ban đầu.
-    Không tạo hàng nghìn card cùng lúc.
-  */
-
-  filtered
-    .slice(0,120)
-    .forEach(
-      asset =>
-        createTextureCard(asset)
-    );
-
-}
-
-
-function createTextureCard(asset){
-
-  const card =
-    document.createElement("div");
-
-  card.className =
-    "texture-card";
-
-  const thumb =
-    getThumbnail(asset);
-
-  const name =
-    asset.name ||
-    asset.id;
-
-  card.innerHTML = `
-    <img
-      class="texture-thumb"
-      src="${thumb || ""}"
-      loading="lazy"
-      alt="${escapeHTML(name)}"
-    >
-
-    <div class="texture-name">
-      ${escapeHTML(name)}
-    </div>
-
-    <div class="texture-meta">
-      PBR · CC0
-    </div>
-  `;
-
-  card.onclick =
-    () => {
-
-      document
-        .querySelectorAll(
-          ".texture-card"
-        )
-        .forEach(
-          x =>
-            x.classList.remove(
-              "selected"
-            )
-        );
-
-      card.classList.add(
-        "selected"
-      );
-
-      selectedAsset =
-        asset;
-
-      applyPolyHavenAsset(
-        asset
-      );
-
-    };
-
-  library.appendChild(
-    card
-  );
-
-}
-
-
-function getThumbnail(asset){
-
-  /*
-    Poly Haven API có metadata
-    và file URLs. Vì schema có thể
-    thay đổi, thử các trường phổ biến.
-  */
-
-  return (
-    asset.thumbnail ||
-    asset.preview ||
-    asset.previewImage ||
-    asset.image ||
-    ""
-  );
-
-}
-
-
-function escapeHTML(value){
-
-  return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-
-}
-
-
-/* =========================================================
-   LOAD PBR ASSET
-========================================================= */
-
-async function applyPolyHavenAsset(asset){
-
-  if(!selectedMesh){
-
-    alert(
-      "Chọn mesh trước rồi chọn texture."
-    );
-
-    return;
-
-  }
-
-  status.textContent =
-    "Đang tải material...";
-
-  try{
-
-    /*
-      Asset detail endpoint.
-    */
-
-    const response =
-      await fetch(
-        `https://api.polyhaven.com/files/${encodeURIComponent(asset.id)}`
-      );
-
-    if(!response.ok){
-
-      throw new Error(
-        "Không lấy được file metadata."
-      );
-
-    }
-
-    const files =
-      await response.json();
-
-    const maps =
-      findPBRMaps(files);
-
-    if(!maps.color){
-
-      throw new Error(
-        "Asset không có Color/Diff map."
-      );
-
-    }
-
-    await applyPBRMaps(
-      maps
-    );
-
-    status.textContent =
-      asset.name ||
-      asset.id;
-
-  }
-  catch(error){
-
-    console.error(error);
-
-    status.textContent =
-      "Không tải được material.";
-
-    /*
-      Fallback:
-      thử dùng asset URL nếu API
-      trả trực tiếp preview/file.
-    */
-
-    if(asset.url){
-
-      applySimpleTexture(
-        asset.url
-      );
-
-    }
-    else{
-
-      alert(
-        "Không lấy được texture từ Library."
-      );
-
-    }
-
-  }
-
-}
-
-
-/* =========================================================
-   FIND PBR MAPS
-========================================================= */
-
-function findPBRMaps(files){
-
-  const result = {
-    color:null,
-    roughness:null,
-    metalness:null,
-    normal:null,
-    displacement:null,
-    ao:null
-  };
-
-
-  function scan(obj){
-
-    if(!obj)
-      return;
-
-    if(typeof obj === "string"){
-
-      const lower =
-        obj.toLowerCase();
-
-      if(
-        lower.includes("diff") ||
-        lower.includes("albedo") ||
-        lower.includes("basecolor") ||
-        lower.includes("color")
-      ){
-
-        result.color ||= obj;
-
-      }
-
-      if(
-        lower.includes("rough")
-      ){
-
-        result.roughness ||= obj;
-
-      }
-
-      if(
-        lower.includes("metal")
-      ){
-
-        result.metalness ||= obj;
-
-      }
-
-      if(
-        lower.includes("nor_gl") ||
-        lower.includes("normal")
-      ){
-
-        result.normal ||= obj;
-
-      }
-
-      if(
-        lower.includes("disp") ||
-        lower.includes("height")
-      ){
-
-        result.displacement ||= obj;
-
-      }
-
-      if(
-        lower.includes("ao")
-      ){
-
-        result.ao ||= obj;
-
-      }
-
-      return;
-    }
-
-
-    if(Array.isArray(obj)){
-
-      obj.forEach(
-        item =>
-          scan(item)
-      );
-
-      return;
-    }
-
-
-    if(typeof obj === "object"){
-
-      Object.entries(obj)
-        .forEach(
-          ([key,value]) => {
-
-            const keyLower =
-              key.toLowerCase();
-
-            if(
-              typeof value === "string"
+            for(
+                const child
+                of [...root.children]
             ){
 
-              if(
-                keyLower.includes("diff") ||
-                keyLower.includes("albedo") ||
-                keyLower.includes("color")
-              ){
+                disposeObject(child);
 
-                result.color ||= value;
-
-              }
-
-              if(
-                keyLower.includes("rough")
-              ){
-
-                result.roughness ||= value;
-
-              }
-
-              if(
-                keyLower.includes("metal")
-              ){
-
-                result.metalness ||= value;
-
-              }
-
-              if(
-                keyLower.includes("normal") ||
-                keyLower.includes("nor_gl")
-              ){
-
-                result.normal ||= value;
-
-              }
-
-              if(
-                keyLower.includes("disp") ||
-                keyLower.includes("height")
-              ){
-
-                result.displacement ||= value;
-
-              }
+                root.remove(child);
 
             }
 
-            scan(value);
 
-          }
+            root =
+            gltf.scene;
+
+            scene.add(root);
+
+
+            root.traverse(
+                obj=>{
+
+                    if(!obj.isMesh)
+                        return;
+
+                    originalMaterial.set(
+                        obj,
+                        cloneMaterial(
+                            obj.material
+                        )
+                    );
+
+                }
+            );
+
+
+            selectedMesh =
+            null;
+
+
+            root.traverse(
+                obj=>{
+
+                    if(
+                        !selectedMesh &&
+                        obj.isMesh
+                    ){
+
+                        selectedMesh =
+                        obj;
+
+                    }
+
+                }
+            );
+
+
+            rebuildMeshList();
+
+            updateMeshName();
+
+        }catch(error){
+
+            console.error(error);
+
+            alert(
+                "Không đọc được GLB/GLTF."
+            );
+
+        }finally{
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        }
+
+    };
+
+
+    input.click();
+
+});
+
+
+function cloneMaterial(mat){
+
+    if(Array.isArray(mat))
+        return mat.map(m=>m.clone());
+
+    return mat.clone();
+
+}
+
+
+/* =====================================================
+   POLY HAVEN
+===================================================== */
+
+const API =
+"https://api.polyhaven.com";
+
+let assets = [];
+
+let filtered = [];
+
+let visible = 0;
+
+const PER_PAGE = 36;
+
+let category = "all";
+
+let sorting = "popular";
+
+let requestId = 0;
+
+
+/*
+ * Poly Haven API returns the real thumbnail_url.
+ *
+ * IMPORTANT:
+ * Browser direct API requests can be blocked because
+ * Poly Haven requires a custom User-Agent.
+ *
+ * We first try direct API.
+ */
+
+async function getAssets(){
+
+    status.innerHTML =
+    `<span class="spinner"></span>
+     Đang kết nối Poly Haven...`;
+
+
+    try{
+
+        const res =
+        await fetch(
+            API + "/assets",
+            {
+                cache:"no-store"
+            }
+        );
+
+
+        if(!res.ok)
+            throw new Error(
+                "HTTP "+res.status
+            );
+
+
+        const data =
+        await res.json();
+
+
+        assets =
+        Object.entries(data)
+        .map(
+            ([id,item])=>({
+                id,
+                ...item
+            })
+        )
+        .filter(
+            item =>
+                Number(item.type)===1
+                &&
+                typeof item.thumbnail_url==="string"
+        );
+
+
+        sortAssets();
+
+        applyFilter();
+
+
+        status.textContent =
+        `${assets.length.toLocaleString()}
+         texture online`;
+
+
+    }catch(error){
+
+        console.error(
+            "Poly Haven API:",
+            error
+        );
+
+
+        status.innerHTML =
+        `<span style="color:#ff6f75">
+        API không cho browser truy cập trực tiếp.
+        </span>`;
+
+
+        grid.innerHTML =
+        `<div class="noResults">
+            Poly Haven yêu cầu User-Agent riêng
+            cho API.<br><br>
+            Nếu bạn chạy bằng file HTML trực tiếp,
+            hãy mở bằng local server/proxy.
+        </div>`;
+
+    }
+
+}
+
+
+function sortAssets(){
+
+    if(sorting==="name"){
+
+        assets.sort(
+            (a,b)=>
+                (a.name||"")
+                .localeCompare(
+                    b.name||""
+                )
+        );
+
+    }else if(sorting==="new"){
+
+        assets.sort(
+            (a,b)=>
+                (b.date_published||0)
+                -
+                (a.date_published||0)
+        );
+
+    }else{
+
+        assets.sort(
+            (a,b)=>
+                (b.download_count||0)
+                -
+                (a.download_count||0)
         );
 
     }
 
-  }
-
-
-  scan(files);
-
-  return result;
-
 }
 
 
-/* =========================================================
-   APPLY PBR MAPS
-========================================================= */
+function applyFilter(){
 
-async function applyPBRMaps(maps){
-
-  const material =
-    ensureStandardMaterial();
-
-  if(!material)
-    return;
+    const q =
+    search.value
+    .trim()
+    .toLowerCase();
 
 
-  if(maps.color){
+    filtered =
+    assets.filter(
+        asset=>{
 
-    const texture =
-      await loadTexture(
-        maps.color
-      );
-
-    texture.colorSpace =
-      THREE.SRGBColorSpace;
-
-    texture.wrapS =
-      THREE.RepeatWrapping;
-
-    texture.wrapT =
-      THREE.RepeatWrapping;
-
-    material.map =
-      texture;
-
-  }
+            const text =
+            [
+                asset.name,
+                asset.category,
+                ...(asset.tags||[])
+            ]
+            .join(" ")
+            .toLowerCase();
 
 
-  if(maps.roughness){
+            if(
+                q &&
+                !text.includes(q)
+            ){
 
-    const texture =
-      await loadTexture(
-        maps.roughness
-      );
+                return false;
 
-    texture.colorSpace =
-      THREE.NoColorSpace;
-
-    texture.wrapS =
-      THREE.RepeatWrapping;
-
-    texture.wrapT =
-      THREE.RepeatWrapping;
-
-    material.roughnessMap =
-      texture;
-
-  }
+            }
 
 
-  if(maps.metalness){
+            if(
+                category!=="all" &&
+                !text.includes(category)
+            ){
 
-    const texture =
-      await loadTexture(
-        maps.metalness
-      );
+                return false;
 
-    texture.colorSpace =
-      THREE.NoColorSpace;
-
-    texture.wrapS =
-      THREE.RepeatWrapping;
-
-    texture.wrapT =
-      THREE.RepeatWrapping;
-
-    material.metalnessMap =
-      texture;
-
-  }
+            }
 
 
-  if(maps.normal){
+            return true;
 
-    const texture =
-      await loadTexture(
-        maps.normal
-      );
-
-    texture.colorSpace =
-      THREE.NoColorSpace;
-
-    texture.wrapS =
-      THREE.RepeatWrapping;
-
-    texture.wrapT =
-      THREE.RepeatWrapping;
-
-    material.normalMap =
-      texture;
-
-  }
-
-
-  if(maps.ao){
-
-    const texture =
-      await loadTexture(
-        maps.ao
-      );
-
-    texture.colorSpace =
-      THREE.NoColorSpace;
-
-    texture.wrapS =
-      THREE.RepeatWrapping;
-
-    texture.wrapT =
-      THREE.RepeatWrapping;
-
-    material.aoMap =
-      texture;
-
-  }
-
-
-  updateMaterial();
-
-  material.needsUpdate =
-    true;
-
-}
-
-
-/* =========================================================
-   TEXTURE LOADER
-========================================================= */
-
-const textureLoader =
-  new THREE.TextureLoader();
-
-
-function loadTexture(url){
-
-  if(textureCache.has(url)){
-
-    return Promise.resolve(
-      textureCache.get(url)
+        }
     );
 
-  }
 
+    visible = 0;
 
-  return new Promise(
-    (resolve,reject) => {
+    grid.innerHTML = "";
 
-      textureLoader.load(
-
-        url,
-
-        texture => {
-
-          textureCache.set(
-            url,
-            texture
-          );
-
-          resolve(texture);
-
-        },
-
-        undefined,
-
-        reject
-
-      );
-
-    }
-  );
+    renderMore();
 
 }
 
 
-/* =========================================================
-   SIMPLE USER TEXTURE
-========================================================= */
+/* =====================================================
+   INFINITE SCROLL
+===================================================== */
 
-function applySimpleTexture(url){
+function renderMore(){
 
-  if(!selectedMesh)
-    return;
+    if(!filtered.length){
 
-  loadTexture(url)
-    .then(
-      texture => {
+        grid.innerHTML =
+        `<div class="noResults">
+            Không có texture.
+        </div>`;
 
-        const material =
-          ensureStandardMaterial();
-
-        texture.colorSpace =
-          THREE.SRGBColorSpace;
-
-        texture.wrapS =
-          THREE.RepeatWrapping;
-
-        texture.wrapT =
-          THREE.RepeatWrapping;
-
-        material.map =
-          texture;
-
-        updateMaterial();
-
-        material.needsUpdate =
-          true;
-
-      }
-    )
-    .catch(
-      console.error
-    );
-
-}
-
-
-/* =========================================================
-   USER UPLOAD TEXTURE
-========================================================= */
-
-document
-  .getElementById("uploadTexture")
-  .onclick = () => {
-
-    document
-      .getElementById("textureInput")
-      .click();
-
-  };
-
-
-document
-  .getElementById("textureInput")
-  .addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files[0];
-
-      if(!file)
         return;
 
-      const url =
-        URL.createObjectURL(file);
+    }
 
-      applySimpleTexture(url);
 
-      status.textContent =
-        file.name;
+    const end =
+    Math.min(
+        visible + PER_PAGE,
+        filtered.length
+    );
+
+
+    const fragment =
+    document.createDocumentFragment();
+
+
+    for(
+        let i=visible;
+        i<end;
+        i++
+    ){
+
+        fragment.appendChild(
+            makeCard(
+                filtered[i]
+            )
+        );
 
     }
-  );
 
 
-/* =========================================================
-   CLEAR TEXTURE
-========================================================= */
-
-document
-  .getElementById("clearTexture")
-  .onclick = () => {
-
-    const material =
-      getMaterial();
-
-    if(!material)
-      return;
-
-    material.map = null;
-    material.normalMap = null;
-    material.roughnessMap = null;
-    material.metalnessMap = null;
-    material.aoMap = null;
-
-    material.needsUpdate =
-      true;
-
-  };
+    grid.appendChild(
+        fragment
+    );
 
 
-/* =========================================================
-   RESET MATERIAL
-========================================================= */
+    visible =
+    end;
 
-document
-  .getElementById("resetMaterial")
-  .onclick = () => {
+
+    if(
+        visible < filtered.length
+    ){
+
+        sentinel.textContent =
+        `Kéo xuống · ${visible} / ${filtered.length}`;
+
+    }else{
+
+        sentinel.textContent =
+        `Đã hết ${visible} texture`;
+
+    }
+
+}
+
+
+const scrollObserver =
+new IntersectionObserver(
+entries=>{
+
+    if(
+        entries[0].isIntersecting
+        &&
+        visible<filtered.length
+    ){
+
+        renderMore();
+
+    }
+
+},
+{
+    root:libraryScroll,
+    rootMargin:"500px"
+});
+
+
+scrollObserver.observe(
+    sentinel
+);
+
+
+/* =====================================================
+   CARD
+===================================================== */
+
+function makeCard(asset){
+
+    const card =
+    document.createElement("div");
+
+    card.className =
+    "card";
+
+
+    const imageBox =
+    document.createElement("div");
+
+    imageBox.className =
+    "imageBox";
+
+
+    const img =
+    document.createElement("img");
+
+
+    /*
+     * EXACT thumbnail_url supplied
+     * by Poly Haven API.
+     */
+
+    img.src =
+    asset.thumbnail_url;
+
+    img.loading =
+    "lazy";
+
+    img.decoding =
+    "async";
+
+    img.alt =
+    asset.name || asset.id;
+
+
+    img.onerror =
+    ()=>{
+
+        /*
+         * Do not leave a broken image.
+         * Hide only this card if the official
+         * thumbnail itself is unavailable.
+         */
+
+        card.remove();
+
+    };
+
+
+    imageBox.appendChild(
+        img
+    );
+
+
+    const name =
+    document.createElement("div");
+
+    name.className =
+    "cardName";
+
+    name.textContent =
+    asset.name || asset.id;
+
+
+    const bottom =
+    document.createElement("div");
+
+    bottom.className =
+    "cardBottom";
+
+
+    const pbr =
+    document.createElement("span");
+
+    pbr.textContent =
+    "PBR";
+
+
+    const k =
+    document.createElement("span");
+
+    k.className =
+    "k";
+
+    const max =
+    Array.isArray(
+        asset.max_resolution
+    )
+    ? Math.max(
+        ...asset.max_resolution
+    )
+    : 0;
+
+
+    k.textContent =
+    max>=8192
+    ? "8K"
+    : max>=4096
+    ? "4K"
+    : "2K";
+
+
+    bottom.append(
+        pbr,
+        k
+    );
+
+
+    card.append(
+        imageBox,
+        name,
+        bottom
+    );
+
+
+    /*
+     * IMPORTANT:
+     * Click handler is on the CARD itself.
+     * It does not depend on image loading.
+     */
+
+    card.addEventListener(
+        "click",
+        event=>{
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            selectAsset(
+                asset,
+                card
+            );
+
+        }
+    );
+
+
+    return card;
+
+}
+
+
+/* =====================================================
+   CLICK TEXTURE
+===================================================== */
+
+let selectedAsset =
+null;
+
+let currentSet =
+null;
+
+
+async function selectAsset(
+    asset,
+    card
+){
+
+    selectedAsset =
+    asset;
+
+
+    document
+    .querySelectorAll(
+        ".card.selected"
+    )
+    .forEach(
+        el =>
+        el.classList.remove(
+            "selected"
+        )
+    );
+
+
+    card.classList.add(
+        "selected"
+    );
+
+
+    document.getElementById(
+        "selectedName"
+    ).textContent =
+    asset.name || asset.id;
+
+
+    document.getElementById(
+        "selectedSource"
+    ).textContent =
+    "Poly Haven · đang tải...";
+
+
+    document.getElementById(
+        "selectedSize"
+    ).textContent =
+    Array.isArray(
+        asset.max_resolution
+    )
+    ?
+    `${asset.max_resolution[0]} × ${asset.max_resolution[1]}`
+    :
+    "";
+
+
+    document.getElementById(
+        "selectedImage"
+    ).src =
+    asset.thumbnail_url;
+
+
+    /*
+     * Every new click gets a new ID.
+     * An old request can no longer apply
+     * itself to the mesh.
+     */
+
+    const id =
+    ++requestId;
+
+
+    try{
+
+        /*
+         * IMPORTANT:
+         * /files/{id} is requested ONLY after
+         * the user clicks.
+         */
+
+        const response =
+        await fetch(
+            API +
+            "/files/" +
+            encodeURIComponent(
+                asset.id
+            ),
+            {
+                cache:"no-store"
+            }
+        );
+
+
+        if(!response.ok)
+            throw new Error(
+                "HTTP "+response.status
+            );
+
+
+        const files =
+        await response.json();
+
+
+        if(id!==requestId)
+            return;
+
+
+        const maps =
+        findMaps(files);
+
+
+        if(!maps.diff)
+            throw new Error(
+                "No diffuse map"
+            );
+
+
+        document.getElementById(
+            "selectedSource"
+        ).textContent =
+        "Poly Haven · đang tải texture...";
+
+
+        const set =
+        await loadMaps(
+            maps,
+            id
+        );
+
+
+        if(id!==requestId){
+
+            disposeSet(set);
+
+            return;
+
+        }
+
+
+        replaceCurrentSet(
+            set
+        );
+
+
+        applySet(
+            selectedMesh,
+            set
+        );
+
+
+        document.getElementById(
+            "selectedSource"
+        ).textContent =
+        "Poly Haven · Applied";
+
+
+    }catch(error){
+
+        console.error(
+            "Texture:",
+            error
+        );
+
+
+        document.getElementById(
+            "selectedSource"
+        ).textContent =
+        "Không tải được texture";
+
+
+    }
+
+}
+
+
+/* =====================================================
+   FIND MAPS
+===================================================== */
+
+function findMaps(data){
+
+    const maps = {
+        diff:null,
+        rough:null,
+        metal:null,
+        normal:null,
+        disp:null,
+        ao:null
+    };
+
+
+    function walk(node){
+
+        if(
+            !node ||
+            typeof node!=="object"
+        )
+            return;
+
+
+        for(
+            const [key,value]
+            of Object.entries(node)
+        ){
+
+            if(
+                value &&
+                typeof value==="object"
+            ){
+
+                if(
+                    typeof value.url==="string"
+                ){
+
+                    const k =
+                    key.toLowerCase();
+
+
+                    if(
+                        k==="diff" &&
+                        !maps.diff
+                    )
+                        maps.diff =
+                        value.url;
+
+
+                    if(
+                        k==="rough" &&
+                        !maps.rough
+                    )
+                        maps.rough =
+                        value.url;
+
+
+                    if(
+                        k==="metal" &&
+                        !maps.metal
+                    )
+                        maps.metal =
+                        value.url;
+
+
+                    if(
+                        k==="nor_gl" &&
+                        !maps.normal
+                    )
+                        maps.normal =
+                        value.url;
+
+
+                    if(
+                        k==="disp" &&
+                        !maps.disp
+                    )
+                        maps.disp =
+                        value.url;
+
+
+                    if(
+                        k==="ao" &&
+                        !maps.ao
+                    )
+                        maps.ao =
+                        value.url;
+
+                }else{
+
+                    walk(value);
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    walk(data);
+
+    return maps;
+
+}
+
+
+/* =====================================================
+   LOAD MAPS
+===================================================== */
+
+const textureLoader =
+new THREE.TextureLoader();
+
+
+function loadOne(url){
+
+    return new Promise(
+        (resolve,reject)=>{
+
+            textureLoader.load(
+                url,
+                texture=>{
+
+                    texture.wrapS =
+                    THREE.RepeatWrapping;
+
+                    texture.wrapT =
+                    THREE.RepeatWrapping;
+
+                    texture.anisotropy =
+                    Math.min(
+                        renderer.capabilities
+                        .getMaxAnisotropy(),
+                        4
+                    );
+
+                    texture.colorSpace =
+                    THREE.SRGBColorSpace;
+
+                    resolve(texture);
+
+                },
+                undefined,
+                reject
+            );
+
+        }
+    );
+
+}
+
+
+async function loadMaps(
+    maps,
+    id
+){
+
+    const set = {
+        diff:null,
+        rough:null,
+        metal:null,
+        normal:null,
+        disp:null,
+        ao:null
+    };
+
+
+    set.diff =
+    await loadOne(
+        maps.diff
+    );
+
+
+    if(id!==requestId)
+        return set;
+
+
+    const optional =
+    await Promise.all(
+        [
+            ["rough",maps.rough],
+            ["metal",maps.metal],
+            ["normal",maps.normal],
+            ["disp",maps.disp],
+            ["ao",maps.ao]
+        ]
+        .map(
+            async ([name,url])=>{
+
+                if(!url)
+                    return [
+                        name,
+                        null
+                    ];
+
+                try{
+
+                    return [
+                        name,
+                        await loadOne(url)
+                    ];
+
+                }catch{
+
+                    return [
+                        name,
+                        null
+                    ];
+
+                }
+
+            }
+        )
+    );
+
+
+    for(
+        const [name,value]
+        of optional
+    ){
+
+        set[name] =
+        value;
+
+    }
+
+
+    return set;
+
+}
+
+
+/* =====================================================
+   APPLY
+===================================================== */
+
+function applySet(
+    mesh,
+    set
+){
+
+    if(
+        !mesh ||
+        !mesh.isMesh
+    )
+        return;
+
+
+    let material =
+    workingMaterial.get(
+        mesh
+    );
+
+
+    if(!material){
+
+        material =
+        cloneMaterial(
+            mesh.material
+        );
+
+        workingMaterial.set(
+            mesh,
+            material
+        );
+
+        mesh.material =
+        material;
+
+    }
+
+
+    const mat =
+    Array.isArray(material)
+    ? material[0]
+    : material;
+
+
+    clearOwned(
+        mesh
+    );
+
+
+    mat.map =
+    set.diff;
+
+
+    mat.roughnessMap =
+    set.rough;
+
+
+    mat.metalnessMap =
+    set.metal;
+
+
+    mat.normalMap =
+    set.normal;
+
+
+    mat.displacementMap =
+    set.disp;
+
+
+    mat.aoMap =
+    set.ao;
+
+
+    mat.needsUpdate =
+    true;
+
+
+    ownedMaps.set(
+        mesh,
+        new Set(
+            Object.values(set)
+            .filter(Boolean)
+        )
+    );
+
+
+    updateControls();
+
+}
+
+
+/* =====================================================
+   REPLACE / CLEAN
+===================================================== */
+
+function replaceCurrentSet(set){
+
+    if(currentSet)
+        disposeSet(
+            currentSet
+        );
+
+    currentSet =
+    set;
+
+}
+
+
+function clearOwned(mesh){
+
+    const set =
+    ownedMaps.get(mesh);
+
+    if(!set)
+        return;
+
+
+    for(
+        const texture
+        of set
+    ){
+
+        texture.dispose();
+
+    }
+
+
+    ownedMaps.delete(
+        mesh
+    );
+
+}
+
+
+function disposeSet(set){
+
+    if(!set)
+        return;
+
+
+    const unique =
+    new Set(
+        Object.values(set)
+        .filter(Boolean)
+    );
+
+
+    for(
+        const texture
+        of unique
+    ){
+
+        texture.dispose();
+
+    }
+
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetMaterial(){
 
     if(!selectedMesh)
-      return;
+        return;
+
+
+    clearOwned(
+        selectedMesh
+    );
+
+
+    const working =
+    workingMaterial.get(
+        selectedMesh
+    );
+
+
+    if(working){
+
+        disposeMaterial(
+            working
+        );
+
+        workingMaterial.delete(
+            selectedMesh
+        );
+
+    }
+
 
     const original =
-      selectedMesh.userData
-        .originalMaterial;
+    originalMaterial.get(
+        selectedMesh
+    );
+
 
     if(original){
 
-      selectedMesh.material =
-        original;
-
-      readMaterial();
+        selectedMesh.material =
+        cloneMaterial(
+            original
+        );
 
     }
 
-  };
+
+    if(currentSet){
+
+        disposeSet(
+            currentSet
+        );
+
+        currentSet =
+        null;
+
+    }
 
 
-/* =========================================================
+    selectedAsset =
+    null;
+
+
+    document.getElementById(
+        "selectedName"
+    ).textContent =
+    "Chưa chọn";
+
+
+    document.getElementById(
+        "selectedSource"
+    ).textContent =
+    "Material đã reset";
+
+
+    document.getElementById(
+        "selectedImage"
+    ).removeAttribute(
+        "src"
+    );
+
+
+    resetControls();
+
+}
+
+
+function resetAll(){
+
+    root.traverse(
+        mesh=>{
+
+            if(!mesh.isMesh)
+                return;
+
+
+            clearOwned(
+                mesh
+            );
+
+
+            const working =
+            workingMaterial.get(
+                mesh
+            );
+
+
+            if(working){
+
+                disposeMaterial(
+                    working
+                );
+
+                workingMaterial.delete(
+                    mesh
+                );
+
+            }
+
+
+            const original =
+            originalMaterial.get(
+                mesh
+            );
+
+
+            if(original){
+
+                mesh.material =
+                cloneMaterial(
+                    original
+                );
+
+            }
+
+        }
+    );
+
+
+    if(currentSet){
+
+        disposeSet(
+            currentSet
+        );
+
+        currentSet =
+        null;
+
+    }
+
+
+    selectedAsset =
+    null;
+
+
+    document
+    .querySelectorAll(
+        ".card.selected"
+    )
+    .forEach(
+        card =>
+        card.classList.remove(
+            "selected"
+        )
+    );
+
+
+    document.getElementById(
+        "selectedName"
+    ).textContent =
+    "Chưa chọn";
+
+
+    document.getElementById(
+        "selectedSource"
+    ).textContent =
+    "Click texture bên trái";
+
+
+    document.getElementById(
+        "selectedImage"
+    ).removeAttribute(
+        "src"
+    );
+
+
+    resetControls();
+
+}
+
+
+function disposeMaterial(mat){
+
+    if(
+        !mat
+    )
+        return;
+
+
+    if(
+        Array.isArray(mat)
+    ){
+
+        mat.forEach(
+            disposeMaterial
+        );
+
+        return;
+
+    }
+
+
+    mat.dispose();
+
+}
+
+
+function disposeObject(obj){
+
+    obj.traverse(
+        child=>{
+
+            if(child.geometry)
+                child.geometry.dispose();
+
+            /*
+             * Don't dispose original materials here
+             * when changing preview.
+             */
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   CONTROLS
+===================================================== */
+
+const tiling =
+document.getElementById(
+    "tiling"
+);
+
+const rotation =
+document.getElementById(
+    "rotation"
+);
+
+const roughness =
+document.getElementById(
+    "roughness"
+);
+
+const metalness =
+document.getElementById(
+    "metalness"
+);
+
+const normal =
+document.getElementById(
+    "normal"
+);
+
+
+function material(){
+
+    if(!selectedMesh)
+        return null;
+
+    const m =
+    selectedMesh.material;
+
+    return Array.isArray(m)
+    ? m[0]
+    : m;
+
+}
+
+
+function updateControls(){
+
+    const mat =
+    material();
+
+    if(!mat)
+        return;
+
+
+    tiling.value =
+    mat.map
+    ? mat.map.repeat.x
+    : 1;
+
+
+    roughness.value =
+    mat.roughness ?? .5;
+
+
+    metalness.value =
+    mat.metalness ?? 0;
+
+
+    document.getElementById(
+        "tilingVal"
+    ).textContent =
+    Number(
+        tiling.value
+    ).toFixed(2);
+
+
+    document.getElementById(
+        "roughVal"
+    ).textContent =
+    Number(
+        roughness.value
+    ).toFixed(2);
+
+
+    document.getElementById(
+        "metalVal"
+    ).textContent =
+    Number(
+        metalness.value
+    ).toFixed(2);
+
+}
+
+
+function allMaps(mat){
+
+    return [
+        mat.map,
+        mat.roughnessMap,
+        mat.metalnessMap,
+        mat.normalMap,
+        mat.displacementMap,
+        mat.aoMap
+    ]
+    .filter(Boolean);
+
+}
+
+
+tiling.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        Number(
+            tiling.value
+        );
+
+
+        document.getElementById(
+            "tilingVal"
+        ).textContent =
+        value.toFixed(2);
+
+
+        const mat =
+        material();
+
+        if(!mat)
+            return;
+
+
+        allMaps(mat)
+        .forEach(
+            tex =>
+            tex.repeat.set(
+                value,
+                value
+            )
+        );
+
+    }
+);
+
+
+rotation.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        Number(
+            rotation.value
+        );
+
+
+        document.getElementById(
+            "rotationVal"
+        ).textContent =
+        value+"°";
+
+
+        const mat =
+        material();
+
+        if(!mat)
+            return;
+
+
+        const rad =
+        THREE.MathUtils.degToRad(
+            value
+        );
+
+
+        allMaps(mat)
+        .forEach(
+            tex=>{
+
+                tex.center.set(
+                    .5,
+                    .5
+                );
+
+                tex.rotation =
+                rad;
+
+            }
+        );
+
+    }
+);
+
+
+roughness.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        Number(
+            roughness.value
+        );
+
+
+        document.getElementById(
+            "roughVal"
+        ).textContent =
+        value.toFixed(2);
+
+
+        const mat =
+        material();
+
+        if(mat)
+            mat.roughness =
+            value;
+
+    }
+);
+
+
+metalness.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        Number(
+            metalness.value
+        );
+
+
+        document.getElementById(
+            "metalVal"
+        ).textContent =
+        value.toFixed(2);
+
+
+        const mat =
+        material();
+
+        if(mat)
+            mat.metalness =
+            value;
+
+    }
+);
+
+
+normal.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        Number(
+            normal.value
+        );
+
+
+        document.getElementById(
+            "normalVal"
+        ).textContent =
+        value.toFixed(2);
+
+
+        const mat =
+        material();
+
+        if(mat){
+
+            mat.normalScale.set(
+                value,
+                value
+            );
+
+        }
+
+    }
+);
+
+
+function resetControls(){
+
+    tiling.value=1;
+    rotation.value=0;
+    roughness.value=.5;
+    metalness.value=0;
+    normal.value=1;
+
+    document.getElementById(
+        "tilingVal"
+    ).textContent="1.00";
+
+    document.getElementById(
+        "rotationVal"
+    ).textContent="0°";
+
+    document.getElementById(
+        "roughVal"
+    ).textContent="0.50";
+
+    document.getElementById(
+        "metalVal"
+    ).textContent="0.00";
+
+    document.getElementById(
+        "normalVal"
+    ).textContent="1.00";
+
+}
+
+
+/* =====================================================
+   UPLOAD
+===================================================== */
+
+document
+.getElementById("upload")
+.addEventListener(
+"change",
+async e=>{
+
+    const file =
+    e.target.files?.[0];
+
+    if(
+        !file ||
+        !selectedMesh
+    )
+        return;
+
+
+    const url =
+    URL.createObjectURL(
+        file
+    );
+
+
+    try{
+
+        const texture =
+        await loadOne(
+            url
+        );
+
+
+        const set = {
+            diff:texture,
+            rough:null,
+            metal:null,
+            normal:null,
+            disp:null,
+            ao:null
+        };
+
+
+        replaceCurrentSet(
+            set
+        );
+
+
+        applySet(
+            selectedMesh,
+            set
+        );
+
+
+        document.getElementById(
+            "selectedImage"
+        ).src =
+        url;
+
+
+        document.getElementById(
+            "selectedName"
+        ).textContent =
+        file.name;
+
+
+        document.getElementById(
+            "selectedSource"
+        ).textContent =
+        "Local · Browser only";
+
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    e.target.value="";
+
+});
+
+
+/* =====================================================
+   APPLY
+===================================================== */
+
+document
+.getElementById("apply")
+.addEventListener(
+"click",
+()=>{
+
+    if(
+        selectedMesh &&
+        currentSet
+    ){
+
+        applySet(
+            selectedMesh,
+            currentSet
+        );
+
+    }
+
+});
+
+
+/* =====================================================
+   RESET BUTTONS
+===================================================== */
+
+document
+.getElementById("reset")
+.addEventListener(
+"click",
+resetAll
+);
+
+
+document
+.getElementById("resetMaterial")
+.addEventListener(
+"click",
+resetMaterial
+);
+
+
+document
+.getElementById("clearLoaded")
+.addEventListener(
+"click",
+resetAll
+);
+
+
+/* =====================================================
    SEARCH
-========================================================= */
+===================================================== */
 
 let searchTimer;
 
 search.addEventListener(
-  "input",
-  () => {
+"input",
+()=>{
 
     clearTimeout(
-      searchTimer
+        searchTimer
     );
 
     searchTimer =
-      setTimeout(
-        renderLibrary,
-        200
-      );
+    setTimeout(
+        applyFilter,
+        120
+    );
 
-  }
-);
+});
 
 
-/* =========================================================
-   CATEGORY
-========================================================= */
+/* =====================================================
+   CATEGORY TABS
+===================================================== */
 
 document
-  .querySelectorAll(".category")
-  .forEach(
-    button => {
+.getElementById("tabs")
+.addEventListener(
+"click",
+e=>{
 
-      button.onclick =
-        () => {
+    const tab =
+    e.target.closest(
+        ".tab"
+    );
 
-          document
+    if(!tab)
+        return;
+
+
+    category =
+    tab.dataset.cat;
+
+
+    document
+    .querySelectorAll(
+        ".tab"
+    )
+    .forEach(
+        x =>
+        x.classList.toggle(
+            "active",
+            x===tab
+        )
+    );
+
+
+    libraryScroll.scrollTop=0;
+
+    applyFilter();
+
+});
+
+
+/* =====================================================
+   SORT
+===================================================== */
+
+document
+.querySelector(".subTabs")
+.addEventListener(
+"click",
+e=>{
+
+    const tab =
+    e.target.closest(
+        ".subTab"
+    );
+
+    if(!tab)
+        return;
+
+
+    sorting =
+    tab.dataset.sort;
+
+
+    document
+    .querySelectorAll(
+        ".subTab"
+    )
+    .forEach(
+        x =>
+        x.classList.toggle(
+            "active",
+            x===tab
+        )
+    );
+
+
+    sortAssets();
+
+    applyFilter();
+
+});
+
+
+/* =====================================================
+   SHAPES
+===================================================== */
+
+document
+.querySelectorAll(
+    ".shape"
+)
+.forEach(
+button=>{
+
+    button.addEventListener(
+        "click",
+        ()=>{
+
+            document
             .querySelectorAll(
-              ".category"
+                ".shape"
             )
             .forEach(
-              x =>
-                x.classList.remove(
-                  "active"
+                b =>
+                b.classList.remove(
+                    "active"
                 )
             );
 
-          button.classList.add(
-            "active"
-          );
 
-          currentCategory =
-            button.dataset.category;
+            button.classList.add(
+                "active"
+            );
 
-          renderLibrary();
 
-        };
+            createPreview(
+                button.dataset.shape
+            );
+
+        }
+    );
+
+});
+
+
+/* =====================================================
+   RAYCAST
+===================================================== */
+
+const raycaster =
+new THREE.Raycaster();
+
+const pointer =
+new THREE.Vector2();
+
+
+renderer.domElement.addEventListener(
+"pointerdown",
+event=>{
+
+    const rect =
+    renderer.domElement
+    .getBoundingClientRect();
+
+
+    pointer.x =
+    (
+        event.clientX -
+        rect.left
+    )
+    /
+    rect.width
+    *2-1;
+
+
+    pointer.y =
+    -(
+        event.clientY -
+        rect.top
+    )
+    /
+    rect.height
+    *2+1;
+
+
+    raycaster.setFromCamera(
+        pointer,
+        camera
+    );
+
+
+    const hits =
+    raycaster.intersectObject(
+        root,
+        true
+    );
+
+
+    if(hits.length){
+
+        const mesh =
+        hits[0].object;
+
+        if(mesh.isMesh)
+            selectMesh(mesh);
 
     }
-  );
+
+});
 
 
-/* =========================================================
-   GRID
-========================================================= */
-
-document
-  .getElementById("toggleGrid")
-  .onclick = () => {
-
-    grid.visible =
-      !grid.visible;
-
-  };
-
-
-/* =========================================================
-   WIREFRAME
-========================================================= */
+/* =====================================================
+   TOOLS
+===================================================== */
 
 document
-  .getElementById("toggleWire")
-  .onclick = () => {
+.getElementById("gridBtn")
+.addEventListener(
+"click",
+()=>{
+    ground.visible =
+    !ground.visible;
+});
 
-    wireframe =
-      !wireframe;
 
-    if(!currentModel)
-      return;
+document
+.getElementById("lightBtn")
+.addEventListener(
+"click",
+()=>{
 
-    currentModel.traverse(
-      object => {
+    const on =
+    ambient.intensity < 1;
 
-        if(!object.isMesh)
-          return;
+    ambient.intensity =
+    on ? 2 : .6;
 
-        setWireframe(
-          object,
-          wireframe
+    light.intensity =
+    on ? 3 : 1;
+
+    fill.intensity =
+    on ? 1 : .2;
+
+});
+
+
+document
+.getElementById("fullBtn")
+.addEventListener(
+"click",
+()=>{
+
+    if(
+        !document.fullscreenElement
+    ){
+
+        document
+        .documentElement
+        .requestFullscreen?.();
+
+    }else{
+
+        document
+        .exitFullscreen?.();
+
+    }
+
+});
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+function resize(){
+
+    const w =
+    wrap.clientWidth;
+
+    const h =
+    wrap.clientHeight;
+
+
+    if(
+        w<=0 ||
+        h<=0
+    )
+        return;
+
+
+    camera.aspect =
+    w/h;
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+        w,
+        h,
+        false
+    );
+
+}
+
+
+window.addEventListener(
+"resize",
+resize
+);
+
+
+/* =====================================================
+   LOOP
+===================================================== */
+
+function loop(){
+
+    requestAnimationFrame(
+        loop
+    );
+
+    controls.update();
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+createPreview(
+    "sphere"
+);
+
+resize();
+
+loop();
+
+getAssets();
+
+
+/* =====================================================
+   PAGE CLEANUP
+===================================================== */
+
+window.addEventListener(
+"beforeunload",
+()=>{
+
+    root.traverse(
+        mesh=>{
+
+            if(mesh.isMesh)
+                clearOwned(mesh);
+
+        }
+    );
+
+
+    if(currentSet){
+
+        disposeSet(
+            currentSet
         );
 
-      }
-    );
-
-  };
-
-
-function getWireframe(mesh){
-
-  const material =
-    mesh.material;
-
-  if(Array.isArray(material))
-    return material[0]?.wireframe;
-
-  return material?.wireframe;
-
-}
-
-
-function setWireframe(
-  mesh,
-  value
-){
-
-  const material =
-    mesh.material;
-
-  if(Array.isArray(material)){
-
-    material.forEach(
-      mat =>
-        mat.wireframe =
-          value
-    );
-
-  }
-  else if(material){
-
-    material.wireframe =
-      value;
-
-  }
-
-}
-
-
-/* =========================================================
-   RELOAD TEXTURE
-========================================================= */
-
-document
-  .getElementById("reloadTexture")
-  .onclick = () => {
-
-    if(selectedAsset &&
-       selectedMesh){
-
-      applyPolyHavenAsset(
-        selectedAsset
-      );
-
     }
 
-  };
-
-
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-function animate(){
-
-  requestAnimationFrame(
-    animate
-  );
-
-  controls.update();
-
-  renderer.render(
-    scene,
-    camera
-  );
-
-}
-
-animate();
-
-
-/* =========================================================
-   START LIBRARY
-========================================================= */
-
-loadLibrary();
+});
 
 </script>
 
 </body>
 </html>
-```
