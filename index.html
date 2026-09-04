@@ -2,933 +2,1284 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>editnew - Advanced Glitch & After Effects Motion FX Pro</title>
-    <!-- Nhúng đầy đủ thư viện đóng gói tệp tin GIF và MP4 -->
-    <script src="https://cloudflare.com"></script>
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        body { 
-            background: #111; 
-            color: #fff; 
-            font-family: sans-serif; 
-            padding: 20px; 
-            margin: 0;
-            display: flex;
-            justify-content: center;
-        }
-        #app-container {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            width: 100%;
-            max-width: 1350px;
-            align-items: flex-start;
-            box-sizing: border-box;
-            min-width: 0;
-        }
-        #left-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-        #preview-window {
-            background: #000;
-            border: 2px solid #333;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            min-width: 0;
-        }
-        #videoCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-            background: #1a1a1a;
-            cursor: crosshair;
-        }
-        #top-controls {
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            box-sizing: border-box;
-        }
-        .global-slider {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
-        /* Mở khóa thanh cuộn dọc cho bảng điều khiển tổng bên phải */
-        #right-panel {
-            width: 340px;
-            flex: 0 0 340px;
-            background: #1e1e1e;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            height: 85vh;
-            max-height: 85vh;
-            min-height: 0;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            box-sizing: border-box;
-        }
-        #right-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-        #right-panel::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 3px;
-        }
-        .fx-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-        .fx-subgrid label{display:flex;align-items:center;gap:6px;background:#252525;border:1px solid #3a3a3a;border-radius:5px;padding:6px;font-size:11px;cursor:pointer}
-        .fx-subgrid input{accent-color:#2f6fed}
-        .fx-note{font-size:10px;color:#888;margin:6px 0}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        #right-panel::-webkit-scrollbar-thumb:hover {
-            background: #666;
-        }
-        .accordion-item {
-            border: 1px solid #333;
-            border-radius: 4px;
-            background: #252525;
-            overflow: hidden;
-        }
-        .accordion-header {
-            background: #2d2d2d;
-            padding: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-            border-bottom: 1px solid #222;
-        }
-        .accordion-header:hover { background: #353535; }
-        
-        /* Bật thanh cuộn độc lập riêng biệt cho từng Tab con nhỏ bên trong */
-        .accordion-content {
-            padding: 10px;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            background: #1a1a1a;
-            max-height: 42vh;
-            min-height: 0;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            scrollbar-gutter: stable; 
-        }
-        .accordion-content::-webkit-scrollbar {
-            width: 4px;
-        }
-        .accordion-content::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 2px;
-        }
-        .accordion-item.active .accordion-content {
-            display: flex;
-        }
-        .accordion-content { scrollbar-width: thin; scrollbar-color: #555 #1a1a1a; }
-        .accordion-content .fx-grid { min-height: 0; }
-        @media (max-height: 700px) { .accordion-content { max-height: 38vh; } }
-        @media (max-width: 900px) {
-            body { padding: 10px; }
-            #app-container { flex-direction: column; gap: 12px; }
-            #left-panel { width: 100%; }
-            #right-panel { width: 100%; flex: 0 0 auto; height: 60vh; max-height: 60vh; }
-            #preview-window { width: 100%; }
-            #videoCanvas { width: 100%; height: 100%; }
-            #tool-section, .tool-section, #rig-toolbar, #export-panel { flex-wrap: wrap; }
-        }
-        @media (max-width: 1100px) {
-            #app-container { flex-direction: column; gap: 12px; }
-            #left-panel { width: 100%; min-width: 0; }
-            #right-panel { width: 100%; flex: 0 0 auto; height: 55vh; max-height: 55vh; overflow: hidden; }
-            #fx-home { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-            #preview-window { width: 100%; max-width: 960px; margin: 0 auto; }
-        }
-        .control-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: 13px;
-        }
-        .control-row input[type="range"] { flex: 1; }
-        .value-disp {
-            min-width: 35px;
-            text-align: right;
-            color: #06b6d4;
-            font-family: monospace;
-        }
-        button { 
-            background: #333; 
-            color: white; 
-            border: 1px solid #555; 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-        button:hover { background: #444; }
-        button.active { background: #2563eb !important; border-color: #3b82f6 !important; }
-        .tool-section {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 5px;
-            align-items: center;
-        }
-        .fx-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        #export-panel {
-            flex-wrap: wrap;
-            background: #222;
-            border: 1px solid #3b82f6;
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        .text-input {
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            padding: 5px;
-            border-radius: 4px;
-            width: 50px;
-            text-align: center;
-        }
-    
-/* Advanced AE controls + smooth mesh editor */
-.transform-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.transform-panel button,.ae10-grid button{background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:6px;padding:8px;cursor:pointer}
-.transform-panel button:hover,.ae10-grid button:hover{background:#383838}
-.ae10-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-#mesh-overlay{position:absolute;inset:0;pointer-events:none}
-.mesh-line{position:absolute;background:rgba(255,255,255,.25);pointer-events:none}
-.mesh-point{position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-sizing:border-box}
-.mesh-point:active{cursor:grabbing}
-#preview-window.mesh-editing #videoCanvas{cursor:crosshair}
+    <title>Texture Studio</title>
 
-        #rig-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#19191f;border:1px solid #333;border-radius:8px;padding:8px;margin-top:8px}
-        #rig-toolbar button{padding:7px 10px}
-        #rig-overlay{position:absolute;inset:0;pointer-events:none}
-        .rig-joint{position:absolute;width:14px;height:14px;border:2px solid #ffd166;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;box-shadow:0 0 8px rgba(255,209,102,.7)}
-        .grid-overlay{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px}
-
-        /* Giao diện Effect dạng thư mục: bấm nhóm -> mở toàn bộ control, bấm Quay lại -> về danh sách */
-        #fx-home{display:flex;flex-direction:column;gap:10px;min-height:0}
-        #fx-home .accordion-item{flex:0 0 auto}
-        #fx-home .accordion-item .accordion-content{display:none!important}
-        #fx-home .accordion-header{min-height:20px;font-size:14px;padding:9px 10px;border:0;border-radius:5px}
-        #fx-home .accordion-header span{font-size:12px;opacity:.8}
-        #fx-home .accordion-header:hover{background:#383838}
-        #fx-detail{flex-direction:column;min-height:0;height:100%;gap:10px}
-        #fx-detail-top{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5;background:#1e1e1e;padding-bottom:8px;border-bottom:1px solid #333}
-        #fx-back{background:#333;border:1px solid #555;font-weight:bold}
-        #fx-back:hover{background:#444}
-        #fx-detail-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        #fx-detail-content{min-height:0;overflow-y:auto;flex:1;background:#1a1a1a;border-radius:6px;padding:10px;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#555 #1a1a1a}
-        #fx-detail-content::-webkit-scrollbar{width:6px}
-        #fx-detail-content::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
-        #fx-detail-content .accordion-content{display:flex!important;max-height:none;overflow:visible;padding:0;background:transparent}
-
-/* PATCH 2026-09: preview + panel layout ổn định */
-html,body{min-height:100%;overflow-x:hidden}
-#app-container{min-width:0;align-items:stretch}
-#left-panel{min-width:0}
-#preview-window{width:100%;max-width:960px;margin:0 auto;aspect-ratio:16/9;position:relative;box-sizing:border-box}
-#videoCanvas{width:100%;height:100%;max-width:100%;display:block;object-fit:contain}
-#right-panel{min-width:0;min-height:0;overflow:hidden}
-#fx-home{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden}
-#fx-detail{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
-#fx-detail-content{flex:1 1 auto;min-height:0;overflow:auto}
-#preview-window #mesh-overlay,#preview-window #rig-overlay,#preview-window #grid-overlay{position:absolute;inset:0;width:100%;height:100%}
-@media (max-width:1100px){
-  body{padding:10px}
-  #right-panel{height:55vh;max-height:55vh}
-  #preview-window{max-width:960px}
-}
-.slash-card{background:#171717;border:1px solid #343434;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
-.slash-card button{font-weight:700}
-.slash-row{display:flex;align-items:center;gap:8px}.slash-row label{min-width:90px;font-size:12px}.slash-row input[type=range]{flex:1}
-.slash-status{font-size:11px;color:#aaa}
-
-</style>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div id="app-container">
-        <div id="left-panel">
-            <div id="top-controls">
-                <div class="global-slider">
-                    <input type="file" id="image-upload" accept="image/*" style="display:none;">
-                    <button id="btn-upload" style="background:#ea580c; font-weight:bold;">📁 Chọn ảnh từ thiết bị</button>
-                </div>
-                <div class="global-slider">
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:5px; user-select:none;">
-                        <input type="checkbox" id="toggle-greenscreen"> 🟢 Kích hoạt phông xanh lót nền dưới
-                    </label>
-                </div>
-            </div>
 
-            <div id="preview-window">
-                <canvas id="videoCanvas" width="960" height="540"></canvas><div id="mesh-overlay"></div><div id="rig-overlay"></div><div id="grid-overlay" class="grid-overlay" style="display:none"></div>
-            </div>
+<!-- =====================================================
+     TOP BAR
+===================================================== -->
 
-            <div class="tool-section">
-                <button id="btn-pin-mode" style="background:#ca8a04;">📍 Ghim điểm neo</button>
-                <button id="btn-mask-mode" style="background:#9333ea;">🎨 Vẽ vùng xử lý (Brush)</button>
-                <button id="btn-clear-all" style="background:#dc2626;">❌ Xóa dữ liệu vẽ</button>
-                <div class="global-slider" style="margin-left:15px;">
-                    <label>Cỡ cọ: </label>
-                    <input type="range" id="slider-brush-size" min="5" max="100" value="30">
-                </div>
-            </div>
+<header class="topbar">
 
-            <div id="rig-toolbar">
-                <strong>🦴 Rig</strong>
-                <button id="rig-toggle">Bật Rig</button>
-                <button id="rig-add">➕ Thêm khớp</button>
-                <button id="rig-left">↶ Xoay trái</button>
-                <button id="rig-right">↷ Xoay phải</button>
-                <button id="rig-up">⬆</button><button id="rig-down">⬇</button>
-                <button id="rig-reset">↺ Reset Rig</button>
-            </div>
-            <!-- THANH CÔNG CỤ ĐIỀU KHIỂN RENDER XUẤT VIDEO THEO GIÂY -->
-            <div id="export-panel">
-                <div class="global-slider">
-                    <label>⏱️ Thời lượng video:</label>
-                    <input type="number" id="export-duration" class="text-input" min="1" max="30" value="3">
-                    <span>giây</span>
-                </div>
-                <div class="global-slider">
-                    <label>🎛️ Định dạng xuất:</label>
-                    <select id="export-format" style="background:#333; color:white; border:1px solid #555; padding:5px; border-radius:4px;">
-                        <option value="mp4">Đoạn Video .MP4 chất lượng cao</option>
-                        <option value="gif">Ảnh động .GIF</option>
-                    </select>
-                </div>
-                <button id="btn-export-start" style="background:#10b981; border-color:#059669; font-weight:bold; flex:1;">🎬 Bắt đầu xuất tệp tin</button>
-            </div>
-        </div>
-
-        <div id="right-panel">
-            <div id="fx-home">
-            <!-- CÁC NHÓM EFFECT: CHỈ HIỆN NÚT, KHÔNG HIỆN TOÀN BỘ CONTROL -->
-            <!-- ACCORDION 1: ALIGHT DISTORTION & WARP -->
-            <div class="accordion-item active">
-                <div class="accordion-header">🌀 Distortion & Warp <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row">
-                        <label>Kích hoạt hiệu ứng:</label>
-                        <input type="checkbox" id="chk-distort" checked>
-                    </div>
-                    <div class="control-row">
-                        <label>Tốc độ chuyển động:</label>
-                        <input type="range" id="distort-speed" min="0.1" max="5" step="0.1" value="1.0">
-                    </div>
-                    <div class="control-row">
-                        <label>Cường độ bóp méo:</label>
-                        <input type="range" id="distort-amount" min="1" max="100" value="30">
-                    </div>
-                    <div class="fx-grid">
-                        <button id="fx-none" class="active">Gốc</button>
-                        <button id="fx-stretch">Sợi tóc</button>
-                        <button id="fx-wave">Gợn sóng</button>
-                        <button id="fx-wavewarp">WaveWarp</button>
-                        <button id="fx-bend">Uốn mềm</button>
-                        <button id="fx-zoom">Zoom</button>
-                        <button id="fx-mirror">Mirror</button>
-                        <button id="fx-fanwarp">Quạt</button>
-                        <button id="fx-swirl">Xoáy nước</button>
-                        <button id="fx-pinch">Hút tâm</button>
-                        <button id="fx-tile">Gạch lặp</button>
-                        <button id="fx-barrel">Barrel</button>
-                        <button id="fx-fisheye">Fisheye</button>
-                        <button id="fx-ripple">Ripple</button>
-                        <button id="fx-twist">Twist</button>
-                        <button id="fx-bulge">Bulge</button>
-                        <button id="fx-radial">Radial Warp</button>
-                        <button id="fx-kaleido">Kaleidoscope</button>
-                        <button id="fx-turbulence">Turbulent</button>
-                        <button id="fx-scanwarp">Scanline Warp</button>
-                        <button id="fx-blockwarp">Block Warp</button>
-                        <button id="fx-rgbwave">RGB Wave</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ACCORDION 2: BAD TV GLITCH -->
-            <div class="accordion-item">
-                <div class="accordion-header">📺 Bad TV Glitch <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Kích hoạt:</label><input type="checkbox" id="chk-badtv"></div>
-                    <div class="control-row"><label>Thick Distort:</label><input type="range" id="slide-thick" min="0.1" max="4" step="0.1" value="1.7"><span id="val-thick" class="value-disp">1.70</span></div>
-                    <div class="control-row"><label>Fine Distort:</label><input type="range" id="slide-fine" min="0" max="1" step="0.01" value="0.1"><span id="val-fine" class="value-disp">0.10</span></div>
-                    <div class="control-row"><label>Roll Speed:</label><input type="range" id="slide-roll" min="0" max="3" step="0.1" value="1"><span id="val-roll" class="value-disp">1.00</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🌓 Brightness &amp; Contrast <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Kích hoạt:</label><input type="checkbox" id="chk-bc"></div>
-                    <div class="control-row"><label>Contrast:</label><input type="range" id="slide-contrast" min="-1" max="2" step="0.01" value="0.20"><span id="val-contrast" class="value-disp">0.20</span></div>
-                    <div class="control-row"><label>Brightness:</label><input type="range" id="slide-brightness" min="-255" max="255" step="1" value="0"><span id="val-brightness" class="value-disp">0</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">⚡ After Effects FX (Saber / Chromatic) <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Kích hoạt Saber Glow:</label><input type="checkbox" id="chk-saber"></div>
-                    <div class="control-row"><label>Màu tia năng lượng:</label><input type="color" id="color-saber" value="#00e5ff"></div>
-                    <div class="control-row"><label>Độ nhòe (Glow Radius):</label><input type="range" id="slide-saber-glow" min="0" max="50" value="18"><span id="val-saber-glow" class="value-disp">18</span></div>
-                    <div class="control-row"><label>Kích hoạt Lệch sắc Rìa:</label><input type="checkbox" id="chk-chromatic"></div>
-                    <div class="control-row"><label>Độ phân tách RGB:</label><input type="range" id="slide-chromatic-amt" min="1" max="30" value="5"><span id="val-chromatic-amt" class="value-disp">5</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🎨 Alight Stylize FX <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Kích hoạt bộ lọc:</label><input type="checkbox" id="chk-stylize"></div>
-                    <div class="fx-grid">
-                        <label><input type="checkbox" class="stylize-check" value="pixelate" checked> Pixelate (Lego)</label>
-                        <label><input type="checkbox" class="stylize-check" value="polar"> Polar Pixelate</label>
-                        <label><input type="checkbox" class="stylize-check" value="slices"> Slices</label>
-                        <label><input type="checkbox" class="stylize-check" value="jitter"> Jitter</label>
-                        <label><input type="checkbox" class="stylize-check" value="melt"> Melt</label>
-                        <label><input type="checkbox" class="stylize-check" value="wobble"> Wobble</label>
-                        <label><input type="checkbox" class="stylize-check" value="shake"> Shake</label>
-                        <label><input type="checkbox" class="stylize-check" value="edges"> Edges</label>
-                        <label><input type="checkbox" class="stylize-check" value="solarize"> Solarize</label>
-                        <label><input type="checkbox" class="stylize-check" value="dotmatrix"> Dot Matrix</label>
-                        <label><input type="checkbox" class="stylize-check" value="posterize"> Posterize</label>
-                        <label><input type="checkbox" class="stylize-check" value="duotone"> DuoTone</label>
-                    </div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🌊 Environment FX <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Hiệu ứng môi trường:</label><select id="environment-fx" multiple size="5"><option value="none">Không</option><option value="water">Water</option><option value="fire">Fire</option><option value="smoke">Smoke</option><option value="fog">Fog</option><option value="ice">Ice</option><option value="electric">Electric</option><option value="wind">Wind</option><option value="rain">Rain</option><option value="snow">Snow</option><option value="lava">Lava</option><option value="space">Space / Stars</option></select></div>
-                    <div class="control-row"><label>Cường độ:</label><input type="range" id="environment-amount" min="0" max="100" value="35"><span id="val-environment" class="value-disp">35</span></div>
-                    <div class="control-row"><label>Tốc độ:</label><input type="range" id="environment-speed" min="0" max="3" step="0.05" value="1"><span id="val-environment-speed" class="value-disp">1.00</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">✨ Extra Motion FX <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="fx-grid">
-                        <button data-extra="vhs">VHS</button><button data-extra="rgb">RGB Split</button>
-                        <button data-extra="shake">Camera Shake</button><button data-extra="echo">Echo</button>
-                        <button data-extra="glow">Glow</button><button data-extra="negative">Negative</button>
-                        <button data-extra="vignette">Vignette</button><button data-extra="pixel">Pixelate</button>
-                    </div>
-                    <div class="control-row"><label>Extra Amount:</label><input type="range" id="extra-amount" min="0" max="100" value="25"><span id="val-extra" class="value-disp">25</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🎬 After Effects FX Pack <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="fx-subgrid">
-                        <label><input type="checkbox" data-aefx="blur"> Gaussian Blur</label>
-                        <label><input type="checkbox" data-aefx="motionblur"> Motion Blur</label>
-                        <label><input type="checkbox" data-aefx="radialblur"> Radial Blur</label>
-                        <label><input type="checkbox" data-aefx="glow"> Glow</label>
-                        <label><input type="checkbox" data-aefx="sharpen"> Sharpen</label>
-                        <label><input type="checkbox" data-aefx="noise"> Noise / Grain</label>
-                        <label><input type="checkbox" data-aefx="vignette"> Vignette</label>
-                        <label><input type="checkbox" data-aefx="scanlines"> Scanlines</label>
-                        <label><input type="checkbox" data-aefx="invert"> Invert</label>
-                        <label><input type="checkbox" data-aefx="sepia"> Sepia</label>
-                        <label><input type="checkbox" data-aefx="threshold"> Threshold</label>
-                        <label><input type="checkbox" data-aefx="huerotate"> Hue Rotate</label>
-                        <label><input type="checkbox" data-aefx="saturate"> Saturation</label>
-                        <label><input type="checkbox" data-aefx="edgeglow"> Edge Glow</label>
-                        <label><input type="checkbox" data-aefx="heat"> Heat Distortion</label>
-                        <label><input type="checkbox" data-aefx="pixelSort"> Pixel Sort</label>
-                    </div>
-                    <div class="ae10-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0">
-<label><input type="checkbox" data-aefx="blur"> Blur</label><label><input type="checkbox" data-aefx="saturate"> Saturate</label>
-<label><input type="checkbox" data-aefx="huerotate"> Hue Rotate</label><label><input type="checkbox" data-aefx="contrast"> Contrast</label>
-<label><input type="checkbox" data-aefx="brightness"> Brightness</label><label><input type="checkbox" data-aefx="grayscale"> Grayscale</label>
-<label><input type="checkbox" data-aefx="invert"> Invert</label><label><input type="checkbox" data-aefx="sepia"> Sepia</label>
-<label><input type="checkbox" data-aefx="dropShadow"> Drop Shadow</label><label><input type="checkbox" data-aefx="hueSat"> Hue/Sat</label>
-</div>
-<div class="control-row"><label>AE FX Amount:</label><input type="range" id="ae-amount" min="0" max="100" value="35"><span id="val-ae" class="value-disp">35</span></div>
-                    <div class="control-row"><label>Preview Quality:</label><select id="preview-quality"><option value="0.5" selected>Performance 50%</option><option value="0.75">Balanced 75%</option><option value="1">Full 100%</option></select></div>
-                    <p class="fx-note">Preview có thể giảm độ phân giải để đỡ lag. Export vẫn render theo chất lượng đầy đủ.</p>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🎬 After Effects FX — 10 Effect mới <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="ae10-grid">
-                        <button data-ae10="boxblur">Box Blur</button>
-                        <button data-ae10="directionalblur">Directional Blur</button>
-                        <button data-ae10="emboss">Emboss</button>
-                        <button data-ae10="findedges">Find Edges</button>
-                        <button data-ae10="colorbalance">Color Balance</button>
-                        <button data-ae10="poster">Posterize</button>
-                        <button data-ae10="threshold">Threshold</button>
-                        <button data-ae10="huerotate">Hue Rotate</button>
-                        <button data-ae10="solarize">Solarize</button>
-                        <button data-ae10="halftone">Halftone</button>
-                    </div>
-                    <div class="control-row"><label>Cường độ:</label><input type="range" id="ae10-amount" min="0" max="100" value="45"><span id="val-ae10" class="value-disp">45</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🧩 Mesh Transform / Di chuyển mượt <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="transform-panel">
-                        <button id="mesh-toggle">🧩 Bật lưới</button>
-                        <button id="mesh-reset">↩ Reset lưới</button>
-                        <button id="transform-up">⬆ Di chuyển lên</button>
-                        <button id="transform-down">⬇ Di chuyển xuống</button>
-                        <button id="rotate-left">↶ Xoay trái</button>
-                        <button id="rotate-right">↷ Xoay phải</button>
-                    </div>
-                    <div class="control-row"><label>Độ xoay:</label><input type="range" id="transform-rotate" min="-180" max="180" value="0"><span id="val-rotate" class="value-disp">0°</span></div>
-                    <div class="control-row"><label>Lưới:</label><select id="mesh-density"><option value="3">3 × 3</option><option value="5" selected>5 × 5</option><option value="7">7 × 7</option></select></div>
-                    <p class="fx-note">Bật lưới rồi kéo các điểm để bóp/méo hình. Điểm được nội suy để chuyển động mềm hơn.</p>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header">🎨 Canvas &amp; Blend <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="control-row"><label>Nền:</label><input type="color" id="bg-color" value="#1e1e24"></div>
-                    <div class="control-row"><label>Grid:</label><input type="checkbox" id="grid-toggle"></div>
-                    <div class="control-row"><label>Snap:</label><input type="checkbox" id="snap-toggle" checked></div>
-                    <div class="control-row"><label>Blend Mode layer:</label><select id="layer-blend"><option value="source-over">Normal</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="lighter">Add</option><option value="difference">Difference</option></select></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🧱 Layers <span>▼</span></div>
-                <div class="accordion-content">
-                    <button id="layer-add-text">➕ Thêm Text</button>
-                    <button id="layer-add-image">🖼️ Thêm ảnh</button>
-                    <div id="layer-list" class="fx-grid"></div>
-                    <div class="control-row"><label>Opacity:</label><input type="range" id="layer-opacity" min="0" max="100" value="100"><span id="val-layer-opacity" class="value-disp">100</span></div>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">🎭 Mask đơn giản <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="fx-grid"><button data-mask="rect">▭ Rectangle</button><button data-mask="circle">◯ Circle</button><button data-mask="clear">✕ Tắt Mask</button></div>
-                    <div class="control-row"><label>Feather:</label><input type="range" id="mask-feather" min="0" max="60" value="0"><span id="val-mask-feather" class="value-disp">0</span></div>
-                    <p class="fx-note">Mask áp dụng cho layer đang chọn.</p>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">📝 Text Animation <span>▼</span></div>
-                <div class="accordion-content">
-                    <input id="text-content" placeholder="Nội dung text" value="EDITNEW">
-                    <div class="control-row"><label>Cỡ chữ:</label><input type="range" id="text-size" min="12" max="180" value="60"><span id="val-text-size" class="value-disp">60</span></div>
-                    <div class="control-row"><label>Opacity:</label><input type="range" id="text-opacity" min="0" max="100" value="100"><span id="val-text-opacity" class="value-disp">100</span></div>
-                    <div class="control-row"><label>Animate:</label><input type="checkbox" id="text-animate"></div>
-                    <button id="text-keyframe">🔑 Lưu Keyframe</button>
-                    <p id="text-key-status" class="fx-note">Keyframe: chưa có</p>
-                </div>
-            </div>
-            <div class="accordion-item">
-                <div class="accordion-header">↩️ Undo / Redo & Project <span>▼</span></div>
-                <div class="accordion-content">
-                    <div class="fx-grid"><button id="undo-btn">↩ Undo</button><button id="redo-btn">↪ Redo</button></div>
-                    <div class="fx-grid"><button id="project-save">💾 Save Project</button><button id="project-load">📂 Load Project</button></div>
-                    <input type="file" id="project-file" accept=".json,application/json" style="display:none">
-                    <p class="fx-note">Project lưu layer, text, mask và thiết lập chính thành file JSON.</p>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header">💾 Export Manager <span>▼</span></div>
-                <div class="accordion-content">
-                    <p style="margin:0;color:#bbb;font-size:12px;line-height:1.4">Bấm Xuất → chọn tên/nơi lưu → Save → render. Nếu trình duyệt không hỗ trợ chọn nơi lưu trực tiếp, file sẽ được tải xuống thư mục Downloads.</p>
-                    <div class="control-row"><label>FPS:</label><select id="export-fps"><option value="10">10</option><option value="15">15</option><option value="24" selected>24</option><option value="30">30</option></select></div>
-                    <div class="control-row"><label>Chất lượng:</label><input type="range" id="export-quality" min="0.5" max="1" step="0.05" value="0.85"><span id="val-quality" class="value-disp">0.85</span></div>
-                    <progress id="export-progress" value="0" max="100" style="width:100%"></progress>
-                    <div id="export-status" style="font-size:12px;color:#aaa;min-height:18px"></div>
-                </div>
-            </div>
-            </div><!-- /fx-home -->
-            <div id="fx-detail" style="display:none">
-                <div id="fx-detail-top">
-                    <button id="fx-back" type="button">← Quay lại</button>
-                    <strong id="fx-detail-title">Effect</strong>
-                </div>
-                <div id="fx-detail-content"></div>
-            </div>
-        </div>
+    <div class="logo">
+        TEXTURE <span>STUDIO</span>
     </div>
-<script>
-class MotionFXEngine {
-    constructor(){
-        this.canvas=document.getElementById('videoCanvas'); this.ctx=this.canvas.getContext('2d',{willReadFrequently:true});
-        this.bgImage=null; this.time=0; this.currentDistortFX='none'; this.currentDistortFXs=new Set(); this.extraFXs=new Set(); this.useGreenScreen=false;
-        this.interactionMode='none'; this.pins=[]; this.isDrawing=false; this.brushSize=30;
-        this.brushMaskCanvas=document.createElement('canvas'); this.brushMaskCanvas.width=960; this.brushMaskCanvas.height=540;
-        this.brushMaskCtx=this.brushMaskCanvas.getContext('2d'); this.cachedBase=document.createElement('canvas');
-        this.cachedBase.width=960; this.cachedBase.height=540; this.cachedBaseCtx=this.cachedBase.getContext('2d',{willReadFrequently:true});
-        this.exporting=false; this.lastFrame=0; this.layers=[{id:1,type:'image',name:'Ảnh gốc',opacity:1,visible:true,mask:null}]; this.selectedLayer=1; this.nextLayerId=2; this.undoStack=[]; this.redoStack=[]; this.textKeyframes=[]; this.textX=480; this.textY=270; this.textColor='#ffffff'; this.transformX=0; this.transformY=0; this.transformRotation=0; this.bgColor='#1e1e24'; this.snapEnabled=true; this.rigEnabled=false; this.rigJoints=[]; this.rigRotation=0; this.meshEnabled=false; this.meshDensity=5; this.meshPoints=[]; this.dragMeshIndex=-1; this.aeFX=new Set(); this.aeAmount=35; this.previewScale=0.5; this.baseDirty=true; this.frameCanvas=document.createElement('canvas'); this.frameCanvas.width=960; this.frameCanvas.height=540; this.frameCtx=this.frameCanvas.getContext('2d'); this.bind(); this.animate();
-    }
-    $(id){return document.getElementById(id)}
-    bind(){
-        // Điều hướng Effect: danh sách -> trang effect -> Quay lại. Nội dung được di chuyển nguyên khối nên các control cũ vẫn hoạt động.
-        const home=this.$('fx-home'), detail=this.$('fx-detail'), detailContent=this.$('fx-detail-content'), detailTitle=this.$('fx-detail-title'), back=this.$('fx-back');
-        document.querySelectorAll('#fx-home .accordion-header').forEach(h=>h.onclick=()=>{
-            const item=h.parentElement, content=item.querySelector('.accordion-content');
-            if(!content)return;
-            detailTitle.textContent=h.childNodes[0]?.textContent?.trim()||'Effect';
-            detailContent.innerHTML=''; detailContent.appendChild(content);
-            home.style.display='none'; detail.style.display='flex';
-            item.classList.add('active');
-            const span=h.querySelector('span'); if(span)span.textContent='←';
-        });
-        back.onclick=()=>{
-            const item=[...document.querySelectorAll('#fx-home .accordion-item')].find(x=>x.querySelector('.accordion-content')===detailContent.firstElementChild);
-            const content=detailContent.firstElementChild;
-            if(item&&content)item.appendChild(content);
-            if(item){item.classList.remove('active');const span=item.querySelector('.accordion-header span');if(span)span.textContent='▼'}
-            detailContent.innerHTML=''; detail.style.display='none'; home.style.display='flex';
-        };
-        this.$('btn-upload').onclick=()=>this.$('image-upload').click();
-        this.$('image-upload').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const u=URL.createObjectURL(f),img=new Image();img.onload=()=>{this.bgImage=img;this.prepareBase();URL.revokeObjectURL(u)};img.src=u};
-        this.$('toggle-greenscreen').onchange=e=>this.useGreenScreen=e.target.checked;
-        this.$('slider-brush-size').oninput=e=>this.brushSize=+e.target.value;
-        this.$('btn-pin-mode').onclick=()=>{this.interactionMode=this.interactionMode==='pin'?'none':'pin';this.updateButtons()};
-        this.$('btn-mask-mode').onclick=()=>{this.interactionMode=this.interactionMode==='mask'?'none':'mask';this.updateButtons()};
-        this.$('btn-clear-all').onclick=()=>{this.pins=[];this.brushMaskCtx.clearRect(0,0,960,540)};
-        ['slide-thick','slide-fine','slide-roll','slide-contrast','slide-brightness','slide-saber-glow','slide-chromatic-amt','environment-amount','environment-speed','extra-amount','export-quality'].forEach(id=>{const x=this.$(id);if(x)x.oninput=()=>{const v=this.$(id.replace('slide-','val-'))||this.$('val-'+id.replace('environment-','environment-').replace('extra-','extra-').replace('export-','')); if(v)v.textContent=(id.includes('brightness')||id.includes('amount')&&id!=='environment-speed'&&id!=='export-quality')?x.value:(+x.value).toFixed(2)}});
-        this.$('export-quality').oninput=e=>this.$('val-quality').textContent=(+e.target.value).toFixed(2);
-        const fxs=['none','stretch','wave','wavewarp','bend','zoom','mirror','fanwarp','swirl','pinch','tile','barrel','fisheye','ripple','twist','bulge','radial','kaleido','turbulence','scanwarp','blockwarp','rgbwave'];
-        fxs.forEach(f=>{const b=this.$('fx-'+f);if(b)b.onclick=()=>{if(f==='none'){this.currentDistortFXs.clear();fxs.forEach(x=>this.$('fx-'+x)?.classList.remove('active'));b.classList.add('active');this.currentDistortFX='none';return;}this.$('fx-none')?.classList.remove('active');if(this.currentDistortFXs.has(f)){this.currentDistortFXs.delete(f);b.classList.remove('active')}else{this.currentDistortFXs.add(f);b.classList.add('active')}this.currentDistortFX=Array.from(this.currentDistortFXs).join('+')||'none'}});
-        const ae10Buttons=document.querySelectorAll('[data-ae10]'); ae10Buttons.forEach(b=>b.onclick=()=>{b.classList.toggle('active'); this.ae10FX=b.dataset.ae10; const map={boxblur:'blur',directionalblur:'directionalBlur',emboss:'emboss',findedges:'findEdges',colorbalance:'contrast',poster:'saturate',threshold:'threshold',huerotate:'huerotate',solarize:'invert',halftone:'halftone'}; const key=map[this.ae10FX]; if(key){if(this.aeFX.has(key))this.aeFX.delete(key);else this.aeFX.add(key)}});
-        const a10=this.$('ae10-amount'); if(a10)a10.oninput=()=>this.$('val-ae10').textContent=a10.value;
-        this.$('transform-up').onclick=()=>this.transformY-=10; this.$('transform-down').onclick=()=>this.transformY+=10;
-        this.$('rotate-left').onclick=()=>{this.transformRotation-=5;this.$('transform-rotate').value=this.transformRotation;this.$('val-rotate').textContent=this.transformRotation+'°'};
-        this.$('rotate-right').onclick=()=>{this.transformRotation+=5;this.$('transform-rotate').value=this.transformRotation;this.$('val-rotate').textContent=this.transformRotation+'°'};
-        this.$('transform-rotate').oninput=e=>{this.transformRotation=+e.target.value;this.$('val-rotate').textContent=e.target.value+'°'};
-        this.$('mesh-density').onchange=e=>{this.meshDensity=+e.target.value;this.resetMesh()};
-        this.$('mesh-toggle').onclick=()=>{this.meshEnabled=!this.meshEnabled;this.$('mesh-toggle').textContent=this.meshEnabled?'🧩 Tắt lưới':'🧩 Bật lưới';this.renderMeshOverlay()};
-        this.$('mesh-reset').onclick=()=>this.resetMesh();
-        const mo=this.$('mesh-overlay'); const meshPos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
-        mo.addEventListener('pointerdown',e=>{if(!this.meshEnabled)return;const p=meshPos(e);let best=-1,bd=18;this.meshPoints.forEach((q,i)=>{const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=i}});if(best>=0){this.dragMeshIndex=best;mo.setPointerCapture(e.pointerId)}});
-        mo.addEventListener('pointermove',e=>{if(this.dragMeshIndex<0)return;const p=meshPos(e);this.meshPoints[this.dragMeshIndex].x=Math.max(0,Math.min(960,p.x));this.meshPoints[this.dragMeshIndex].y=Math.max(0,Math.min(540,p.y));this.renderMeshOverlay()});
-        mo.addEventListener('pointerup',()=>this.dragMeshIndex=-1);
-        this.resetMesh();
-        this.setupNewFeatures();
-        this.$('btn-export-start').onclick=()=>this.handleAdvancedExport();
-        const pos=e=>{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*960/r.width,y:(e.clientY-r.top)*540/r.height}};
-        this.canvas.onmousedown=e=>{const p=pos(e);if(this.interactionMode==='pin')this.pins.push(p);else if(this.interactionMode==='mask'){this.isDrawing=true;this.lastX=p.x;this.lastY=p.y;this.drawBrush(p.x,p.y,false)}};
-        this.canvas.onmousemove=e=>{if(this.isDrawing&&this.interactionMode==='mask'){const p=pos(e);this.drawBrush(p.x,p.y,true)}};
-        window.onmouseup=()=>this.isDrawing=false;
-        document.querySelectorAll('[data-extra]').forEach(b=>b.onclick=()=>{const f=b.dataset.extra;if(this.extraFXs.has(f)){this.extraFXs.delete(f);b.classList.remove('active')}else{this.extraFXs.add(f);b.classList.add('active')}});
-        document.querySelectorAll('[data-aefx]').forEach(b=>b.onchange=()=>{if(b.checked)this.aeFX.add(b.dataset.aefx);else this.aeFX.delete(b.dataset.aefx)});
-        const ae=this.$('ae-amount');if(ae)ae.oninput=()=>{this.aeAmount=+ae.value;this.$('val-ae').textContent=ae.value};
-        const pq=this.$('preview-quality');if(pq)pq.onchange=()=>{this.previewScale=+pq.value};
-    }
-setupNewFeatures(){
-        const save=()=>this.pushUndo();
-        const list=this.$('layer-list'), renderList=()=>{list.innerHTML='';this.layers.slice().reverse().forEach(l=>{const b=document.createElement('button');b.textContent=(l.visible?'👁 ':'🚫 ')+l.name;b.classList.toggle('active',l.id===this.selectedLayer);b.onclick=()=>{this.selectedLayer=l.id;this.$('layer-opacity').value=Math.round(l.opacity*100);this.$('val-layer-opacity').textContent=Math.round(l.opacity*100);this.$('layer-blend').value=l.blend||'source-over';renderList()};list.appendChild(b)})};
-        this.$('layer-add-text').onclick=()=>{save();const l={id:this.nextLayerId++,type:'text',name:'Text '+this.nextLayerId,text:this.$('text-content').value||'EDITNEW',size:+this.$('text-size').value,color:'#fff',opacity:1,visible:true,mask:null,blend:'source-over',x:480,y:270,rotation:0,keyframes:[]};this.layers.push(l);this.selectedLayer=l.id;renderList()};
-        this.$('layer-add-image').onclick=()=>{save();const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{this.layers.push({id:this.nextLayerId++,type:'image',name:f.name,image:img,src:img.src,opacity:1,visible:true,mask:null,blend:'source-over',x:480,y:270,rotation:0});this.selectedLayer=this.layers.at(-1).id;renderList()};img.src=URL.createObjectURL(f)};input.click()};
-        this.$('layer-opacity').oninput=e=>{const l=this.layers.find(x=>x.id===this.selectedLayer);if(l){l.opacity=+e.target.value/100;this.$('val-layer-opacity').textContent=e.target.value}};
-        document.querySelectorAll('[data-mask]').forEach(b=>b.onclick=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer);if(!l)return;save();l.mask=b.dataset.mask==='clear'?null:b.dataset.mask});
-        this.$('mask-feather').oninput=e=>this.$('val-mask-feather').textContent=e.target.value;
-        this.$('text-content').oninput=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer&&x.type==='text');if(l)l.text=this.$('text-content').value};
-        this.$('text-size').oninput=()=>this.$('val-text-size').textContent=this.$('text-size').value;
-        this.$('text-opacity').oninput=()=>this.$('val-text-opacity').textContent=this.$('text-opacity').value;
-        this.$('text-keyframe').onclick=()=>{const l=this.layers.find(x=>x.id===this.selectedLayer&&x.type==='text');if(!l)return alert('Hãy chọn một Text layer');l.keyframes=l.keyframes||[];l.keyframes.push({t:this.time,x:l.x,y:l.y,opacity:+this.$('text-opacity').value/100});this.$('text-key-status').textContent=`Keyframe: ${l.keyframes.length} tại ${this.time.toFixed(2)}s`;};
-        this.$('undo-btn').onclick=()=>this.undo();this.$('redo-btn').onclick=()=>this.redo();
-        this.$('project-save').onclick=()=>this.saveProject();this.$('project-load').onclick=()=>this.$('project-file').click();this.$('project-file').onchange=e=>this.loadProject(e.target.files[0]);renderList();
-    }
-    snapshot(){return JSON.stringify(this.layers.map(l=>{const x={...l};delete x.image;return x}),null,0)}
-    pushUndo(){this.undoStack.push(this.snapshot());if(this.undoStack.length>30)this.undoStack.shift();this.redoStack=[]}
-    restore(json){const arr=JSON.parse(json);this.layers=arr.map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;}
-    undo(){if(!this.undoStack.length)return;this.redoStack.push(this.snapshot());this.restore(this.undoStack.pop());}
-    redo(){if(!this.redoStack.length)return;this.undoStack.push(this.snapshot());this.restore(this.redoStack.pop());}
-    saveProject(){const data={version:1,layers:this.layers.map(l=>{const x={...l};delete x.image;return x}),settings:{distort:this.currentDistortFX,distortStack:[...this.currentDistortFXs],transformX:this.transformX,transformY:this.transformY,rotation:this.transformRotation,bgColor:this.bgColor,snapEnabled:this.snapEnabled}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));a.download='editnew-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-    loadProject(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);this.layers=(d.layers||[]).map(l=>l.type==='image'&&l.src?({...l,image:Object.assign(new Image(),{src:l.src})}):l);this.selectedLayer=this.layers[0]?.id||1;this.nextLayerId=Math.max(0,...this.layers.map(x=>x.id||0))+1;if(d.settings){this.bgColor=d.settings.bgColor||this.bgColor;this.snapEnabled=d.settings.snapEnabled!==false;this.$('bg-color').value=this.bgColor;this.$('snap-toggle').checked=this.snapEnabled;}alert('✅ Đã load project')}catch(e){alert('Project lỗi: '+e.message)}};r.readAsText(file)}
-    drawLayers(ctx,time){
-        const active=this.layers.filter(l=>l.visible); for(const l of active){ctx.save();ctx.globalAlpha=l.opacity??1;ctx.globalCompositeOperation=l.blend||'source-over';let x=l.x??480,y=l.y??270;const rot=(l.rotation||0)*Math.PI/180;ctx.translate(x,y);ctx.rotate(rot); if(l.type==='text'){let k=l.keyframes||[];if(k.length){const a=k.filter(q=>q.t<=time).at(-1),b=k.find(q=>q.t>time);if(a){if(b){const u=(time-a.t)/(b.t-a.t);x=a.x+(b.x-a.x)*u;y=a.y+(b.y-a.y)*u;ctx.globalAlpha=a.opacity+(b.opacity-a.opacity)*u}else{x=a.x;y=a.y;ctx.globalAlpha=a.opacity}}}ctx.font=`${l.size||60}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=l.color||'#fff';ctx.fillText(l.text||'',0,0)}else if(l.image){const iw=l.image.naturalWidth||960,ih=l.image.naturalHeight||540,sc=Math.min(960/iw,540/ih),dw=iw*sc,dh=ih*sc;if(l.mask){ctx.beginPath();if(l.mask==='circle')ctx.arc(480,270,Math.min(dw,dh)/2,0,Math.PI*2);else ctx.rect((960-dw)/2,(540-dh)/2,dw,dh);ctx.clip()}ctx.drawImage(l.image,-dw/2,-dh/2,dw,dh)}ctx.restore()}
-    }
-    resetMesh(){this.meshPoints=[];const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n;i++)this.meshPoints.push({x:i*960/(n-1),y:j*540/(n-1),ox:i*960/(n-1),oy:j*540/(n-1)});this.renderMeshOverlay()}
-    renderMeshOverlay(){const o=this.$('mesh-overlay');if(!o)return;o.innerHTML='';if(!this.meshEnabled)return;const n=this.meshDensity;for(let j=0;j<n;j++)for(let i=0;i<n-1;i++){const a=this.meshPoints[j*n+i],b=this.meshPoints[j*n+i+1];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}for(let i=0;i<n;i++)for(let j=0;j<n-1;j++){const a=this.meshPoints[j*n+i],b=this.meshPoints[(j+1)*n+i];const line=document.createElement('div');line.className='mesh-line';line.style.left=a.x+'px';line.style.top=a.y+'px';line.style.width=Math.hypot(b.x-a.x,b.y-a.y)+'px';line.style.height='1px';line.style.transformOrigin='0 0';line.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`;o.appendChild(line)}this.meshPoints.forEach((p,i)=>{const d=document.createElement('div');d.className='mesh-point';d.style.left=p.x+'px';d.style.top=p.y+'px';d.dataset.i=i;o.appendChild(d)})}
-    meshSample(x,y,w,h){if(!this.meshEnabled||!this.meshPoints.length)return{x,y};const n=this.meshDensity, gx=x/w*(n-1),gy=y/h*(n-1),i=Math.max(0,Math.min(n-2,Math.floor(gx))),j=Math.max(0,Math.min(n-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*n+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1);return{x:(p00.x*(1-u)*(1-v)+p10.x*u*(1-v)+p01.x*(1-u)*v+p11.x*u*v),y:(p00.y*(1-u)*(1-v)+p10.y*u*(1-v)+p01.y*(1-u)*v+p11.y*u*v)}}
-    updateButtons(){this.$('btn-pin-mode').style.boxShadow=this.interactionMode==='pin'?'0 0 12px #f59e0b':'none';this.$('btn-mask-mode').style.boxShadow=this.interactionMode==='mask'?'0 0 12px #a855f7':'none'}
-    drawBrush(x,y,line){const c=this.brushMaskCtx;c.save();c.strokeStyle='#fff';c.fillStyle='#fff';c.lineWidth=this.brushSize;c.lineCap='round';c.beginPath();if(line){c.moveTo(this.lastX,this.lastY);c.lineTo(x,y);c.stroke()}else{c.arc(x,y,this.brushSize/2,0,Math.PI*2);c.fill()}c.restore();this.lastX=x;this.lastY=y}
-    prepareBase(){const c=this.cachedBaseCtx;c.clearRect(0,0,960,540);c.fillStyle=this.useGreenScreen?'#00ff00':this.bgColor;c.fillRect(0,0,960,540);if(!this.bgImage)return;const iw=this.bgImage.naturalWidth,ih=this.bgImage.naturalHeight,scale=Math.min(960/iw,540/ih),dw=iw*scale,dh=ih*scale;c.drawImage(this.bgImage,(960-dw)/2,(540-dh)/2,dw,dh);this.baseDirty=false}
-    sampleBase(){if(!this.bgImage)return this.cachedBaseCtx.getImageData(0,0,960,540);return this.cachedBaseCtx.getImageData(0,0,960,540)}
-    applyAllFX(srcData,dstData,w,h){
-        const s=srcData.data,d=dstData.data,amt=+this.$('distort-amount').value,spd=+this.$('distort-speed').value,t=this.time*spd;
-        const distort=this.$('chk-distort').checked,badtv=this.$('chk-badtv').checked,bc=this.$('chk-bc').checked,styl=this.$('chk-stylize').checked,chrom=this.$('chk-chromatic').checked;
-        const stylTypes=[...document.querySelectorAll('.stylize-check:checked')].map(x=>x.value), tvT=+this.$('slide-thick').value,tvF=+this.$('slide-fine').value,tvR=+this.$('slide-roll').value,cont=+this.$('slide-contrast').value+1,bright=+this.$('slide-brightness').value,ca=+this.$('slide-chromatic-amt').value;
-        const mask=this.brushMaskCtx.getImageData(0,0,w,h).data; let hasMask=false;for(let i=3;i<mask.length;i+=4){if(mask[i]>0){hasMask=true;break}}
-        const pinFactor=(x,y)=>{if(!this.pins.length)return 1;let md=Infinity;for(const p of this.pins)md=Math.min(md,Math.hypot(x-p.x,y-p.y));return Math.min(1,md/100)};
-        const clamp=v=>Math.max(0,Math.min(255,v));
-        for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-            const idx=(y*w+x)*4;let sx=x,sy=y,fac=hasMask?(mask[idx+3]>128):true,pf=pinFactor(x,y);
-            if(distort&&fac&&this.currentDistortFXs.size){
-                for(const distortionFX of this.currentDistortFXs){ switch(distortionFX){case'stretch':sy+=Math.sin(x*.05+t)*amt*.3*pf;break;case'wave':sx+=Math.sin(y*.05+t)*amt*.4*pf;break;case'wavewarp':sx+=Math.sin(y*.08+t*1.5)*amt*.3*pf;sy+=Math.cos(x*.08+t*1.5)*amt*.2*pf;break;case'bend':sx+=(y/h-.5)*Math.sin(t)*amt*.8*pf;break;case'zoom':{const z=1+Math.sin(t)*amt/200*pf;sx=w/2+(x-w/2)*z;sy=h/2+(y-h/2)*z}break;case'mirror':if(x>w/2)sx=w-x;break;case'fanwarp':{const a=Math.atan2(y-h/2,x-w/2)+Math.sin(t)*amt/50*pf,r=Math.hypot(x-w/2,y-h/2);sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'swirl':{const r=Math.hypot(x-w/2,y-h/2);if(r<250){const a=Math.atan2(y-h/2,x-w/2)+(250-r)/250*(amt/10)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}}break;case'pinch':{const r=Math.hypot(x-w/2,y-h/2);if(r<300){const p=Math.pow(r/300,Math.sin(t)*amt/100*pf);sx=w/2+(x-w/2)*p;sy=h/2+(y-h/2)*p}}break;case'tile':sx=((x*(1+amt/50)+t*20)%w+w)%w;sy=((y*(1+amt/50))%h+h)%h;break;case'barrel':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r2=nx*nx+ny*ny,k=1+amt/160*r2;sx=w/2+nx*(w/2)/k;sy=h/2+ny*(h/2)/k}break;case'fisheye':{const nx=(x-w/2)/(w/2),ny=(y-h/2)/(h/2),r=Math.hypot(nx,ny),f=1+(amt/80)*r*r;sx=w/2+nx*(w/2)*f;sy=h/2+ny*(h/2)*f}break;case'ripple':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.sin(r*.08-t*5)*amt/35*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'twist':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/500),a=Math.atan2(dy,dx)+q*q*(amt/18)*Math.sin(t)*pf;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'bulge':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),q=Math.max(0,1-r/320),f=1+(amt/90)*q*q;sx=w/2+dx*f;sy=h/2+dy*f}break;case'radial':{const dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),f=1+Math.sin(r*.025-t*3)*amt/180*pf;sx=w/2+dx*f;sy=h/2+dy*f}break;case'kaleido':{let dx=x-w/2,dy=y-h/2,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),seg=Math.PI/4;a=((a+Math.PI*2)%seg);if(a>seg/2)a=seg-a;sx=w/2+Math.cos(a)*r;sy=h/2+Math.sin(a)*r}break;case'turbulence':{sx+=Math.sin(y*.055+t*2.7)*amt*.55*pf+Math.sin(y*.013-t)*amt*.22;sy+=Math.cos(x*.045-t*2.1)*amt*.45*pf+Math.sin(x*.017+t)*amt*.2}break;case'scanwarp':{sy+=Math.sin(y*.22+t*7)*amt*.22*pf;sx+=Math.sin(y*.035+t*3)*amt*.5*pf}break;case'blockwarp':{const bs=40,bx=Math.floor(x/bs)*bs,by=Math.floor(y/bs)*bs,q=Math.sin((bx+by)*.08+t*3)*amt*.8*pf;sx+=q;sy+=Math.cos((bx-by)*.08+t*2)*amt*.5*pf}break;case'rgbwave':sx+=Math.sin(y*.06+t*4)*amt*.35*pf;break} }
-            }
-            if(this.meshEnabled&&fac){const mp=this.meshSample(x,y,w,h);const gx=x/w*(this.meshDensity-1),gy=y/h*(this.meshDensity-1),i=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gx))),j=Math.max(0,Math.min(this.meshDensity-2,Math.floor(gy))),u=gx-i,v=gy-j,at=(a,b)=>this.meshPoints[b*this.meshDensity+a],p00=at(i,j),p10=at(i+1,j),p01=at(i,j+1),p11=at(i+1,j+1),ox=(p00.ox*(1-u)*(1-v)+p10.ox*u*(1-v)+p01.ox*(1-u)*v+p11.ox*u*v),oy=(p00.oy*(1-u)*(1-v)+p10.oy*u*(1-v)+p01.oy*(1-u)*v+p11.oy*u*v);sx+=(mp.x-ox);sy+=(mp.y-oy)}
-            const rr=this.transformRotation*Math.PI/180,cx=w/2,cy=h/2,tx=sx-cx,ty=sy-cy;sx=tx*Math.cos(rr)-ty*Math.sin(rr)+cx-this.transformX;sy=tx*Math.sin(rr)+ty*Math.cos(rr)+cy-this.transformY;
-            sx=Math.max(0,Math.min(w-1,sx|0));sy=Math.max(0,Math.min(h-1,sy|0));let si=(sy*w+sx)*4,r=s[si],g=s[si+1],b=s[si+2],a=s[si+3];
-            if(fac){
-                if(styl&&stylTypes.length){for(const stylType of stylTypes){switch(stylType){case'pixelate':{const q=12,px=Math.floor(sx/q)*q,py=Math.floor(sy/q)*q,ii=(Math.min(h-1,py)*w+Math.min(w-1,px))*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'polar':{const rr=Math.hypot(sx-w/2,sy-h/2),aa=Math.atan2(sy-h/2,sx-w/2);const px=Math.max(0,Math.min(w-1,(w/2+Math.cos(aa)*Math.floor(rr/10)*10)|0)),py=Math.max(0,Math.min(h-1,(h/2+Math.sin(aa)*Math.floor(rr/10)*10)|0)),ii=(py*w+px)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'slices':{const ii=(sy*w+Math.max(0,Math.min(w-1,sx+25))) *4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'jitter':if(Math.random()>.7){r=Math.min(255,r+40);g=Math.max(0,g-30)}break;case'melt':{const yy=Math.max(0,Math.min(h-1,(sy+Math.sin(sx*.05+t)*20)|0)),ii=(yy*w+sx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'wobble':{const xx=Math.max(0,Math.min(w-1,(sx+Math.sin(sy*.04+t*4)*12)|0)),ii=(sy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'shake':{const sh=Math.sin(t*8)*8,yy=Math.max(0,Math.min(h-1,sy+sh|0)),xx=Math.max(0,Math.min(w-1,sx+sh|0)),ii=(yy*w+xx)*4;r=s[ii];g=s[ii+1];b=s[ii+2]}break;case'edges':{const v=(r+g+b)/3;r=v>120?0:255;g=v>120?255:0;b=255}break;case'solarize':r=r>128?255-r:r;g=g>128?255-g:g;b=b>128?255-b:b;break;case'dotmatrix':if(sx%6>2||sy%6>2){r*=.2;g*=.2;b*=.2}break;case'posterize':r=Math.floor(r/64)*64;g=Math.floor(g/64)*64;b=Math.floor(b/64)*64;break;case'duotone':{const gr=(r+g+b)/3;r=gr*.4;g=gr*.3;b=gr*.9}break}}}
-                if(badtv){const yy=((sy+t*tvR*150)%h+h)%h,ii=((yy|0)*w+sx)*4,n=Math.sin(sy*tvT+t*10)*15+(Math.random()-.5)*tvF*100;r=clamp(s[ii]+n);g=clamp(s[ii+1]+n);b=clamp(s[ii+2]+n)}
-                if(bc){r=(r-128)*cont+128+bright;g=(g-128)*cont+128+bright;b=(b-128)*cont+128+bright}
-                if(chrom){r=s[(sy*w+Math.max(0,sx-ca))*4];b=s[(sy*w+Math.min(w-1,sx+ca))*4]}
-            }
-            d[idx]=clamp(r);d[idx+1]=clamp(g);d[idx+2]=clamp(b);d[idx+3]=a;
-        }
-    }
-    drawEnvironment(ctx){
-        const sel=this.$('environment-fx');
-        const types=[...sel.selectedOptions].map(o=>o.value).filter(v=>v!=='none');
-        if(!types.length)return;
-        const amount=+this.$('environment-amount').value/100,speed=+this.$('environment-speed').value,t=this.time*speed,w=960,h=540;
-        for(const type of types){ctx.save();
-        if(type==='rain'||type==='snow'){ctx.globalAlpha=.15+.65*amount;ctx.strokeStyle=type==='rain'?'#9ddcff':'#fff';ctx.lineWidth=1.5;const n=Math.floor(180*amount+20);for(let i=0;i<n;i++){let x=(i*83+t*120)%w,y=(i*47+t*(type==='rain'?500:100))%h;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(type==='rain'?-3:1),y+(type==='rain'?14:5));ctx.stroke()}}
-        else if(type==='space'){ctx.globalAlpha=.3+.7*amount;ctx.fillStyle='#fff';for(let i=0;i<180*amount;i++){let x=(i*97)%w,y=(i*53)%h;ctx.fillRect(x,y,1+(i%2),1+(i%2))}}
-        else if(type==='fog'||type==='smoke'){ctx.globalAlpha=.08+.22*amount;ctx.fillStyle='#d9e0e8';for(let i=0;i<10;i++){const x=(i*130+t*20)%1100-70,y=80+(i*61)%420;ctx.beginPath();ctx.arc(x,y,70+(i%3)*30,0,Math.PI*2);ctx.fill()}}
-        else if(type==='fire'||type==='lava'){ctx.globalAlpha=.15+.45*amount;ctx.fillStyle=type==='fire'?'#ff7a18':'#ff2500';for(let i=0;i<16;i++){const x=i*70+(Math.sin(t+i)*20),y=h-10-Math.abs(Math.sin(t*2+i))*90*amount;ctx.beginPath();ctx.arc(x,y,10+Math.random()*18,0,Math.PI*2);ctx.fill()}}
-        else if(type==='electric'){ctx.globalAlpha=.25+.7*amount;ctx.strokeStyle='#72e8ff';ctx.lineWidth=2;for(let j=0;j<6;j++){ctx.beginPath();ctx.moveTo(0,j*100+50);for(let x=0;x<w;x+=40)ctx.lineTo(x,j*100+50+Math.sin(x*.05+t*8+j)*25*amount);ctx.stroke()}}
-        else if(type==='wind'){ctx.globalAlpha=.2+.5*amount;ctx.strokeStyle='#d7f1ff';for(let j=0;j<14;j++){ctx.beginPath();ctx.moveTo((j*73+t*100)%w,30+j*38);ctx.quadraticCurveTo(400,10+j*38,960,40+j*38);ctx.stroke()}}
-        else if(type==='water'){ctx.globalAlpha=.15+.35*amount;ctx.strokeStyle='#6fdcff';for(let y=0;y<h;y+=25){ctx.beginPath();for(let x=0;x<=w;x+=20)ctx.lineTo(x,y+Math.sin(x*.03+t*2+y)*5*amount);ctx.stroke()}}
-        else if(type==='ice'){ctx.globalAlpha=.15+.35*amount;ctx.fillStyle='#c9f4ff';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#fff';for(let i=0;i<20;i++){ctx.beginPath();ctx.moveTo(i*60,0);ctx.lineTo(i*60+100,h);ctx.stroke()}}
-        ctx.restore();}
-    }
-    applyExtraFX(ctx,time){
-        const E=this.extraFXs||new Set(), a=+this.$('extra-amount').value/100,w=960,h=540; if(!E.size)return;
-        if(E.has('rgb')){ctx.save();ctx.globalAlpha=.18+.35*a;ctx.globalCompositeOperation='screen';ctx.drawImage(ctx.canvas,-8*a,0);ctx.drawImage(ctx.canvas,8*a,0);ctx.restore()}
-        if(E.has('shake')){ctx.save();ctx.globalAlpha=.18+.25*a;ctx.globalCompositeOperation='screen';ctx.drawImage(ctx.canvas,Math.sin(time*18)*10*a,Math.cos(time*15)*6*a);ctx.restore()}
-        if(E.has('echo')){ctx.save();ctx.globalAlpha=.12+.18*a;ctx.globalCompositeOperation='screen';for(let k=1;k<=3;k++)ctx.drawImage(ctx.canvas,-k*8*a,0,w,h);ctx.restore()}
-        if(E.has('glow')){ctx.save();ctx.globalAlpha=.18+.35*a;ctx.globalCompositeOperation='screen';ctx.filter=`blur(${2+12*a}px)`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
-        if(E.has('negative')){ctx.save();ctx.globalAlpha=.2+.8*a;ctx.filter=`invert(${a})`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
-        if(E.has('vignette')){const g=ctx.createRadialGradient(w/2,h/2,100,w/2,h/2,650);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${.25+.55*a})`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
-        if(E.has('pixel')){ctx.save();ctx.globalAlpha=.2+.5*a;ctx.filter=`contrast(${1+a*2}) saturate(${1+a})`;ctx.drawImage(ctx.canvas,0,0);ctx.restore()}
-        if(E.has('vhs')){ctx.save();ctx.globalAlpha=.12+.3*a;ctx.fillStyle='#fff';for(let y=0;y<h;y+=5)ctx.fillRect(0,y,w,1);ctx.restore()}
-    }
-    applyPostFX(ctx, sourceCanvas, time, isExport=false){
-        const A=this.aeFX, amt=this.aeAmount/100, w=960,h=540;
-        if(!A.size)return;
-        // GPU-friendly canvas filters for the common AE-style color/blur effects.
-        let filters=[];
-        if(A.has('blur')) filters.push(`blur(${(amt*8).toFixed(1)}px)`);
-        if(A.has('saturate')) filters.push(`saturate(${(1+amt*2).toFixed(2)})`);
-        if(A.has('huerotate')) filters.push(`hue-rotate(${Math.round(amt*360)}deg)`);
-        if(A.has('contrast')) filters.push(`contrast(${(1+amt*1.5).toFixed(2)})`);
-        if(A.has('brightness')) filters.push(`brightness(${(1+amt).toFixed(2)})`);
-        if(A.has('grayscale')) filters.push(`grayscale(${amt.toFixed(2)})`);
-        if(A.has('invert')) filters.push(`invert(${amt.toFixed(2)})`);
-        if(A.has('sepia')) filters.push(`sepia(${amt.toFixed(2)})`);
-        if(A.has('dropShadow')) filters.push(`drop-shadow(0 0 ${(4+amt*14).toFixed(1)}px rgba(255,255,255,${(.25+amt*.5).toFixed(2)}))`);
-        if(A.has('hueSat')) filters.push(`saturate(${(1+amt*2.5).toFixed(2)}) hue-rotate(${Math.round(amt*180)}deg)`);
-        if(A.has('softLight')) filters.push(`brightness(${(1+amt*.25).toFixed(2)}) contrast(${(1+amt*.35).toFixed(2)})`);
-        if(A.has('colorBurn')) filters.push(`contrast(${(1+amt*2.2).toFixed(2)}) brightness(${(1-amt*.25).toFixed(2)})`);
 
-        if(A.has('sepia')) filters.push(`sepia(${amt.toFixed(2)})`);
-        if(A.has('invert')) filters.push(`invert(${amt.toFixed(2)})`);
-        if(filters.length){ctx.save();ctx.filter=filters.join(' ');ctx.globalAlpha=.55+amt*.45;ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
-        if(A.has('glow')||A.has('edgeglow')){
-            ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=.15+.45*amt;ctx.filter=`blur(${(2+amt*14).toFixed(1)}px)`;ctx.drawImage(sourceCanvas,0,0);ctx.restore();
-        }
-        if(A.has('motionblur')){
-            ctx.save();ctx.globalAlpha=.12+.22*amt;ctx.filter=`blur(${(1+amt*5).toFixed(1)}px)`;ctx.drawImage(sourceCanvas,Math.sin(time*4)*amt*8,Math.cos(time*3)*amt*5);ctx.restore();
-        }
-        if(A.has('radialblur')){
-            ctx.save();ctx.globalAlpha=.12+.2*amt;ctx.translate(w/2,h/2);ctx.scale(1+amt*.035,1+amt*.035);ctx.translate(-w/2,-h/2);ctx.filter='blur(2px)';ctx.drawImage(sourceCanvas,0,0);ctx.restore();
-        }
-        if(A.has('vignette')){const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.2,w/2,h/2,Math.max(w,h)*.72);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${(.25+.6*amt).toFixed(2)})`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
-        if(A.has('scanlines')){ctx.save();ctx.globalAlpha=.12+.25*amt;ctx.fillStyle='#000';for(let y=0;y<h;y+=4)ctx.fillRect(0,y,w,1);ctx.restore()}
-        if(A.has('noise')){ctx.save();ctx.globalAlpha=.04+.14*amt;ctx.fillStyle='#fff';for(let i=0;i<Math.floor(800*amt);i++){const x=(i*73+time*17)%w,y=(i*137+time*29)%h;ctx.fillRect(x,y,1,1)}ctx.restore()}
-        if(A.has('threshold')){ctx.save();ctx.globalAlpha=.12+.5*amt;ctx.fillStyle='#000';ctx.globalCompositeOperation='multiply';ctx.fillRect(0,0,w,h);ctx.restore()}
-        if(A.has('sharpen')){ctx.save();ctx.globalAlpha=.18+.25*amt;ctx.globalCompositeOperation='overlay';ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
-        if(A.has('heat')){ctx.save();ctx.globalAlpha=.12+.3*amt;ctx.filter=`blur(${(1+amt*3).toFixed(1)}px)`;ctx.translate(Math.sin(time*7)*amt*5,0);ctx.drawImage(sourceCanvas,0,0);ctx.restore()}
-        if(A.has('pixelSort')){ctx.save();ctx.globalAlpha=.12+.3*amt;for(let y=0;y<h;y+=Math.max(4,Math.floor(18-amt*10))){ctx.drawImage(sourceCanvas,0,y,w,2,Math.sin(y*.07+time*2)*amt*18,y,w,2)}ctx.restore()}
-        ctx.save();
-        if(A.has('emboss')){ctx.globalAlpha=.15+amt*.45;ctx.globalCompositeOperation='overlay';ctx.filter=`blur(0.4px) contrast(${1+amt*2})`;ctx.drawImage(sourceCanvas,amt*3,amt*3,w,h);}
-        if(A.has('findEdges')){ctx.globalAlpha=.25+amt*.65;ctx.globalCompositeOperation='screen';ctx.filter=`contrast(${2+amt*4}) grayscale(1)`;ctx.drawImage(sourceCanvas,0,0,w,h);}
-        if(A.has('threshold')){ctx.globalAlpha=.2+amt*.8;ctx.globalCompositeOperation='multiply';ctx.filter=`contrast(${3+amt*7}) grayscale(1)`;ctx.drawImage(sourceCanvas,0,0,w,h);}
-        if(A.has('halftone')){ctx.globalAlpha=.15+amt*.5;ctx.fillStyle='#fff';for(let y=0;y<h;y+=8)for(let x=0;x<w;x+=8){const r=2+Math.sin(x*.02+time*2)*amt*2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}}
-        if(A.has('directionalBlur')){ctx.globalAlpha=.08+amt*.3;for(let k=1;k<=5;k++)ctx.drawImage(sourceCanvas,k*amt*5,0,w,h);}
-        ctx.restore();
-    }
-    renderFrameTo(ctx,time,isExport=false){
-        this.time=time;
-        this.prepareBase();
-        const src=this.sampleBase(),dst=this.cachedBaseCtx.createImageData(960,540);
-        this.applyAllFX(src,dst,960,540);
-        const frame=this.frameCanvas,fc=this.frameCtx;
-        fc.putImageData(dst,0,0);
-        ctx.clearRect(0,0,960,540);
-        ctx.fillStyle=this.useGreenScreen?'#00ff00':'#1e1e24';ctx.fillRect(0,0,960,540);
-        ctx.drawImage(frame,0,0); this.drawLayers(ctx,time);
-        if(this.$('chk-saber').checked&&this.pins.length){ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowColor=this.$('color-saber').value;ctx.shadowBlur=+this.$('slide-saber-glow').value;for(const p of this.pins){ctx.strokeStyle=this.$('color-saber').value;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.sin(time*3)*80,p.y+Math.cos(time*2)*80);ctx.stroke()}ctx.restore()}
-        this.drawEnvironment(ctx);
-        this.applyExtraFX(ctx,time);
-        this.applyPostFX(ctx,ctx.canvas,time,isExport);
-    }
-    animate(now=0){if(!this.exporting&&now-this.lastFrame>66){this.lastFrame=now;this.time+=.03;this.renderFrameTo(this.ctx,this.time);this.pins.forEach(p=>{this.ctx.beginPath();this.ctx.arc(p.x,p.y,6,0,Math.PI*2);this.ctx.fillStyle='#f59e0b';this.ctx.fill()});if(this.interactionMode==='mask'){this.ctx.save();this.ctx.globalAlpha=.2;this.ctx.drawImage(this.brushMaskCanvas,0,0);this.ctx.restore()}}requestAnimationFrame(t=>this.animate(t))}
-    async handleAdvancedExport(){
-        if(!this.bgImage){alert('Vui lòng nạp ảnh trước bro ơi!');return} if(this.exporting)return;
-        const secs=Math.max(1,Math.min(30,+this.$('export-duration').value||3)),fps=+this.$('export-fps').value,format=this.$('export-format').value,total=Math.round(secs*fps),quality=+this.$('export-quality').value;
-        let handle=null,filename=format==='gif'?`motion_fx_${Date.now()}.gif`:`motion_video_${Date.now()}.webm`;
-        if(window.showSaveFilePicker){try{handle=await window.showSaveFilePicker({suggestedName:filename,types:[{description:format==='gif'?'GIF image':'WebM video',accept:format==='gif'?{'image/gif':['.gif']}:{'video/webm':['.webm']}}]})}catch(e){if(e.name==='AbortError')return;handle=null}}
-        this.exporting=true;this.$('export-progress').value=0;this.$('export-status').textContent=`⚙️ Đang chuẩn bị ${format.toUpperCase()} — ${total} khung hình @ ${fps} FPS...`;const backup=this.time;
-        try{
-            if(format==='gif'){await this.exportGIF(total,fps,quality,handle,filename)}else await this.exportVideo(total,fps,handle,filename);
-            this.$('export-status').textContent='✅ Xuất xong!';this.$('export-progress').value=100;
-        }catch(e){console.error(e);this.$('export-status').textContent='❌ Lỗi: '+e.message;alert('Không xuất được: '+e.message)}finally{this.time=backup;this.exporting=false}
-    }
-    async exportVideo(total,fps,handle,filename){
-        const out=document.createElement('canvas');out.width=960;out.height=540;const stream=out.captureStream(fps);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const done=new Promise((res,rej)=>{rec.onstop=res;rec.onerror=e=>rej(e.error||new Error('MediaRecorder error'))});rec.start();for(let i=0;i<total;i++){this.renderFrameTo(out.getContext('2d'),i/fps,true);await new Promise(r=>setTimeout(r,1000/fps));this.$('export-progress').value=Math.round((i+1)/total*100);this.$('export-status').textContent=`🖼️ Render video ${i+1}/${total} — ${Math.round((i+1)/total*100)}% — hiệu ứng: ${this.aeFX.size?Array.from(this.aeFX).join(', '):'cơ bản'}`;await new Promise(r=>setTimeout(r,0))}rec.stop();await done;const blob=new Blob(chunks,{type:'video/webm'});await this.saveBlob(blob,handle,filename)}
-    async exportGIF(total,fps,quality,handle,filename){
-        if(!window.gifshot)throw new Error('Thư viện GIF chưa tải. Hãy mở lại trang và thử lại.');const images=[];const out=document.createElement('canvas');out.width=960;out.height=540;const oc=out.getContext('2d');
-        for(let i=0;i<total;i++){this.renderFrameTo(oc,i/fps,true);images.push(out.toDataURL('image/jpeg',quality));this.$('export-progress').value=Math.round((i+1)/total*75);this.$('export-status').textContent=`🖼️ Chuẩn bị GIF ${i+1}/${total} — ${Math.round((i+1)/total*75)}% — hiệu ứng: ${this.aeFX.size?Array.from(this.aeFX).join(', '):'cơ bản'}`;await new Promise(r=>setTimeout(r,0))}
-        const blob=await new Promise((resolve,reject)=>window.gifshot.createGIF({images,gifWidth:960,gifHeight:540,interval:1/fps,quality:1},obj=>obj.error?reject(new Error(obj.errorMsg||'GIF error')):fetch(obj.image).then(r=>r.blob()).then(resolve).catch(reject)));
-        this.$('export-progress').value=90;await this.saveBlob(blob,handle,filename)
-    }
-    async saveBlob(blob,handle,filename){if(handle){const w=await handle.createWritable();await w.write(blob);await w.close();return}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
-}
-window.addEventListener('DOMContentLoaded',()=>new MotionFXEngine());
+    <div class="toolbar">
 
-/* ===== Special Slash FX ===== */
-(function(){
-  // Patch the existing engine without replacing/removing any original effect.
-  const Engine = (typeof MotionFXEngine !== 'undefined') ? MotionFXEngine : null;
-  if(!Engine) return;
-  const proto = Engine.prototype;
-  proto.slashEnabled = false;
-  proto.slashAmount = 55;
-  proto.slashSpeed = 1;
-  proto.slashBend = 28;
-  proto.slashAngle = -18;
-  proto.slashColor = '#ffffff';
+        <label class="button primary">
+            ⬆ Upload Model
 
-  const oldRender = proto.renderFrameTo;
-  proto.renderFrameTo = function(ctx,time,isExport){
-    if(!this.slashEnabled){
-      oldRender.call(this,ctx,time,isExport);
-      return;
-    }
-    // Render the normal composition first, then reveal only the moving curved slash.
-    oldRender.call(this,ctx,time,isExport);
-    const tmp=document.createElement('canvas');
-    tmp.width=960; tmp.height=540;
-    const tc=tmp.getContext('2d');
-    tc.drawImage(ctx.canvas,0,0,960,540);
+            <input
+                id="modelInput"
+                type="file"
+                accept=".glb,.gltf"
+                hidden
+            >
+        </label>
 
-    const t=(time*this.slashSpeed)%1;
-    const cx=960*(0.08+0.84*t);
-    const cy=270 + Math.sin(time*this.slashSpeed*2.2)*65;
-    const bend=this.slashBend*Math.sin(time*2.6);
-    const half=170 + this.slashAmount*1.2;
-    const angle=this.slashAngle*Math.PI/180;
+        <label class="button">
+            ＋ Add Texture
 
-    ctx.save();
-    ctx.clearRect(0,0,960,540);
-    ctx.fillStyle=this.useGreenScreen?'#00ff00':this.bgColor||'#1e1e24';
-    ctx.fillRect(0,0,960,540);
-    ctx.translate(cx,cy);
-    ctx.rotate(angle);
+            <input
+                id="textureInput"
+                type="file"
+                accept="image/*"
+                hidden
+            >
+        </label>
 
-    // Thick curved slash mask.
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(-half,80);
-    ctx.quadraticCurveTo(bend,0,half,-80);
-    ctx.lineWidth=Math.max(14,this.slashAmount*1.45);
-    ctx.lineCap='round';
-    ctx.globalCompositeOperation='destination-out';
-    // Build mask on a separate canvas to avoid compositing against the background.
-    ctx.restore();
+        <button
+            id="selectButton"
+            class="button active"
+        >
+            ⌖ Chọn bề mặt
+        </button>
 
-    const mask=document.createElement('canvas'); mask.width=960; mask.height=540;
-    const mc=mask.getContext('2d');
-    mc.translate(cx,cy); mc.rotate(angle);
-    mc.beginPath();
-    mc.moveTo(-half,80);
-    mc.quadraticCurveTo(bend,0,half,-80);
-    mc.lineWidth=Math.max(16,this.slashAmount*1.5);
-    mc.lineCap='round'; mc.strokeStyle='#fff'; mc.stroke();
-    mc.globalCompositeOperation='source-in';
-    mc.drawImage(tmp,0,0);
-    ctx.drawImage(mask,-cx,-cy,960,540);
-    ctx.restore();
+    </div>
 
-    // Animated energy edge.
-    ctx.save();
-    ctx.translate(cx,cy); ctx.rotate(angle);
-    ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.55+.35*Math.sin(time*10);
-    ctx.strokeStyle=this.slashColor; ctx.shadowColor=this.slashColor; ctx.shadowBlur=16;
-    ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(-half,80); ctx.quadraticCurveTo(bend,0,half,-80); ctx.stroke();
-    ctx.restore();
-  };
+</header>
 
-  function makeUI(){
-    const home=document.getElementById('fx-home');
-    if(!home || document.getElementById('special-slash-item')) return;
-    const item=document.createElement('div');
-    item.id='special-slash-item'; item.className='accordion-item';
-    item.innerHTML=`<div class="accordion-header">🗡️ Special Slash FX <span>▼</span></div>
-      <div class="accordion-content">
-        <div class="slash-card">
-          <div class="control-row"><label>Kích hoạt Slash:</label><input type="checkbox" id="chk-slash"></div>
-          <div class="slash-row"><label>Độ rộng</label><input id="slash-amount" type="range" min="10" max="100" value="55"><span id="slash-amount-v">55</span></div>
-          <div class="slash-row"><label>Tốc độ</label><input id="slash-speed" type="range" min="0.1" max="4" step="0.1" value="1"><span id="slash-speed-v">1</span></div>
-          <div class="slash-row"><label>Độ uốn</label><input id="slash-bend" type="range" min="0" max="100" value="28"><span id="slash-bend-v">28</span></div>
-          <div class="slash-row"><label>Góc</label><input id="slash-angle" type="range" min="-45" max="45" value="-18"><span id="slash-angle-v">-18°</span></div>
-          <button id="slash-reset">↺ Reset Slash</button>
-          <div class="slash-status">Ảnh sẽ chạy thành một vệt slash cong có animation. Tắt/bật không ảnh hưởng các effect khác.</div>
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+
+    <!-- =================================================
+         TEXTURE LIBRARY
+    ================================================== -->
+
+    <aside class="leftPanel">
+
+        <div class="panelTitle">
+            TEXTURE LIBRARY
         </div>
-      </div>`;
-    home.appendChild(item);
-    const q=id=>item.querySelector(id);
-    item.querySelector('.accordion-header').onclick=()=>{
-      const c=q('.accordion-content'); c.style.display=c.style.display==='flex'?'none':'flex';
-    };
-    q('#chk-slash').onchange=e=>proto.slashEnabled=e.target.checked;
-    q('#slash-amount').oninput=e=>{proto.slashAmount=+e.target.value;q('#slash-amount-v').textContent=e.target.value};
-    q('#slash-speed').oninput=e=>{proto.slashSpeed=+e.target.value;q('#slash-speed-v').textContent=e.target.value};
-    q('#slash-bend').oninput=e=>{proto.slashBend=+e.target.value;q('#slash-bend-v').textContent=e.target.value};
-    q('#slash-angle').oninput=e=>{proto.slashAngle=+e.target.value;q('#slash-angle-v').textContent=e.target.value+'°'};
-    q('#slash-reset').onclick=()=>{
-      proto.slashEnabled=false; proto.slashAmount=55; proto.slashSpeed=1; proto.slashBend=28; proto.slashAngle=-18;
-      q('#chk-slash').checked=false; q('#slash-amount').value=55; q('#slash-speed').value=1; q('#slash-bend').value=28; q('#slash-angle').value=-18;
-      q('#slash-amount-v').textContent='55'; q('#slash-speed-v').textContent='1'; q('#slash-bend-v').textContent='28'; q('#slash-angle-v').textContent='-18°';
-    };
-  }
-  // The script is at the end of body, so the UI can be inserted immediately.
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',makeUI,{once:true}); else makeUI();
-})();
+
+
+        <div class="searchBox">
+
+            <input
+                id="textureSearch"
+                type="text"
+                placeholder="Tìm texture..."
+            >
+
+        </div>
+
+
+        <div
+            id="textureLibrary"
+            class="textureLibrary"
+        >
+
+            <div class="empty">
+
+                Chưa có texture.
+
+                <br><br>
+
+                Nhấn
+                <b>Add Texture</b>
+                để thêm.
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =================================================
+         3D VIEW
+    ================================================== -->
+
+    <section class="viewport">
+
+        <div id="viewer"></div>
+
+
+        <div
+            id="status"
+            class="status"
+        >
+            Chưa tải model
+        </div>
+
+
+        <div class="controlsHint">
+
+            🖱 Kéo để xoay
+            ·
+            Cuộn để zoom
+            ·
+            Click model để chọn
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         MATERIAL PANEL
+    ================================================== -->
+
+    <aside class="rightPanel">
+
+        <div class="panelTitle">
+            MATERIAL
+        </div>
+
+
+        <div
+            id="selectedObject"
+            class="selectedObject"
+        >
+
+            Chưa chọn bề mặt
+
+        </div>
+
+
+        <!-- SCALE -->
+
+        <div class="property">
+
+            <div class="propertyHeader">
+
+                <span>
+                    Texture Scale
+                </span>
+
+                <span id="scaleValue">
+                    1.00
+                </span>
+
+            </div>
+
+
+            <input
+                id="scale"
+                type="range"
+                min="0.1"
+                max="10"
+                step="0.05"
+                value="1"
+            >
+
+        </div>
+
+
+        <!-- ROTATION -->
+
+        <div class="property">
+
+            <div class="propertyHeader">
+
+                <span>
+                    Rotation
+                </span>
+
+                <span id="rotationValue">
+                    0°
+                </span>
+
+            </div>
+
+
+            <input
+                id="rotation"
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                value="0"
+            >
+
+        </div>
+
+
+        <!-- ROUGHNESS -->
+
+        <div class="property">
+
+            <div class="propertyHeader">
+
+                <span>
+                    Roughness
+                </span>
+
+                <span id="roughnessValue">
+                    0.50
+                </span>
+
+            </div>
+
+
+            <input
+                id="roughness"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.5"
+            >
+
+        </div>
+
+
+        <!-- METALLIC -->
+
+        <div class="property">
+
+            <div class="propertyHeader">
+
+                <span>
+                    Metallic
+                </span>
+
+                <span id="metallicValue">
+                    0.00
+                </span>
+
+            </div>
+
+
+            <input
+                id="metallic"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0"
+            >
+
+        </div>
+
+
+        <button
+            id="removeTexture"
+            class="removeButton"
+        >
+
+            🗑 Xóa texture
+
+        </button>
+
+    </aside>
+
+</main>
+
+
+<!-- =====================================================
+     THREE.JS
+===================================================== -->
+
+<script type="importmap">
+
+{
+    "imports": {
+
+        "three":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+        "three/addons/":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
+    }
+}
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/build/gifshot.min.js"></script>
-</body></html>
+
+
+<!-- =====================================================
+     EVERYTHING BELOW IS JAVASCRIPT
+     Không cần index.js
+===================================================== -->
+
+<script type="module">
+
+import * as THREE from "three";
+
+import {
+    OrbitControls
+}
+from "three/addons/controls/OrbitControls.js";
+
+import {
+    GLTFLoader
+}
+from "three/addons/loaders/GLTFLoader.js";
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const viewer =
+    document.getElementById("viewer");
+
+const status =
+    document.getElementById("status");
+
+const library =
+    document.getElementById("textureLibrary");
+
+const selectedObject =
+    document.getElementById("selectedObject");
+
+const modelInput =
+    document.getElementById("modelInput");
+
+const textureInput =
+    document.getElementById("textureInput");
+
+const selectButton =
+    document.getElementById("selectButton");
+
+const searchInput =
+    document.getElementById("textureSearch");
+
+const scale =
+    document.getElementById("scale");
+
+const rotation =
+    document.getElementById("rotation");
+
+const roughness =
+    document.getElementById("roughness");
+
+const metallic =
+    document.getElementById("metallic");
+
+
+/* =====================================================
+   THREE.JS SCENE
+===================================================== */
+
+const scene =
+    new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x0c0e12);
+
+
+const camera =
+    new THREE.PerspectiveCamera(
+        45,
+        1,
+        0.01,
+        1000
+    );
+
+
+camera.position.set(
+    3,
+    2,
+    5
+);
+
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
+
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+
+viewer.appendChild(
+    renderer.domElement
+);
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+const controls =
+    new OrbitControls(
+        camera,
+        renderer.domElement
+    );
+
+
+controls.enableDamping = true;
+
+
+/* =====================================================
+   LIGHT
+===================================================== */
+
+const hemisphere =
+    new THREE.HemisphereLight(
+        0xffffff,
+        0x252a34,
+        2
+    );
+
+
+scene.add(hemisphere);
+
+
+const directional =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
+
+
+directional.position.set(
+    4,
+    6,
+    4
+);
+
+
+scene.add(directional);
+
+
+/* =====================================================
+   GRID
+===================================================== */
+
+const grid =
+    new THREE.GridHelper(
+        10,
+        20
+    );
+
+
+scene.add(grid);
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+const loader =
+    new GLTFLoader();
+
+
+const raycaster =
+    new THREE.Raycaster();
+
+
+const mouse =
+    new THREE.Vector2();
+
+
+let model = null;
+
+let selectedMesh = null;
+
+let selectMode = true;
+
+let textureList = [];
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+function resizeViewer() {
+
+    const width =
+        viewer.clientWidth;
+
+    const height =
+        viewer.clientHeight;
+
+
+    camera.aspect =
+        width / height;
+
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+        width,
+        height,
+        false
+    );
+
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeViewer
+);
+
+
+resizeViewer();
+
+
+/* =====================================================
+   UPLOAD MODEL
+===================================================== */
+
+modelInput.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files[0];
+
+        if (!file)
+            return;
+
+
+        const url =
+            URL.createObjectURL(file);
+
+
+        status.textContent =
+            "Đang tải model...";
+
+
+        loader.load(
+
+            url,
+
+            gltf => {
+
+                if (model) {
+
+                    scene.remove(model);
+
+                }
+
+
+                model =
+                    gltf.scene;
+
+
+                model.traverse(
+                    object => {
+
+                        if (
+                            object.isMesh
+                        ) {
+
+                            object.userData.originalMaterial =
+                                object.material;
+
+                        }
+
+                    }
+                );
+
+
+                scene.add(model);
+
+
+                centerModel(
+                    model
+                );
+
+
+                selectedMesh =
+                    null;
+
+
+                selectedObject.textContent =
+                    "Chưa chọn bề mặt";
+
+
+                status.textContent =
+                    "Model: " +
+                    file.name;
+
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+
+            undefined,
+
+            error => {
+
+                console.error(error);
+
+                status.textContent =
+                    "Không thể đọc model.";
+
+            }
+
+        );
+
+    }
+);
+
+
+/* =====================================================
+   CENTER MODEL
+===================================================== */
+
+function centerModel(root) {
+
+    const box =
+        new THREE.Box3()
+            .setFromObject(root);
+
+
+    const size =
+        box.getSize(
+            new THREE.Vector3()
+        );
+
+
+    const center =
+        box.getCenter(
+            new THREE.Vector3()
+        );
+
+
+    const maxSize =
+        Math.max(
+            size.x,
+            size.y,
+            size.z
+        );
+
+
+    root.position.sub(
+        center
+    );
+
+
+    camera.position.set(
+        maxSize * 1.8,
+        maxSize * 1.2,
+        maxSize * 2.2
+    );
+
+
+    controls.target.set(
+        0,
+        0,
+        0
+    );
+
+
+    controls.update();
+
+}
+
+
+/* =====================================================
+   ADD TEXTURE
+===================================================== */
+
+textureInput.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files[0];
+
+        if (!file)
+            return;
+
+
+        const url =
+            URL.createObjectURL(file);
+
+
+        textureList.push({
+
+            name:
+                file.name,
+
+            url:
+                url
+
+        });
+
+
+        renderTextureLibrary();
+
+
+        textureInput.value = "";
+
+    }
+);
+
+
+/* =====================================================
+   TEXTURE LIBRARY
+===================================================== */
+
+function renderTextureLibrary() {
+
+    const search =
+        searchInput.value
+            .toLowerCase();
+
+
+    library.innerHTML = "";
+
+
+    const filtered =
+        textureList.filter(
+            texture =>
+                texture.name
+                    .toLowerCase()
+                    .includes(search)
+        );
+
+
+    if (
+        filtered.length === 0
+    ) {
+
+        library.innerHTML = `
+
+            <div class="empty">
+
+                Không tìm thấy texture.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    filtered.forEach(
+        texture => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "textureCard";
+
+
+            card.innerHTML = `
+
+                <img
+                    src="${texture.url}"
+                    class="texturePreview"
+                >
+
+                <div class="textureInfo">
+
+                    <div class="textureName">
+                        ${texture.name}
+                    </div>
+
+                    <div class="textureType">
+                        IMAGE TEXTURE
+                    </div>
+
+                </div>
+
+            `;
+
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    applyTexture(
+                        texture
+                    );
+
+                }
+            );
+
+
+            library.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+searchInput.addEventListener(
+    "input",
+    renderTextureLibrary
+);
+
+
+/* =====================================================
+   CLICK MODEL
+===================================================== */
+
+renderer.domElement.addEventListener(
+    "pointerdown",
+    event => {
+
+        if (!selectMode)
+            return;
+
+
+        if (!model)
+            return;
+
+
+        const rect =
+            renderer.domElement
+                .getBoundingClientRect();
+
+
+        mouse.x =
+            (
+                (
+                    event.clientX -
+                    rect.left
+                )
+                /
+                rect.width
+            ) * 2 - 1;
+
+
+        mouse.y =
+            -(
+                (
+                    event.clientY -
+                    rect.top
+                )
+                /
+                rect.height
+            ) * 2 + 1;
+
+
+        raycaster.setFromCamera(
+            mouse,
+            camera
+        );
+
+
+        const hits =
+            raycaster.intersectObject(
+                model,
+                true
+            );
+
+
+        if (
+            hits.length > 0 &&
+            hits[0].object.isMesh
+        ) {
+
+            selectMesh(
+                hits[0].object
+            );
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   SELECT MESH
+===================================================== */
+
+function selectMesh(mesh) {
+
+    selectedMesh =
+        mesh;
+
+
+    selectedObject.textContent =
+        mesh.name ||
+        "Mesh không tên";
+
+
+    status.textContent =
+        "Đã chọn: " +
+        (
+            mesh.name ||
+            "Mesh"
+        );
+
+
+    const material =
+        mesh.material;
+
+
+    if (!material)
+        return;
+
+
+    roughness.value =
+        material.roughness ?? 0.5;
+
+
+    metallic.value =
+        material.metalness ?? 0;
+
+
+    if (material.map) {
+
+        scale.value =
+            material.map.repeat.x;
+
+
+        rotation.value =
+            THREE.MathUtils.radToDeg(
+                material.map.rotation
+            );
+
+    }
+
+
+    updateLabels();
+
+}
+
+
+/* =====================================================
+   APPLY TEXTURE
+===================================================== */
+
+function applyTexture(
+    textureData
+) {
+
+    if (!selectedMesh) {
+
+        status.textContent =
+            "Hãy click vào phần model trước.";
+
+        return;
+
+    }
+
+
+    const textureLoader =
+        new THREE.TextureLoader();
+
+
+    textureLoader.load(
+
+        textureData.url,
+
+        texture => {
+
+            texture.wrapS =
+                THREE.RepeatWrapping;
+
+
+            texture.wrapT =
+                THREE.RepeatWrapping;
+
+
+            texture.colorSpace =
+                THREE.SRGBColorSpace;
+
+
+            texture.center.set(
+                0.5,
+                0.5
+            );
+
+
+            texture.repeat.set(
+                Number(scale.value),
+                Number(scale.value)
+            );
+
+
+            texture.rotation =
+                THREE.MathUtils.degToRad(
+                    Number(
+                        rotation.value
+                    )
+                );
+
+
+            const material =
+                selectedMesh.material.clone();
+
+
+            material.map =
+                texture;
+
+
+            material.roughness =
+                Number(
+                    roughness.value
+                );
+
+
+            material.metalness =
+                Number(
+                    metallic.value
+                );
+
+
+            material.needsUpdate =
+                true;
+
+
+            selectedMesh.material =
+                material;
+
+
+            status.textContent =
+                "Đã gắn texture: " +
+                textureData.name;
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   MATERIAL CONTROLS
+===================================================== */
+
+function updateLabels() {
+
+    document.getElementById(
+        "scaleValue"
+    ).textContent =
+        Number(
+            scale.value
+        ).toFixed(2);
+
+
+    document.getElementById(
+        "rotationValue"
+    ).textContent =
+        Math.round(
+            rotation.value
+        ) + "°";
+
+
+    document.getElementById(
+        "roughnessValue"
+    ).textContent =
+        Number(
+            roughness.value
+        ).toFixed(2);
+
+
+    document.getElementById(
+        "metallicValue"
+    ).textContent =
+        Number(
+            metallic.value
+        ).toFixed(2);
+
+}
+
+
+[
+    scale,
+    rotation,
+    roughness,
+    metallic
+
+].forEach(
+    input => {
+
+        input.addEventListener(
+            "input",
+            () => {
+
+                updateLabels();
+
+
+                if (!selectedMesh)
+                    return;
+
+
+                const material =
+                    selectedMesh.material;
+
+
+                if (
+                    material.map
+                ) {
+
+                    material.map.repeat.set(
+
+                        Number(
+                            scale.value
+                        ),
+
+                        Number(
+                            scale.value
+                        )
+
+                    );
+
+
+                    material.map.rotation =
+                        THREE.MathUtils.degToRad(
+                            Number(
+                                rotation.value
+                            )
+                        );
+
+
+                    material.map.needsUpdate =
+                        true;
+
+                }
+
+
+                material.roughness =
+                    Number(
+                        roughness.value
+                    );
+
+
+                material.metalness =
+                    Number(
+                        metallic.value
+                    );
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   REMOVE TEXTURE
+===================================================== */
+
+document
+    .getElementById(
+        "removeTexture"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            if (!selectedMesh)
+                return;
+
+
+            const material =
+                selectedMesh.material;
+
+
+            if (
+                material &&
+                material.map
+            ) {
+
+                material.map.dispose();
+
+                material.map = null;
+
+                material.needsUpdate =
+                    true;
+
+            }
+
+
+            status.textContent =
+                "Đã xóa texture.";
+
+        }
+    );
+
+
+/* =====================================================
+   SELECT MODE
+===================================================== */
+
+selectButton.addEventListener(
+    "click",
+    () => {
+
+        selectMode =
+            !selectMode;
+
+
+        selectButton.classList.toggle(
+            "active",
+            selectMode
+        );
+
+
+        selectButton.textContent =
+            selectMode
+                ? "⌖ Chọn bề mặt"
+                : "✋ Xoay / xem";
+
+    }
+);
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    controls.update();
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+updateLabels();
+
+animate();
+
+</script>
+
+</body>
+</html>

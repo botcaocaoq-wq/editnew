@@ -1,129 +1,632 @@
-/* =========================================================================
-   1. CÀI ĐẶT CHUNG TOÀN ỨNG DỤNG (RESET & BODY)
-   ========================================================================= */
+* {
+    box-sizing: border-box;
+}
+
+html,
 body {
     margin: 0;
-    padding: 0;
-    background-color: #121214; /* Nền tối Dark Mode chủ đạo */
-    color: #e4e4e7;            /* Màu chữ trắng xám nhẹ chống chói mắt */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    user-select: none;         /* Không cho người dùng bôi đen chữ lung tung */
-    overflow: hidden;          /* Khóa thanh cuộn trang web */
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #101217;
+    color: #e9edf3;
 }
 
-/* Bộ khung chính chứa toàn bộ ứng dụng */
-#app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;             /* Chiếm full chiều cao màn hình máy tính */
-}
 
-/* =========================================================================
-   2. MÀN HÌNH PREVIEW EDIT CHÍNH
-   ========================================================================= */
-#preview-window {
-    flex: 1;                   /* Tự động chiếm toàn bộ không gian trống phía trên */
+/* ==============================
+   TOP BAR
+============================== */
+
+.topbar {
+
+    height: 58px;
+
     display: flex;
-    justify-content: center;
+
     align-items: center;
-    background: #09090b;       /* Nền đen tuyền bao quanh khung ảnh edit */
-    padding: 20px;
+
+    justify-content: space-between;
+
+    padding: 0 16px;
+
+    background: #191c22;
+
+    border-bottom:
+        1px solid #30343d;
 }
 
-/* Khung Vẽ Đồ Họa Canvas */
-#videoCanvas {
-    background: #18181b;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Tạo bóng đổ sâu cho canvas */
-    border: 1px solid #2d2d3d;
-    border-radius: 6px;
-    cursor: crosshair;         /* Đổi chuột thành hình chữ thập để dễ ghim điểm */
-}
-/* =========================================================================
-   3. BẢNG ĐIỀU CHỈNH THÔNG SỐ HIỆU ỨNG (SLIDERS PANEL)
-   ========================================================================= */
-#fx-controls-panel {
-    background: #18181f;
-    padding: 12px 25px;
-    border-top: 1px solid #2d2d3d;
-    display: flex;
-    justify-content: center;
-    gap: 30px; /* Khoảng cách giữa 2 thanh kéo slider */
+
+.logo {
+
+    font-size: 18px;
+
+    font-weight: 800;
+
+    letter-spacing: 2px;
 }
 
-.slider-group {
+
+.logo span {
+
+    color: #8d96a5;
+
+    font-weight: 400;
+}
+
+
+.toolbar {
+
     display: flex;
+
     align-items: center;
-    gap: 10px;
-}
 
-.slider-group label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #a1a1aa;
-    min-width: 130px;
-}
-
-/* Định dạng thanh kéo range slider */
-input[type="range"] {
-    cursor: pointer;
-    width: 180px;
-    accent-color: #007acc; /* Đổi núm trượt sang màu xanh đồ họa */
-}
-
-/* =========================================================================
-   4. THANH CÔNG CỤ CHỨC NĂNG CHÍNH (TOOLBAR)
-   ========================================================================= */
-#toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: center;   /* Căn giữa toàn bộ nút bấm */
-    gap: 12px;
-    background: #1e1e24;       /* Màu xám sáng hơn cho thanh công cụ */
-    padding: 12px 20px;
-    border-top: 1px solid #2d2d3d;
-    flex-wrap: wrap;           /* Tự động xuống hàng nếu màn hình nhỏ */
-}
-
-/* Các phân khu nút bấm con */
-.upload-section, .fx-section, .export-section {
-    display: flex;
     gap: 8px;
 }
 
-/* Định dạng cấu hình nút bấm chung */
-button {
-    background: #2d2d3d;
-    color: #e4e4e7;
-    border: 1px solid #3f3f46;
-    padding: 8px 16px;
+
+/* ==============================
+   BUTTON
+============================== */
+
+.button {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    padding:
+        8px
+        13px;
+
+    border-radius: 7px;
+
+    border:
+        1px solid #373d47;
+
+    background: #23272f;
+
+    color: #edf0f5;
+
     font-size: 13px;
-    font-weight: 500;
+
     cursor: pointer;
+
+    user-select: none;
+}
+
+
+.button:hover {
+
+    background: #2d323b;
+}
+
+
+.button.primary {
+
+    background: #315fd3;
+
+    border-color: #4d75dc;
+}
+
+
+.button.primary:hover {
+
+    background: #3b6ce1;
+}
+
+
+.button.active {
+
+    background: #365eb8;
+
+    border-color: #6687dc;
+}
+
+
+/* ==============================
+   MAIN
+============================== */
+
+.main {
+
+    height:
+        calc(100% - 58px);
+
+    display: grid;
+
+    grid-template-columns:
+        250px
+        minmax(0, 1fr)
+        280px;
+}
+
+
+/* ==============================
+   LEFT PANEL
+============================== */
+
+.leftPanel {
+
+    background: #171a20;
+
+    border-right:
+        1px solid #30343d;
+
+    padding: 14px;
+
+    overflow-y: auto;
+}
+
+
+/* ==============================
+   RIGHT PANEL
+============================== */
+
+.rightPanel {
+
+    background: #171a20;
+
+    border-left:
+        1px solid #30343d;
+
+    padding: 14px;
+
+    overflow-y: auto;
+}
+
+
+/* ==============================
+   PANEL TITLE
+============================== */
+
+.panelTitle {
+
+    margin:
+        3px 0 14px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+
+    color: #929baa;
+}
+
+
+/* ==============================
+   SEARCH
+============================== */
+
+.searchBox {
+
+    margin-bottom: 12px;
+}
+
+
+.searchBox input {
+
+    width: 100%;
+
+    padding:
+        9px 10px;
+
     border-radius: 6px;
-    transition: all 0.15s ease;
+
+    border:
+        1px solid #343943;
+
+    background: #20242b;
+
+    color: white;
+
+    outline: none;
+
+    font-size: 12px;
 }
 
-button:hover {
-    background: #3f3f46;
-    border-color: #52525b;
+
+.searchBox input:focus {
+
+    border-color: #5876c2;
 }
 
-/* Khi một nút hiệu ứng đang được bật kích hoạt */
-button.active {
-    background: #007acc !important;
-    color: #ffffff;
-    border-color: #0098ff !important;
-    box-shadow: 0 0 10px rgba(0, 122, 204, 0.5);
+
+.searchBox input::placeholder {
+
+    color: #697382;
 }
 
-/* Định dạng nút Tải ảnh lên */
-#btn-upload { background: #16a34a; border-color: #22c55e; }
-#btn-upload:hover { background: #15803d; }
 
-/* Vạch kẻ dọc chia tách các nhóm nút */
-.divider {
-    width: 1px;
-    height: 24px;
-    background: #3f3f46;
-    margin: 0 5px;
+/* ==============================
+   TEXTURE LIBRARY
+============================== */
+
+.textureLibrary {
+
+    width: 100%;
+}
+
+
+.empty {
+
+    padding: 30px 8px;
+
+    text-align: center;
+
+    color: #697382;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+/* ==============================
+   TEXTURE CARD
+============================== */
+
+.textureCard {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 7px;
+
+    margin-bottom: 7px;
+
+    border:
+        1px solid #303640;
+
+    border-radius: 7px;
+
+    background: #20242b;
+
+    cursor: pointer;
+
+    transition:
+        border-color .15s,
+        background .15s;
+}
+
+
+.textureCard:hover {
+
+    background: #272c34;
+
+    border-color: #5a78c7;
+}
+
+
+.texturePreview {
+
+    width: 48px;
+
+    height: 48px;
+
+    flex-shrink: 0;
+
+    object-fit: cover;
+
+    border-radius: 5px;
+
+    background: #0d0f13;
+}
+
+
+.textureInfo {
+
+    min-width: 0;
+}
+
+
+.textureName {
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-size: 12px;
+}
+
+
+.textureType {
+
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    color: #737e8e;
+
+    letter-spacing: .5px;
+}
+
+
+/* ==============================
+   VIEWPORT
+============================== */
+
+.viewport {
+
+    position: relative;
+
+    min-width: 0;
+
+    background: #0c0e12;
+}
+
+
+#viewer {
+
+    width: 100%;
+
+    height: 100%;
+}
+
+
+#viewer canvas {
+
+    display: block;
+
+    width: 100%;
+
+    height: 100%;
+}
+
+
+/* ==============================
+   STATUS
+============================== */
+
+.status {
+
+    position: absolute;
+
+    top: 12px;
+
+    left: 12px;
+
+    padding:
+        7px 10px;
+
+    border:
+        1px solid #303640;
+
+    border-radius: 6px;
+
+    background: #171a20dd;
+
+    color: #aeb6c2;
+
+    font-size: 11px;
+}
+
+
+/* ==============================
+   HINT
+============================== */
+
+.controlsHint {
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 12px;
+
+    transform:
+        translateX(-50%);
+
+    padding:
+        7px 12px;
+
+    border:
+        1px solid #303640;
+
+    border-radius: 6px;
+
+    background: #171a20dd;
+
+    color: #9ea8b6;
+
+    font-size: 11px;
+
+    white-space: nowrap;
+}
+
+
+/* ==============================
+   SELECTED OBJECT
+============================== */
+
+.selectedObject {
+
+    padding: 10px;
+
+    margin-bottom: 20px;
+
+    border:
+        1px solid #343a45;
+
+    border-radius: 7px;
+
+    background: #20242b;
+
+    color: #c9ced7;
+
+    font-size: 12px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ==============================
+   MATERIAL PROPERTY
+============================== */
+
+.property {
+
+    margin-bottom: 18px;
+}
+
+
+.propertyHeader {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+
+    color: #adb5c2;
+
+    font-size: 12px;
+}
+
+
+.propertyHeader span:last-child {
+
+    color: #e0e5ec;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+/* ==============================
+   RANGE
+============================== */
+
+input[type="range"] {
+
+    width: 100%;
+
+    height: 4px;
+
+    margin: 0;
+
+    accent-color: #5a78d0;
+
+    cursor: pointer;
+}
+
+
+/* ==============================
+   REMOVE
+============================== */
+
+.removeButton {
+
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding: 9px;
+
+    border:
+        1px solid #713d44;
+
+    border-radius: 7px;
+
+    background: #3b2226;
+
+    color: #f0dfe1;
+
+    cursor: pointer;
+
+    font-size: 12px;
+}
+
+
+.removeButton:hover {
+
+    background: #4a272c;
+}
+
+
+/* ==============================
+   SCROLLBAR
+============================== */
+
+::-webkit-scrollbar {
+
+    width: 7px;
+}
+
+
+::-webkit-scrollbar-track {
+
+    background: #15181d;
+}
+
+
+::-webkit-scrollbar-thumb {
+
+    background: #343a45;
+
+    border-radius: 10px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+
+    background: #454d5b;
+}
+
+
+/* ==============================
+   SMALL SCREEN
+============================== */
+
+@media (max-width: 900px) {
+
+    .main {
+
+        grid-template-columns:
+            200px
+            minmax(0, 1fr)
+            230px;
+
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .main {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+    .leftPanel,
+    .rightPanel {
+
+        display: none;
+
+    }
+
 }
