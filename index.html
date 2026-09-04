@@ -1,993 +1,3 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Effect Designer</title>
-
-<script type="importmap">
-{
-  "imports": {
-    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-  }
-}
-</script>
-
-<style>
-*{box-sizing:border-box}
-html,body{
-  margin:0;width:100%;height:100%;overflow:hidden;
-  background:#0b0f14;color:#e7edf5;
-  font-family:Inter,system-ui,Arial
-}
-button,input,select{font:inherit}
-button{
-  border:1px solid #303947;
-  background:#171d26;color:#dfe7f0;
-  border-radius:6px;padding:7px 10px;cursor:pointer
-}
-button:hover{background:#232b36;border-color:#516078}
-button.active{background:#2453a6;border-color:#5e91ee}
-.primary{background:#245fb8;border-color:#4d89e5}
-.danger{background:#4e2028;border-color:#93404d}
-
-#app{
-  height:100vh;
-  display:grid;
-  grid-template-rows:48px minmax(0,1fr)
-}
-
-#topbar{
-  display:flex;align-items:center;gap:7px;
-  padding:7px 10px;background:#11161d;
-  border-bottom:1px solid #252d38;z-index:4
-}
-.logo{
-  font-weight:900;font-size:14px;
-  letter-spacing:.8px;margin-right:10px
-}
-.logo span{color:#71a5ff}
-.toolbar{
-  display:flex;gap:6px;align-items:center;flex:1
-}
-.spacer{flex:1}
-.toolbar button{font-size:10px}
-
-#workspace{
-  display:grid;
-  grid-template-columns:245px minmax(0,1fr) 330px;
-  min-height:0
-}
-
-#left,#right{
-  min-width:0;min-height:0;
-  background:#10151c;
-  display:flex;flex-direction:column
-}
-
-.panelTitle{
-  padding:11px 12px 8px;
-  border-bottom:1px solid #252d38;
-  font-size:10px;font-weight:800;
-  letter-spacing:.8px;color:#a8b3c2
-}
-.panelTitle small{
-  color:#6e7d90;margin-left:5px;font-weight:600
-}
-
-#sceneTree{
-  padding:8px;overflow:auto;
-  border-bottom:1px solid #252d38;
-  max-height:45%
-}
-
-.treeRow{
-  display:flex;align-items:center;gap:6px;
-  padding:7px 8px;border-radius:6px;
-  color:#bfc9d7;font-size:10px;cursor:pointer
-}
-.treeRow:hover{background:#1b222c}
-.treeRow.active{
-  background:#1b2b43;color:#fff
-}
-.treeArrow{width:12px;color:#7f8fa4}
-.treeIcon{width:17px;text-align:center}
-.treeChildren{padding-left:18px}
-
-.empty{
-  padding:12px;color:#667487;font-size:9px
-}
-
-#library{
-  flex:1;overflow:auto;padding:8px
-}
-
-.effectCard{
-  display:flex;align-items:center;gap:8px;
-  padding:7px;border:1px solid #2a3340;
-  background:#151b23;border-radius:7px;
-  margin-bottom:6px;cursor:pointer
-}
-.effectCard:hover{border-color:#4b586a}
-.effectCard.active{
-  border-color:#4f86e0;background:#1a2637
-}
-
-.thumb{
-  width:44px;height:44px;
-  object-fit:contain;background:#0a0e13;
-  border:1px solid #34404e;border-radius:5px
-}
-.effectMeta{min-width:0}
-.effectName{
-  font-size:10px;font-weight:700;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-.effectSub{
-  font-size:8px;color:#748397;margin-top:3px
-}
-
-#center{
-  position:relative;min-width:0;min-height:0;
-  background:radial-gradient(
-    circle at 50% 45%,
-    #1b2431 0,#0d131b 50%,#090c11 100%
-  )
-}
-
-#viewer{
-  position:absolute;inset:0
-}
-
-.viewLabel,.viewHint{
-  position:absolute;top:10px;
-  padding:5px 7px;font-size:9px;
-  color:#9eacbd;
-  background:rgba(10,14,19,.8);
-  border:1px solid #303b4b;
-  border-radius:5px;
-  pointer-events:none
-}
-.viewLabel{left:12px}
-.viewHint{right:12px}
-
-#right{
-  border-left:1px solid #252d38;
-  overflow:hidden
-}
-
-.inspectorScroll{overflow:auto}
-
-.section{
-  padding:10px;
-  border-bottom:1px solid #252d38
-}
-
-.section h3{
-  margin:0 0 8px;
-  color:#a8b3c2;
-  font-size:10px;
-  letter-spacing:.7px
-}
-
-.row{
-  display:grid;
-  grid-template-columns:95px minmax(0,1fr) 55px;
-  gap:6px;align-items:center;
-  margin:7px 0;font-size:9px;color:#9eabbb
-}
-
-.row input[type=range]{width:100%}
-
-.val{
-  font-family:ui-monospace,Consolas,monospace;
-  color:#d2dce8;text-align:right
-}
-
-.mini{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px
-}
-.mini button{font-size:9px}
-
-.check{
-  display:flex;gap:7px;
-  align-items:center;
-  font-size:9px;color:#9eabbb;
-  margin:6px 0
-}
-
-.select{
-  width:100%;
-  background:#0f141b;color:#dfe7f0;
-  border:1px solid #303947;
-  border-radius:5px;padding:6px 7px;
-  font-size:9px
-}
-
-.fileRow{
-  display:flex;gap:6px;align-items:center
-}
-.fileRow input{width:100%;font-size:9px}
-
-.status{
-  min-height:17px;color:#7e8ca0;
-  font-size:9px;margin-top:5px
-}
-
-.note{
-  font-size:8px;
-  line-height:1.45;color:#67768a
-}
-
-/* ==============================
-   SEQUENCE EDITOR
-============================== */
-
-.sequence{
-  border:1px solid #303947;
-  background:#0d131b;
-  border-radius:6px;
-  padding:7px;
-  margin-bottom:6px
-}
-
-.sequenceRow{
-  display:grid;
-  grid-template-columns:42px 1fr 42px;
-  gap:6px;
-  align-items:center;
-  margin:5px 0;
-  font-size:8px;
-  color:#8997a9
-}
-
-.sequenceRow input{width:100%}
-
-.sequenceValue{
-  text-align:right;
-  color:#d5deea;
-  font-family:monospace
-}
-
-/* ==============================
-   TIMELINE
-============================== */
-
-.timelineWrap{
-  border:1px solid #303947;
-  background:#090e14;
-  border-radius:6px;
-  overflow:hidden
-}
-
-.timeline{
-  height:95px;
-  position:relative;
-  cursor:pointer;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent calc(10% - 1px),
-      #1c2632 calc(10% - 1px),
-      #1c2632 10%
-    )
-}
-
-.timelineLine{
-  position:absolute;
-  top:0;bottom:0;
-  width:2px;
-  background:#70a6ff;
-  pointer-events:none
-}
-
-.timelineKey{
-  position:absolute;
-  top:35px;
-  width:10px;height:10px;
-  transform:translateX(-50%) rotate(45deg);
-  background:#75aaff;
-  border:1px solid #b8d2ff;
-  cursor:pointer;
-  z-index:3
-}
-
-.timelineLabel{
-  position:absolute;
-  bottom:4px;
-  font-size:7px;
-  color:#59697d;
-  transform:translateX(-50%)
-}
-
-.timelineControls{
-  display:flex;
-  gap:5px;
-  margin-top:6px
-}
-
-.timelineControls button{
-  flex:1;font-size:9px
-}
-
-.trackName{
-  font-size:8px;
-  color:#7e8da1;
-  margin:7px 0 3px
-}
-
-/* ==============================
-   EXPORT
-============================== */
-
-.exportBox{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px
-}
-
-.exportBox button{
-  font-size:9px
-}
-
-@media(max-width:1000px){
-  #workspace{
-    grid-template-columns:205px minmax(0,1fr) 280px
-  }
-}
-</style>
-</head>
-
-<body>
-
-<div id="app">
-
-<header id="topbar">
-
-  <div class="logo">
-    EFFECT<span>DESIGNER</span>
-  </div>
-
-  <div class="toolbar">
-
-    <button id="backToStudio">
-      ← Studio
-    </button>
-
-    <button id="addPart" class="primary">
-      ＋ Part
-    </button>
-
-    <button id="addEffect">
-      ＋ Effect
-    </button>
-
-    <button id="uploadImage">
-      ＋ Texture
-    </button>
-
-    <button id="duplicateEffect">
-      Duplicate
-    </button>
-
-    <button id="deleteSelected" class="danger">
-      Delete
-    </button>
-
-    <button id="playTop">
-      ▶ Play
-    </button>
-
-    <button id="stopTop">
-      ■ Stop
-    </button>
-
-    <div class="spacer"></div>
-
-    <button id="exportOBJ">
-      Export OBJ
-    </button>
-
-    <button id="exportGLB" class="primary">
-      Export GLB
-    </button>
-
-    <button id="saveEffect">
-      Save JSON
-    </button>
-
-    <button id="loadEffect">
-      Load JSON
-    </button>
-
-    <input
-      id="jsonInput"
-      type="file"
-      accept=".json,application/json"
-      hidden
-    >
-
-  </div>
-
-</header>
-
-
-<section id="workspace">
-
-<!-- ================= LEFT ================= -->
-
-<aside id="left">
-
-  <div class="panelTitle">
-    EXPLORER <small>WORKSPACE</small>
-  </div>
-
-  <div id="sceneTree"></div>
-
-  <div class="panelTitle">
-    EFFECT LIBRARY <small>ASSETS</small>
-  </div>
-
-  <div id="library"></div>
-
-</aside>
-
-
-<!-- ================= CENTER ================= -->
-
-<main id="center">
-
-  <div id="viewer"></div>
-
-  <div class="viewLabel">
-    3D EFFECT PREVIEW
-  </div>
-
-  <div class="viewHint">
-    Orbit: chuột trái · Zoom: wheel
-  </div>
-
-</main>
-
-
-<!-- ================= RIGHT ================= -->
-
-<aside id="right">
-
-  <div class="panelTitle">
-    EFFECT PROPERTIES
-    <small id="selectionTitle">NONE</small>
-  </div>
-
-  <div class="inspectorScroll">
-
-
-    <!-- PART -->
-
-    <div id="partProps" class="section" hidden>
-
-      <h3>PART</h3>
-
-      <div class="row">
-        <span>Size X</span>
-        <input id="partX" type="range"
-          min=".2" max="5" step=".1" value="2">
-        <span id="partXV" class="val">2.0</span>
-      </div>
-
-      <div class="row">
-        <span>Size Y</span>
-        <input id="partY" type="range"
-          min=".2" max="5" step=".1" value="2">
-        <span id="partYV" class="val">2.0</span>
-      </div>
-
-      <div class="row">
-        <span>Size Z</span>
-        <input id="partZ" type="range"
-          min=".2" max="5" step=".1" value=".4">
-        <span id="partZV" class="val">0.4</span>
-      </div>
-
-      <label class="check">
-        <input id="partVisible" type="checkbox" checked>
-        Visible
-      </label>
-
-    </div>
-
-
-    <!-- EFFECT -->
-
-    <div id="effectProps" hidden>
-
-
-      <!-- BASIC -->
-
-      <div class="section">
-
-        <h3>EFFECT</h3>
-
-        <div class="mini">
-
-          <button id="effectPlay" class="primary">
-            ▶ Play
-          </button>
-
-          <button id="effectStop">
-            ■ Stop
-          </button>
-
-        </div>
-
-        <div class="row">
-          <span>Duration</span>
-          <input id="duration"
-            type="range"
-            min=".1" max="20"
-            step=".1" value="2">
-          <span id="durationV" class="val">
-            2.0s
-          </span>
-        </div>
-
-      </div>
-
-
-      <!-- PARTICLE -->
-
-      <div class="section">
-
-        <h3>PARTICLE EMITTER</h3>
-
-        <div class="fileRow">
-          <input id="imageInput"
-            type="file"
-            accept="image/*">
-        </div>
-
-        <div id="assetStatus" class="status">
-          No texture
-        </div>
-
-        <label class="check">
-          <input id="enabled"
-            type="checkbox"
-            checked>
-          Enabled
-        </label>
-
-        <div class="row">
-          <span>Rate</span>
-          <input id="rate"
-            type="range"
-            min="0" max="500"
-            step="1" value="50">
-          <span id="rateV" class="val">50</span>
-        </div>
-
-        <div class="row">
-          <span>Lifetime Min</span>
-          <input id="lifeMin"
-            type="range"
-            min="0.05" max="20"
-            step=".1" value="1">
-          <span id="lifeMinV" class="val">1.0</span>
-        </div>
-
-        <div class="row">
-          <span>Lifetime Max</span>
-          <input id="lifeMax"
-            type="range"
-            min=".05" max="20"
-            step=".1" value="2">
-          <span id="lifeMaxV" class="val">2.0</span>
-        </div>
-
-        <div class="row">
-          <span>Speed Min</span>
-          <input id="speedMin"
-            type="range"
-            min="0" max="50"
-            step=".1" value="3">
-          <span id="speedMinV" class="val">3.0</span>
-        </div>
-
-        <div class="row">
-          <span>Speed Max</span>
-          <input id="speedMax"
-            type="range"
-            min="0" max="50"
-            step=".1" value="6">
-          <span id="speedMaxV" class="val">6.0</span>
-        </div>
-
-      </div>
-
-
-      <!-- SIZE -->
-
-      <div class="section">
-
-        <h3>SIZE SEQUENCE</h3>
-
-        <div id="sizeSequence"
-          class="sequence">
-
-          <div class="sequenceRow">
-            <span>0.00</span>
-            <input type="range"
-              min="0" max="3"
-              step=".01" value=".2">
-            <span class="sequenceValue">
-              .20
-            </span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>.25</span>
-            <input type="range"
-              min="0" max="3"
-              step=".01" value="1">
-            <span class="sequenceValue">
-              1.00
-            </span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>.50</span>
-            <input type="range"
-              min="0" max="3"
-              step=".01" value="1.5">
-            <span class="sequenceValue">
-              1.50
-            </span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>.75</span>
-            <input type="range"
-              min="0" max="3"
-              step=".01" value=".7">
-            <span class="sequenceValue">
-              .70
-            </span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>1.00</span>
-            <input type="range"
-              min="0" max="3"
-              step=".01" value="0">
-            <span class="sequenceValue">
-              .00
-            </span>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- TRANSPARENCY -->
-
-      <div class="section">
-
-        <h3>TRANSPARENCY SEQUENCE</h3>
-
-        <div id="transparencySequence"
-          class="sequence">
-
-          <div class="sequenceRow">
-            <span>0.00</span>
-            <input type="range"
-              min="0" max="1"
-              step=".01" value="0">
-            <span class="sequenceValue">0</span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>.50</span>
-            <input type="range"
-              min="0" max="1"
-              step=".01" value=".15">
-            <span class="sequenceValue">.15</span>
-          </div>
-
-          <div class="sequenceRow">
-            <span>1.00</span>
-            <input type="range"
-              min="0" max="1"
-              step=".01" value="1">
-            <span class="sequenceValue">1</span>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- COLOR -->
-
-      <div class="section">
-
-        <h3>COLOR / LIGHT</h3>
-
-        <div class="row">
-          <span>Color</span>
-          <input id="color"
-            type="color"
-            value="#ffffff">
-          <span id="colorV"
-            class="val">#ffffff</span>
-        </div>
-
-        <div class="row">
-          <span>Emission</span>
-          <input id="emission"
-            type="range"
-            min="0" max="3"
-            step=".01" value="1">
-          <span id="emissionV"
-            class="val">1.00</span>
-        </div>
-
-      </div>
-
-
-      <!-- ROTATION -->
-
-      <div class="section">
-
-        <h3>ROTATION</h3>
-
-        <div class="row">
-          <span>Rotation Min</span>
-          <input id="rotMin"
-            type="range"
-            min="-360" max="360"
-            value="0">
-          <span id="rotMinV"
-            class="val">0°</span>
-        </div>
-
-        <div class="row">
-          <span>Rotation Max</span>
-          <input id="rotMax"
-            type="range"
-            min="-360" max="360"
-            value="360">
-          <span id="rotMaxV"
-            class="val">360°</span>
-        </div>
-
-        <div class="row">
-          <span>Rot Speed</span>
-          <input id="rotSpeed"
-            type="range"
-            min="-20" max="20"
-            step=".1" value="0">
-          <span id="rotSpeedV"
-            class="val">0.0</span>
-        </div>
-
-      </div>
-
-
-      <!-- EMISSION -->
-
-      <div class="section">
-
-        <h3>EMISSION</h3>
-
-        <div class="row">
-          <span>Spread X</span>
-          <input id="spreadX"
-            type="range"
-            min="0" max="180"
-            value="20">
-          <span id="spreadXV"
-            class="val">20°</span>
-        </div>
-
-        <div class="row">
-          <span>Spread Y</span>
-          <input id="spreadY"
-            type="range"
-            min="0" max="180"
-            value="20">
-          <span id="spreadYV"
-            class="val">20°</span>
-        </div>
-
-        <div class="row">
-          <span>Direction</span>
-          <select id="direction"
-            class="select">
-            <option>Front</option>
-            <option>Back</option>
-            <option>Top</option>
-            <option>Bottom</option>
-            <option>Left</option>
-            <option>Right</option>
-          </select>
-          <span></span>
-        </div>
-
-        <div class="row">
-          <span>Shape</span>
-          <select id="shape"
-            class="select">
-            <option>Box</option>
-            <option>Sphere</option>
-            <option>Disc</option>
-            <option>Cylinder</option>
-          </select>
-          <span></span>
-        </div>
-
-        <label class="check">
-          <input id="locked"
-            type="checkbox">
-          Locked To Part
-        </label>
-
-      </div>
-
-
-      <!-- TRANSFORM -->
-
-      <div class="section">
-
-        <h3>EFFECT TRANSFORM</h3>
-
-        <div class="row">
-          <span>Offset X</span>
-          <input id="offX"
-            type="range"
-            min="-5" max="5"
-            step=".01" value="0">
-          <span id="offXV"
-            class="val">0.00</span>
-        </div>
-
-        <div class="row">
-          <span>Offset Y</span>
-          <input id="offY"
-            type="range"
-            min="-5" max="5"
-            step=".01" value="0">
-          <span id="offYV"
-            class="val">0.00</span>
-        </div>
-
-        <div class="row">
-          <span>Offset Z</span>
-          <input id="offZ"
-            type="range"
-            min="-5" max="5"
-            step=".01" value="0">
-          <span id="offZV"
-            class="val">0.00</span>
-        </div>
-
-        <div class="mini">
-          <button id="centerEffect">
-            Center
-          </button>
-
-          <button id="faceCamera">
-            Face Camera
-          </button>
-        </div>
-
-      </div>
-
-
-      <!-- ================= TIMELINE ================= -->
-
-      <div class="section">
-
-        <h3>ANIMATION TIMELINE</h3>
-
-        <div class="timelineWrap">
-
-          <div id="timeline"
-            class="timeline">
-
-            <div id="timelineLine"
-              class="timelineLine">
-            </div>
-
-            <div id="timelineKeys"></div>
-
-          </div>
-
-        </div>
-
-        <div class="timelineControls">
-
-          <button id="minusTime">
-            −
-          </button>
-
-          <button id="currentTime">
-            0.00s
-          </button>
-
-          <button id="plusTime">
-            +
-          </button>
-
-        </div>
-
-        <div class="trackName">
-          ANIMATION TRACKS
-        </div>
-
-        <div class="mini">
-
-          <button id="keyPosition">
-            ◆ Position
-          </button>
-
-          <button id="keyRotation">
-            ◆ Rotation
-          </button>
-
-          <button id="keyScale">
-            ◆ Scale
-          </button>
-
-          <button id="keyOpacity">
-            ◆ Opacity
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- EXPORT -->
-
-      <div class="section">
-
-        <h3>EXPORT</h3>
-
-        <div class="exportBox">
-
-          <button id="exportOBJ2">
-            Export OBJ
-          </button>
-
-          <button id="exportGLB2"
-            class="primary">
-            Export GLB
-          </button>
-
-        </div>
-
-        <p class="note">
-          GLB dùng để đưa model/material/animation sang
-          Blender. OBJ chỉ chứa geometry tĩnh.
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</aside>
-
-</section>
-</div>
-
-
 <script type="module">
 
 import * as THREE from 'three';
@@ -1009,8 +19,15 @@ import {
    HELPERS
 ========================================================= */
 
-const $ = id =>
-  document.getElementById(id);
+const $ = id => document.getElementById(id);
+
+function clamp(v,min,max){
+  return Math.max(min,Math.min(max,v));
+}
+
+function lerp(a,b,t){
+  return a+(b-a)*t;
+}
 
 
 /* =========================================================
@@ -1020,15 +37,21 @@ const $ = id =>
 const renderer =
   new THREE.WebGLRenderer({
     antialias:true,
-    alpha:true
+    alpha:true,
+    preserveDrawingBuffer:true
   });
 
 renderer.setPixelRatio(
-  Math.min(devicePixelRatio,2)
+  Math.min(window.devicePixelRatio,2)
 );
 
 renderer.outputColorSpace =
   THREE.SRGBColorSpace;
+
+renderer.setClearColor(
+  0x000000,
+  0
+);
 
 $("viewer").appendChild(
   renderer.domElement
@@ -1041,11 +64,16 @@ const scene =
 
 const camera =
   new THREE.PerspectiveCamera(
-    45,1,.1,100
+    45,
+    1,
+    .1,
+    200
   );
 
 camera.position.set(
-  5,3.5,6
+  5,
+  3.5,
+  6
 );
 
 
@@ -1058,9 +86,13 @@ const controls =
 controls.enableDamping = true;
 
 controls.target.set(
-  0,1,0
+  0,
+  1,
+  0
 );
 
+
+/* LIGHT */
 
 scene.add(
   new THREE.HemisphereLight(
@@ -1078,15 +110,20 @@ const keyLight =
   );
 
 keyLight.position.set(
-  4,6,5
+  4,
+  6,
+  5
 );
 
 scene.add(keyLight);
 
 
+/* GRID */
+
 const grid =
   new THREE.GridHelper(
-    10,10,
+    10,
+    10,
     0x28323e,
     0x18202a
   );
@@ -1127,18 +164,27 @@ function makePart(){
 
   const material =
     new THREE.MeshStandardMaterial({
+
       color:0x5b6878,
+
       roughness:.5,
+
       metalness:.15
+
     });
 
 
   const obj =
     new THREE.Mesh(
+
       new THREE.BoxGeometry(
-        2,2,.4
+        2,
+        2,
+        .4
       ),
+
       material
+
     );
 
 
@@ -1153,7 +199,9 @@ function makePart(){
 
   const p = {
 
-    id:"part"+state.nextPart++,
+    id:
+      "part"+
+      state.nextPart++,
 
     name:"Part",
 
@@ -1179,6 +227,7 @@ function makePart(){
   renderTree();
 
   return p;
+
 }
 
 
@@ -1196,7 +245,9 @@ function makeEffect(){
 
   const e = {
 
-    id:"effect"+state.nextEffect++,
+    id:
+      "effect"+
+      state.nextEffect++,
 
     name:"Effect",
 
@@ -1253,9 +304,10 @@ function makeEffect(){
 
   p.effects.push(e);
 
-  state.selectedPart = p;
+  state.selectedPart=p;
 
-  state.selectedEffect = e;
+  state.selectedEffect=e;
+
 
   rebuildEffectVisual(e);
 
@@ -1266,11 +318,12 @@ function makeEffect(){
   syncInspector();
 
   return e;
+
 }
 
 
 /* =========================================================
-   PARTICLES
+   PARTICLE TEXTURE
 ========================================================= */
 
 const textureLoader =
@@ -1285,9 +338,16 @@ function makeParticleTexture(data){
   tex.colorSpace =
     THREE.SRGBColorSpace;
 
+  tex.needsUpdate=true;
+
   return tex;
+
 }
 
+
+/* =========================================================
+   CREATE PARTICLES
+========================================================= */
 
 function createParticlesVisual(e){
 
@@ -1295,7 +355,7 @@ function createParticlesVisual(e){
     p => scene.remove(p)
   );
 
-  e.particles = [];
+  e.particles=[];
 
 
   if(
@@ -1304,6 +364,11 @@ function createParticlesVisual(e){
   )
     return;
 
+
+  /*
+    Runtime particle count.
+    Giới hạn để preview không lag.
+  */
 
   const count =
     Math.min(
@@ -1353,13 +418,16 @@ function createParticlesVisual(e){
 
 
     sprite.scale.set(
-      .3,.3,1
+      .3,
+      .3,
+      1
     );
 
 
-    e.particles.push(
-      sprite
-    );
+    sprite.userData.particleIndex=i;
+
+
+    e.particles.push(sprite);
 
     scene.add(sprite);
 
@@ -1371,6 +439,226 @@ function createParticlesVisual(e){
 function rebuildEffectVisual(e){
 
   createParticlesVisual(e);
+
+}
+
+
+/* =========================================================
+   PARTICLE DIRECTION
+========================================================= */
+
+function getDirection(e){
+
+  const dir =
+    new THREE.Vector3(
+      0,
+      1,
+      0
+    );
+
+
+  if(e.direction==="Front")
+    dir.set(0,0,1);
+
+  if(e.direction==="Back")
+    dir.set(0,0,-1);
+
+  if(e.direction==="Top")
+    dir.set(0,1,0);
+
+  if(e.direction==="Bottom")
+    dir.set(0,-1,0);
+
+  if(e.direction==="Left")
+    dir.set(-1,0,0);
+
+  if(e.direction==="Right")
+    dir.set(1,0,0);
+
+
+  return dir;
+
+}
+
+
+/* =========================================================
+   PARTICLE POSITION CALCULATION
+========================================================= */
+
+function calculateParticleTransform(
+  e,
+  particleIndex,
+  absoluteTime
+){
+
+  const p =
+    state.parts.find(
+      x => x.id===e.partId
+    );
+
+
+  if(!p){
+
+    return {
+      position:new THREE.Vector3(),
+      scale:1,
+      rotation:0,
+      opacity:0
+    };
+
+  }
+
+
+  const base =
+    p.object.position;
+
+
+  const life =
+    Math.max(
+      .05,
+      lerp(
+        e.lifeMin,
+        e.lifeMax,
+        (particleIndex%17)/17
+      )
+    );
+
+
+  /*
+    Stable particle seed.
+    Giúp preview và export gần giống nhau.
+  */
+
+  const seed =
+    particleIndex*17.123;
+
+
+  const age =
+    (
+      seed+
+      absoluteTime*
+      Math.max(
+        .01,
+        lerp(
+          e.speedMin,
+          e.speedMax,
+          (particleIndex%10)/10
+        )
+      )
+    )%life;
+
+
+  const t =
+    age/life;
+
+
+  const dir =
+    getDirection(e);
+
+
+  const sx =
+    Math.tan(
+      THREE.MathUtils.degToRad(
+        e.spreadX
+      )
+    );
+
+
+  const sy =
+    Math.tan(
+      THREE.MathUtils.degToRad(
+        e.spreadY
+      )
+    );
+
+
+  const speed =
+    THREE.MathUtils.lerp(
+      e.speedMin,
+      e.speedMax,
+      (particleIndex%10)/10
+    );
+
+
+  const vx =
+    dir.x*speed+
+    Math.sin(
+      particleIndex*13.1
+    )*sx;
+
+
+  const vy =
+    dir.y*speed+
+    Math.cos(
+      particleIndex*7.3
+    )*sy;
+
+
+  const vz =
+    dir.z*speed+
+    Math.sin(
+      particleIndex*9.4
+    )*sx;
+
+
+  const position =
+    new THREE.Vector3(
+
+      base.x+
+      e.offset.x+
+      vx*t,
+
+      base.y+
+      e.offset.y+
+      vy*t,
+
+      base.z+
+      e.offset.z+
+      vz*t
+
+    );
+
+
+  const fade =
+    1-t;
+
+
+  const size =
+    .12+
+    .65*
+    Math.sin(
+      t*Math.PI
+    );
+
+
+  const rotation =
+    THREE.MathUtils.degToRad(
+
+      e.rotMin+
+      (e.rotMax-e.rotMin)*t
+
+    )+
+    e.rotSpeed*
+    absoluteTime;
+
+
+  return {
+
+    position,
+
+    scale:Math.max(
+      .001,
+      size
+    ),
+
+    rotation,
+
+    opacity:Math.max(
+      0,
+      fade
+    )
+
+  };
 
 }
 
@@ -1391,133 +679,29 @@ function simulateEffect(e,dt){
   e.runtime += dt;
 
 
-  const life =
-    Math.max(
-      .05,
-      e.lifeMax
-    );
-
-
-  const p =
-    state.parts.find(
-      x => x.id === e.partId
-    );
-
-
-  if(!p)return;
-
-
-  const base =
-    p.object.position;
-
-
   e.particles.forEach(
     (sprite,i)=>{
 
-      const seed =
-        i*17.123 +
-        e.runtime *
-        (e.speedMin+.5);
-
-
-      const age =
-        ((seed%life)+life)%life;
-
-
-      const t =
-        age/life;
-
-
-      let dir =
-        new THREE.Vector3(
-          0,1,0
+      const tr =
+        calculateParticleTransform(
+          e,
+          i,
+          e.runtime
         );
 
 
-      if(e.direction==="Back")
-        dir.set(0,0,-1);
-
-      if(e.direction==="Front")
-        dir.set(0,0,1);
-
-      if(e.direction==="Top")
-        dir.set(0,1,0);
-
-      if(e.direction==="Bottom")
-        dir.set(0,-1,0);
-
-      if(e.direction==="Left")
-        dir.set(-1,0,0);
-
-      if(e.direction==="Right")
-        dir.set(1,0,0);
-
-
-      const sx =
-        Math.tan(
-          THREE.MathUtils.degToRad(
-            e.spreadX
-          )
-        );
-
-
-      const sy =
-        Math.tan(
-          THREE.MathUtils.degToRad(
-            e.spreadY
-          )
-        );
-
-
-      const speed =
-        THREE.MathUtils.lerp(
-          e.speedMin,
-          e.speedMax,
-          (i%10)/10
-        );
-
-
-      const vx =
-        dir.x*speed +
-        Math.sin(i*13.1)*sx;
-
-
-      const vy =
-        dir.y*speed +
-        Math.cos(i*7.3)*sy;
-
-
-      const vz =
-        dir.z*speed +
-        Math.sin(i*9.4)*sx;
-
-
-      sprite.position.set(
-
-        base.x +
-        e.offset.x +
-        vx*t,
-
-        base.y +
-        e.offset.y +
-        vy*t,
-
-        base.z +
-        e.offset.z +
-        vz*t
-
+      sprite.position.copy(
+        tr.position
       );
 
 
-      const fade =
-        1-t;
+      sprite.scale.setScalar(
+        tr.scale
+      );
 
 
       sprite.material.opacity =
-        Math.max(
-          0,
-          fade
-        );
+        tr.opacity;
 
 
       sprite.material.color.set(
@@ -1525,26 +709,8 @@ function simulateEffect(e,dt){
       );
 
 
-      const size =
-        (.12 +
-        .65 *
-        Math.sin(
-          t*Math.PI
-        ));
-
-
-      sprite.scale.setScalar(
-        size
-      );
-
-
       sprite.material.rotation =
-        THREE.MathUtils.degToRad(
-          e.rotMin +
-          (e.rotMax-e.rotMin)*t
-        ) +
-        e.rotSpeed *
-        e.runtime;
+        tr.rotation;
 
     }
   );
@@ -1558,21 +724,28 @@ function simulateEffect(e,dt){
 
 function selectPart(p){
 
-  state.selectedPart = p;
+  state.selectedPart=p;
 
-  state.selectedEffect = null;
+  state.selectedEffect=null;
 
 
   state.parts.forEach(
-    part => {
+    part=>{
 
-      part.object.material
-        .emissive
-        .setHex(
+      if(
+        part.object.material &&
+        part.object.material.emissive
+      ){
+
+        part.object.material.emissive.setHex(
+
           part===p
           ?0x1b3555
           :0x000000
+
         );
+
+      }
 
     }
   );
@@ -1587,12 +760,13 @@ function selectPart(p){
 
 function selectEffect(e){
 
-  state.selectedEffect = e;
+  state.selectedEffect=e;
+
 
   state.selectedPart =
     state.parts.find(
-      p => p.id===e.partId
-    ) || null;
+      p=>p.id===e.partId
+    )||null;
 
 
   syncInspector();
@@ -1600,6 +774,8 @@ function selectEffect(e){
   renderTree();
 
   renderLibrary();
+
+  renderTimeline();
 
 }
 
@@ -1615,7 +791,7 @@ function removeSelected(){
     const p =
       state.parts.find(
         x =>
-          x.id ===
+          x.id===
           state.selectedEffect.partId
       );
 
@@ -1635,17 +811,20 @@ function removeSelected(){
 
     state.selectedEffect.particles
       .forEach(
-        x => scene.remove(x)
+        x=>scene.remove(x)
       );
 
 
     state.selectedEffect=null;
+
 
     syncInspector();
 
     renderTree();
 
     renderLibrary();
+
+    renderTimeline();
 
     return;
 
@@ -1659,9 +838,9 @@ function removeSelected(){
 
 
     p.effects.forEach(
-      e =>
+      e=>
         e.particles.forEach(
-          x => scene.remove(x)
+          x=>scene.remove(x)
         )
     );
 
@@ -1681,11 +860,16 @@ function removeSelected(){
 
     state.selectedPart=null;
 
+    state.selectedEffect=null;
+
+
     syncInspector();
 
     renderTree();
 
     renderLibrary();
+
+    renderTimeline();
 
   }
 
@@ -1724,7 +908,7 @@ function renderTree(){
 
 
       row.className =
-        "treeRow" +
+        "treeRow"+
         (
           p===state.selectedPart &&
           !state.selectedEffect
@@ -1741,7 +925,7 @@ function renderTree(){
 
 
       row.onclick =
-        () => selectPart(p);
+        ()=>selectPart(p);
 
 
       root.appendChild(row);
@@ -1751,6 +935,7 @@ function renderTree(){
         document.createElement(
           "div"
         );
+
 
       child.className =
         "treeChildren";
@@ -1766,7 +951,7 @@ function renderTree(){
 
 
           er.className =
-            "treeRow" +
+            "treeRow"+
             (
               e===state.selectedEffect
               ?" active":""
@@ -1816,26 +1001,41 @@ function placeholder(){
       "canvas"
     );
 
+
   canvas.width=64;
+
   canvas.height=64;
+
 
   const c =
     canvas.getContext("2d");
 
+
   c.fillStyle="#0d131b";
-  c.fillRect(0,0,64,64);
+
+  c.fillRect(
+    0,
+    0,
+    64,
+    64
+  );
+
 
   c.fillStyle="#6aa0ff";
+
 
   c.beginPath();
 
   c.arc(
-    32,32,15,
+    32,
+    32,
+    15,
     0,
     Math.PI*2
   );
 
   c.fill();
+
 
   return canvas.toDataURL();
 
@@ -1852,7 +1052,7 @@ function renderLibrary(){
 
   const all =
     state.parts.flatMap(
-      p => p.effects
+      p=>p.effects
     );
 
 
@@ -1876,7 +1076,7 @@ function renderLibrary(){
 
 
       card.className =
-        "effectCard" +
+        "effectCard"+
         (
           e===state.selectedEffect
           ?" active":""
@@ -1891,8 +1091,9 @@ function renderLibrary(){
 
       img.className="thumb";
 
+
       img.src =
-        e.textureData ||
+        e.textureData||
         placeholder();
 
 
@@ -1901,8 +1102,8 @@ function renderLibrary(){
           "div"
         );
 
-      meta.className =
-        "effectMeta";
+
+      meta.className="effectMeta";
 
 
       meta.innerHTML =
@@ -1924,7 +1125,7 @@ function renderLibrary(){
 
 
       card.onclick =
-        () => selectEffect(e);
+        ()=>selectEffect(e);
 
 
       box.appendChild(card);
@@ -1958,8 +1159,7 @@ function syncInspector(){
   $("selectionTitle")
     .textContent =
       (
-        e ||
-        p
+        e||p
       )
       ?
       (
@@ -1972,14 +1172,14 @@ function syncInspector(){
 
 
   $("partProps").hidden =
-    !p || !!e;
+    !p||!!e;
 
 
   $("effectProps").hidden =
     !e;
 
 
-  if(p && !e){
+  if(p&&!e){
 
     setVal(
       "partX",
@@ -1996,26 +1196,25 @@ function syncInspector(){
       p.size.z
     );
 
-    $("partXV")
-      .textContent =
+
+    $("partXV").textContent =
       p.size.x.toFixed(1);
 
-    $("partYV")
-      .textContent =
+    $("partYV").textContent =
       p.size.y.toFixed(1);
 
-    $("partZV")
-      .textContent =
+    $("partZV").textContent =
       p.size.z.toFixed(1);
 
-    $("partVisible")
-      .checked =
+
+    $("partVisible").checked =
       p.visible;
 
   }
 
 
-  if(!e)return;
+  if(!e)
+    return;
 
 
   setVal(
@@ -2023,12 +1222,13 @@ function syncInspector(){
     state.duration
   );
 
+
   $("durationV")
     .textContent =
-    state.duration.toFixed(1)+"s";
+      state.duration.toFixed(1)+"s";
 
 
-  const fields = [
+  const fields=[
 
     ["rate","rate",v=>Math.round(v)],
 
@@ -2063,9 +1263,10 @@ function syncInspector(){
         e[key]
       );
 
+
       $(id+"V")
         .textContent =
-        fmt(e[key]);
+          fmt(e[key]);
 
     }
   );
@@ -2100,26 +1301,41 @@ function syncInspector(){
   $("enabled").checked =
     e.enabled;
 
+
   $("locked").checked =
     e.locked;
+
 
   $("color").value =
     e.color;
 
+
   $("colorV").textContent =
     e.color;
+
 
   $("direction").value =
     e.direction;
 
+
   $("shape").value =
     e.shape;
+
+
+  if($("assetStatus")){
+
+    $("assetStatus").textContent =
+      e.textureData
+      ?"Texture loaded"
+      :"No texture";
+
+  }
 
 }
 
 
 /* =========================================================
-   RANGE BINDINGS
+   RANGE BIND
 ========================================================= */
 
 function bind(
@@ -2128,25 +1344,32 @@ function bind(
   display
 ){
 
-  $(id).addEventListener(
+  const el=$(id);
+
+  if(!el)return;
+
+
+  el.addEventListener(
     "input",
     ()=>{
 
-      callback(
+      const v =
         Number(
-          $(id).value
-        )
-      );
+          el.value
+        );
+
+
+      callback(v);
+
 
       if(display){
 
-        $(id+"V")
-          .textContent =
-          display(
-            Number(
-              $(id).value
-            )
-          );
+        const out =
+          $(id+"V");
+
+        if(out)
+          out.textContent =
+            display(v);
 
       }
 
@@ -2159,6 +1382,7 @@ function bind(
 bind(
   "rate",
   v=>{
+
     if(state.selectedEffect){
 
       state.selectedEffect.rate=v;
@@ -2168,6 +1392,7 @@ bind(
       );
 
     }
+
   },
   v=>Math.round(v)
 );
@@ -2176,8 +1401,10 @@ bind(
 bind(
   "lifeMin",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.lifeMin=v;
+
   },
   v=>v.toFixed(1)
 );
@@ -2186,8 +1413,10 @@ bind(
 bind(
   "lifeMax",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.lifeMax=v;
+
   },
   v=>v.toFixed(1)
 );
@@ -2196,8 +1425,10 @@ bind(
 bind(
   "speedMin",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.speedMin=v;
+
   },
   v=>v.toFixed(1)
 );
@@ -2206,8 +1437,10 @@ bind(
 bind(
   "speedMax",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.speedMax=v;
+
   },
   v=>v.toFixed(1)
 );
@@ -2216,8 +1449,10 @@ bind(
 bind(
   "rotMin",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.rotMin=v;
+
   },
   v=>Math.round(v)+"°"
 );
@@ -2226,8 +1461,10 @@ bind(
 bind(
   "rotMax",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.rotMax=v;
+
   },
   v=>Math.round(v)+"°"
 );
@@ -2236,8 +1473,10 @@ bind(
 bind(
   "rotSpeed",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.rotSpeed=v;
+
   },
   v=>v.toFixed(1)
 );
@@ -2246,8 +1485,10 @@ bind(
 bind(
   "spreadX",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.spreadX=v;
+
   },
   v=>Math.round(v)+"°"
 );
@@ -2256,8 +1497,10 @@ bind(
 bind(
   "spreadY",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.spreadY=v;
+
   },
   v=>Math.round(v)+"°"
 );
@@ -2266,8 +1509,10 @@ bind(
 bind(
   "emission",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.emission=v;
+
   },
   v=>v.toFixed(2)
 );
@@ -2280,8 +1525,10 @@ bind(
 bind(
   "offX",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.offset.x=v;
+
   },
   v=>v.toFixed(2)
 );
@@ -2290,8 +1537,10 @@ bind(
 bind(
   "offY",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.offset.y=v;
+
   },
   v=>v.toFixed(2)
 );
@@ -2300,8 +1549,10 @@ bind(
 bind(
   "offZ",
   v=>{
+
     if(state.selectedEffect)
       state.selectedEffect.offset.z=v;
+
   },
   v=>v.toFixed(2)
 );
@@ -2313,20 +1564,23 @@ bind(
 
 $("partX").oninput=()=>{
 
-  const p=state.selectedPart;
+  const p=
+    state.selectedPart;
 
   if(!p)return;
+
 
   p.size.x =
     Number(
       $("partX").value
     );
 
+
   p.object.scale.x =
     p.size.x/2;
 
-  $("partXV")
-    .textContent =
+
+  $("partXV").textContent =
     p.size.x.toFixed(1);
 
 };
@@ -2334,23 +1588,27 @@ $("partX").oninput=()=>{
 
 $("partY").oninput=()=>{
 
-  const p=state.selectedPart;
+  const p=
+    state.selectedPart;
 
   if(!p)return;
+
 
   p.size.y =
     Number(
       $("partY").value
     );
 
+
   p.object.scale.y =
     p.size.y/2;
+
 
   p.object.position.y =
     p.size.y/2;
 
-  $("partYV")
-    .textContent =
+
+  $("partYV").textContent =
     p.size.y.toFixed(1);
 
 };
@@ -2358,20 +1616,23 @@ $("partY").oninput=()=>{
 
 $("partZ").oninput=()=>{
 
-  const p=state.selectedPart;
+  const p=
+    state.selectedPart;
 
   if(!p)return;
+
 
   p.size.z =
     Number(
       $("partZ").value
     );
 
+
   p.object.scale.z =
     p.size.z/.4;
 
-  $("partZV")
-    .textContent =
+
+  $("partZV").textContent =
     p.size.z.toFixed(1);
 
 };
@@ -2379,12 +1640,15 @@ $("partZ").oninput=()=>{
 
 $("partVisible").onchange=()=>{
 
-  const p=state.selectedPart;
+  const p=
+    state.selectedPart;
 
   if(!p)return;
 
+
   p.visible =
     $("partVisible").checked;
+
 
   p.object.visible =
     p.visible;
@@ -2398,12 +1662,15 @@ $("partVisible").onchange=()=>{
 
 $("enabled").onchange=()=>{
 
-  const e=state.selectedEffect;
+  const e=
+    state.selectedEffect;
 
   if(!e)return;
 
+
   e.enabled =
     $("enabled").checked;
+
 
   rebuildEffectVisual(e);
 
@@ -2439,12 +1706,15 @@ $("shape").onchange=()=>{
 
 $("color").oninput=()=>{
 
-  const e=state.selectedEffect;
+  const e=
+    state.selectedEffect;
 
   if(!e)return;
 
+
   e.color =
     $("color").value;
+
 
   $("colorV").textContent =
     e.color;
@@ -2463,11 +1733,23 @@ $("duration").oninput=()=>{
       $("duration").value
     );
 
+
   $("durationV")
     .textContent =
-    state.duration.toFixed(1)+"s";
+      state.duration.toFixed(1)+"s";
+
+
+  state.time =
+    clamp(
+      state.time,
+      0,
+      state.duration
+    );
+
 
   renderTimeline();
+
+  updateTimeline();
 
 };
 
@@ -2479,7 +1761,7 @@ $("duration").oninput=()=>{
 function updateTimeline(){
 
   const percent =
-    state.time /
+    state.time/
     Math.max(
       .001,
       state.duration
@@ -2488,15 +1770,16 @@ function updateTimeline(){
 
   $("timelineLine")
     .style.left =
-    Math.min(
-      100,
-      Math.max(0,percent*100)
-    )+"%";
+      clamp(
+        percent*100,
+        0,
+        100
+      )+"%";
 
 
   $("currentTime")
     .textContent =
-    state.time.toFixed(2)+"s";
+      state.time.toFixed(2)+"s";
 
 }
 
@@ -2509,18 +1792,19 @@ function renderTimeline(){
   box.innerHTML="";
 
 
+  const e =
+    state.selectedEffect;
+
+
+  if(!e)
+    return;
+
+
   const duration =
     Math.max(
       .001,
       state.duration
     );
-
-
-  const e =
-    state.selectedEffect;
-
-
-  if(!e)return;
 
 
   e.keys.forEach(
@@ -2532,28 +1816,31 @@ function renderTimeline(){
         );
 
 
-      div.className =
+      div.className=
         "timelineKey";
 
 
-      div.style.left =
-        (
-          key.time/duration*100
+      div.style.left=
+        clamp(
+          key.time/duration*100,
+          0,
+          100
         )+"%";
 
 
       div.title =
         key.type+
         " @ "+
-        key.time.toFixed(2)+"s";
+        key.time.toFixed(2)+
+        "s";
 
 
-      div.onclick =
+      div.onclick=
         ev=>{
 
           ev.stopPropagation();
 
-          state.time =
+          state.time=
             key.time;
 
           updateTimeline();
@@ -2580,17 +1867,21 @@ $("timeline").addEventListener(
 
     const percent =
       THREE.MathUtils.clamp(
+
         (
-          ev.clientX -
+          ev.clientX-
           rect.left
-        ) /
+        )/
         rect.width,
-        0,1
+
+        0,
+        1
+
       );
 
 
     state.time =
-      percent *
+      percent*
       state.duration;
 
 
@@ -2612,7 +1903,7 @@ function addKey(type){
   if(!e)return;
 
 
-  const key = {
+  const key={
 
     type,
 
@@ -2640,8 +1931,10 @@ function addKey(type){
 
   e.keys.push(key);
 
+
   e.keys.sort(
-    (a,b)=>a.time-b.time
+    (a,b)=>
+      a.time-b.time
   );
 
 
@@ -2671,6 +1964,7 @@ $("minusTime").onclick=()=>{
       state.time-.1
     );
 
+
   updateTimeline();
 
 };
@@ -2684,19 +1978,21 @@ $("plusTime").onclick=()=>{
       state.time+.1
     );
 
+
   updateTimeline();
 
 };
 
 
 /* =========================================================
-   PLAY / STOP
+   PLAY
 ========================================================= */
 
 function play(){
 
   if(!state.selectedEffect)
     return;
+
 
   state.playing=true;
 
@@ -2715,9 +2011,11 @@ function stop(){
 
 
 $("effectPlay").onclick=play;
+
 $("playTop").onclick=play;
 
 $("effectStop").onclick=stop;
+
 $("stopTop").onclick=stop;
 
 
@@ -2726,46 +2024,46 @@ $("stopTop").onclick=stop;
 ========================================================= */
 
 $("imageInput").onchange =
-ev=>{
+  ev=>{
 
-  const file =
-    ev.target.files[0];
+    const file =
+      ev.target.files[0];
 
-  if(!file)return;
-
-
-  const reader =
-    new FileReader();
+    if(!file)return;
 
 
-  reader.onload=()=>{
-
-    const e =
-      state.selectedEffect;
-
-    if(!e)return;
+    const reader =
+      new FileReader();
 
 
-    e.textureData =
-      reader.result;
+    reader.onload=()=>{
+
+      const e =
+        state.selectedEffect;
+
+      if(!e)return;
 
 
-    $("assetStatus")
-      .textContent =
-      "Texture loaded: "+
-      file.name;
+      e.textureData =
+        reader.result;
 
 
-    rebuildEffectVisual(e);
+      $("assetStatus")
+        .textContent =
+          "Texture loaded: "+
+          file.name;
 
-    renderLibrary();
+
+      rebuildEffectVisual(e);
+
+      renderLibrary();
+
+    };
+
+
+    reader.readAsDataURL(file);
 
   };
-
-
-  reader.readAsDataURL(file);
-
-};
 
 
 $("uploadImage").onclick =
@@ -2773,7 +2071,7 @@ $("uploadImage").onclick =
 
 
 /* =========================================================
-   CENTER / CAMERA
+   CENTER
 ========================================================= */
 
 $("centerEffect").onclick=()=>{
@@ -2783,9 +2081,13 @@ $("centerEffect").onclick=()=>{
 
   if(!e)return;
 
+
   e.offset.x=0;
+
   e.offset.y=0;
+
   e.offset.z=.25;
+
 
   syncInspector();
 
@@ -2799,12 +2101,15 @@ $("faceCamera").onclick=()=>{
 
   if(!e)return;
 
+
   const p =
     state.parts.find(
       x=>x.id===e.partId
     );
 
+
   if(!p)return;
+
 
   controls.target.copy(
     p.object.position
@@ -2829,6 +2134,7 @@ $("duplicateEffect").onclick=()=>{
     state.parts.find(
       x=>x.id===e.partId
     );
+
 
   if(!p)return;
 
@@ -2855,6 +2161,7 @@ $("duplicateEffect").onclick=()=>{
 
   p.effects.push(copy);
 
+
   selectEffect(copy);
 
   rebuildEffectVisual(copy);
@@ -2867,6 +2174,841 @@ $("duplicateEffect").onclick=()=>{
 
 
 /* =========================================================
+   EXPORT HELPERS
+========================================================= */
+
+/*
+  Chuyển HEX thành THREE.Color
+*/
+
+function colorToNumber(hex){
+
+  return new THREE.Color(hex);
+
+}
+
+
+/*
+  Tạo texture material cho GLB
+*/
+
+function createExportMaterial(e){
+
+  let map=null;
+
+
+  if(e.textureData){
+
+    map =
+      textureLoader.load(
+        e.textureData
+      );
+
+    map.colorSpace =
+      THREE.SRGBColorSpace;
+
+    map.needsUpdate=true;
+
+  }
+
+
+  const material =
+    new THREE.MeshBasicMaterial({
+
+      map,
+
+      color:
+        colorToNumber(
+          e.color
+        ),
+
+      transparent:true,
+
+      opacity:1,
+
+      side:
+        THREE.DoubleSide,
+
+      depthWrite:false,
+
+      alphaTest:.001
+
+    });
+
+
+  /*
+    Emission được mô phỏng bằng màu sáng.
+    GLTF/Blender sẽ vẫn nhận material.
+  */
+
+  if(e.emission>1){
+
+    material.color.multiplyScalar(
+      Math.min(
+        2,
+        e.emission
+      )
+    );
+
+  }
+
+
+  return material;
+
+}
+
+
+/* =========================================================
+   EXPORT PARTICLE MESH
+========================================================= */
+
+function createExportParticle(
+  e,
+  particleIndex,
+  material
+){
+
+  /*
+    PlaneGeometry thay Sprite.
+
+    Sprite không phải geometry chuẩn GLTF.
+    PlaneGeometry thì Blender đọc được.
+  */
+
+  const geometry =
+    new THREE.PlaneGeometry(
+      1,
+      1
+    );
+
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material.clone()
+    );
+
+
+  mesh.name =
+    e.name+
+    "_Particle_"+
+    particleIndex;
+
+
+  /*
+    Cho plane hướng về camera mặc định.
+  */
+
+  mesh.rotation.x=0;
+
+
+  return mesh;
+
+}
+
+
+/* =========================================================
+   APPLY EFFECT KEYFRAMES
+========================================================= */
+
+function getEffectKeyValue(
+  e,
+  time
+){
+
+  if(!e.keys || !e.keys.length){
+
+    return {
+
+      position:{
+        x:e.offset.x,
+        y:e.offset.y,
+        z:e.offset.z
+      },
+
+      rotation:{
+        x:0,
+        y:0,
+        z:0
+      },
+
+      scale:1,
+
+      opacity:1
+
+    };
+
+  }
+
+
+  /*
+    Tìm key gần nhất trước/sau.
+  */
+
+  let before=null;
+
+  let after=null;
+
+
+  for(const key of e.keys){
+
+    if(key.time<=time)
+      before=key;
+
+    if(key.time>=time){
+
+      after=key;
+
+      break;
+
+    }
+
+  }
+
+
+  if(!before)
+    before=e.keys[0];
+
+  if(!after)
+    after=e.keys[e.keys.length-1];
+
+
+  if(before===after){
+
+    return {
+
+      position:
+        {...before.position},
+
+      rotation:
+        {...before.rotation},
+
+      scale:
+        before.scale,
+
+      opacity:
+        before.opacity
+
+    };
+
+  }
+
+
+  const span =
+    Math.max(
+      .0001,
+      after.time-before.time
+    );
+
+
+  const t =
+    clamp(
+      (time-before.time)/span,
+      0,
+      1
+    );
+
+
+  return {
+
+    position:{
+
+      x:lerp(
+        before.position.x,
+        after.position.x,
+        t
+      ),
+
+      y:lerp(
+        before.position.y,
+        after.position.y,
+        t
+      ),
+
+      z:lerp(
+        before.position.z,
+        after.position.z,
+        t
+      )
+
+    },
+
+    rotation:{
+
+      x:lerp(
+        before.rotation.x,
+        after.rotation.x,
+        t
+      ),
+
+      y:lerp(
+        before.rotation.y,
+        after.rotation.y,
+        t
+      ),
+
+      z:lerp(
+        before.rotation.z,
+        after.rotation.z,
+        t
+      )
+
+    },
+
+    scale:
+      lerp(
+        before.scale,
+        after.scale,
+        t
+      ),
+
+    opacity:
+      lerp(
+        before.opacity,
+        after.opacity,
+        t
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   BAKE PARTICLE ANIMATION
+========================================================= */
+
+function bakeEffectToGLTF(
+  e,
+  group,
+  fps=24
+){
+
+  if(
+    !e.enabled ||
+    !e.textureData
+  )
+    return;
+
+
+  /*
+    Giới hạn export particle.
+
+    Preview có thể 180.
+    GLB dùng tối đa 80 để tránh file quá nặng.
+  */
+
+  const count =
+    Math.min(
+      80,
+      Math.max(
+        10,
+        Math.floor(e.rate*.45)
+      )
+    );
+
+
+  const material =
+    createExportMaterial(e);
+
+
+  const particleMeshes=[];
+
+
+  for(
+    let i=0;
+    i<count;
+    i++
+  ){
+
+    const mesh =
+      createExportParticle(
+        e,
+        i,
+        material
+      );
+
+
+    group.add(mesh);
+
+    particleMeshes.push(mesh);
+
+  }
+
+
+  /*
+    Số frame.
+
+    Ví dụ:
+    2 giây × 24fps = 48 frames.
+  */
+
+  const frameCount =
+    Math.max(
+      2,
+      Math.ceil(
+        state.duration*fps
+      )
+    );
+
+
+  /*
+    AnimationClip sẽ chứa
+    Position + Quaternion + Scale.
+  */
+
+  const tracks=[];
+
+
+  for(
+    let i=0;
+    i<particleMeshes.length;
+    i++
+  ){
+
+    const mesh =
+      particleMeshes[i];
+
+
+    const times=[];
+
+    const positions=[];
+
+    const quaternions=[];
+
+    const scales=[];
+
+
+    for(
+      let frame=0;
+      frame<=frameCount;
+      frame++
+    ){
+
+      const time =
+        Math.min(
+          state.duration,
+          frame/fps
+        );
+
+
+      const tr =
+        calculateParticleTransform(
+          e,
+          i,
+          time
+        );
+
+
+      const effectKey =
+        getEffectKeyValue(
+          e,
+          time
+        );
+
+
+      /*
+        Particle position
+        + Effect Position keyframe.
+      */
+
+      const px =
+        tr.position.x+
+        effectKey.position.x;
+
+
+      const py =
+        tr.position.y+
+        effectKey.position.y;
+
+
+      const pz =
+        tr.position.z+
+        effectKey.position.z;
+
+
+      times.push(time);
+
+
+      positions.push(
+        px,
+        py,
+        pz
+      );
+
+
+      /*
+        Rotation particle.
+      */
+
+      const q =
+        new THREE.Quaternion();
+
+
+      q.setFromEuler(
+
+        new THREE.Euler(
+          0,
+          0,
+          tr.rotation
+        )
+
+      );
+
+
+      /*
+        Effect Rotation.
+      */
+
+      const effectQ =
+        new THREE.Quaternion();
+
+
+      effectQ.setFromEuler(
+
+        new THREE.Euler(
+
+          THREE.MathUtils.degToRad(
+            effectKey.rotation.x
+          ),
+
+          THREE.MathUtils.degToRad(
+            effectKey.rotation.y
+          ),
+
+          THREE.MathUtils.degToRad(
+            effectKey.rotation.z
+          )
+
+        )
+
+      );
+
+
+      q.multiply(effectQ);
+
+
+      quaternions.push(
+        q.x,
+        q.y,
+        q.z,
+        q.w
+      );
+
+
+      const finalScale =
+        tr.scale*
+        Math.max(
+          .001,
+          effectKey.scale
+        );
+
+
+      scales.push(
+        finalScale,
+        finalScale,
+        finalScale
+      );
+
+    }
+
+
+    tracks.push(
+
+      new THREE.VectorKeyframeTrack(
+        mesh.name+
+        ".position",
+        times,
+        positions
+      )
+
+    );
+
+
+    tracks.push(
+
+      new THREE.QuaternionKeyframeTrack(
+        mesh.name+
+        ".quaternion",
+        times,
+        quaternions
+      )
+
+    );
+
+
+    tracks.push(
+
+      new THREE.VectorKeyframeTrack(
+        mesh.name+
+        ".scale",
+        times,
+        scales
+      )
+
+    );
+
+  }
+
+
+  /*
+    Opacity không được export ổn định
+    dưới dạng material track giữa các
+    Blender/GLTF importer.
+
+    Vì vậy opacity được bake vào scale:
+    particle nhỏ dần về 0 khi fade.
+  */
+
+  const clip =
+    new THREE.AnimationClip(
+      e.name+
+      "_Animation",
+      state.duration,
+      tracks
+    );
+
+
+  group.animations =
+    group.animations||[];
+
+
+  group.animations.push(
+    clip
+  );
+
+
+  /*
+    Đặt animation name rõ ràng.
+  */
+
+  clip.name =
+    e.name+
+    "_Animation";
+
+}
+
+
+/* =========================================================
+   EXPORT COMPLETE EFFECT PROJECT
+========================================================= */
+
+function buildExportScene(){
+
+  const exportScene =
+    new THREE.Scene();
+
+
+  exportScene.name =
+    "EffectProject";
+
+
+  /*
+    Không export grid/light.
+    Chỉ export object cần thiết.
+  */
+
+
+  state.parts.forEach(
+    p=>{
+
+      /*
+        PART
+      */
+
+      const part =
+        p.object.clone(true);
+
+
+      part.name =
+        p.name+
+        "_Part";
+
+
+      part.position.copy(
+        p.object.position
+      );
+
+
+      part.rotation.copy(
+        p.object.rotation
+      );
+
+
+      part.scale.copy(
+        p.object.scale
+      );
+
+
+      part.visible =
+        p.visible;
+
+
+      exportScene.add(
+        part
+      );
+
+
+      /*
+        EFFECTS
+      */
+
+      p.effects.forEach(
+        e=>{
+
+          bakeEffectToGLTF(
+            e,
+            exportScene,
+            24
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  return exportScene;
+
+}
+
+
+/* =========================================================
+   GLB EXPORT
+========================================================= */
+
+async function exportGLB(){
+
+  if(!state.parts.length){
+
+    alert(
+      "Chưa có Part để export."
+    );
+
+    return;
+
+  }
+
+
+  const exportScene =
+    buildExportScene();
+
+
+  const exporter =
+    new GLTFExporter();
+
+
+  try{
+
+    const result =
+      await new Promise(
+        (resolve,reject)=>{
+
+          exporter.parse(
+
+            exportScene,
+
+            resolve,
+
+            reject,
+
+            {
+
+              binary:true,
+
+              animations:
+                exportScene.animations||[],
+
+              trs:true,
+
+              onlyVisible:false,
+
+              includeCustomExtensions:true
+
+            }
+
+          );
+
+        }
+      );
+
+
+    const blob =
+      new Blob(
+        [result],
+        {
+          type:
+            "model/gltf-binary"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const a =
+      document.createElement(
+        "a"
+      );
+
+
+    a.href=url;
+
+    a.download =
+      "effect-project-ANIMATED.glb";
+
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+
+    setTimeout(
+      ()=>{
+        URL.revokeObjectURL(url);
+      },
+      3000
+    );
+
+
+    console.log(
+      "GLB exported with animations:",
+      exportScene.animations
+    );
+
+
+    alert(
+      "Đã export GLB có Effect + Animation.\n\n"+
+      "Mở Blender → File → Import → glTF 2.0 (.glb/.gltf).\n"+
+      "Animation nằm trong Dope Sheet / Action."
+    );
+
+  }
+  catch(error){
+
+    console.error(
+      "GLB EXPORT ERROR:",
+      error
+    );
+
+
+    alert(
+      "Không thể export GLB.\n"+
+      "Mở F12 → Console để xem lỗi."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
    OBJ EXPORT
 ========================================================= */
 
@@ -2874,6 +3016,7 @@ function exportOBJ(){
 
   const group =
     new THREE.Group();
+
 
   group.name =
     "EffectProject";
@@ -2894,12 +3037,20 @@ function exportOBJ(){
         p.object.position
       );
 
+
+      clone.rotation.copy(
+        p.object.rotation
+      );
+
+
       clone.scale.copy(
         p.object.scale
       );
 
 
-      group.add(clone);
+      group.add(
+        clone
+      );
 
     }
   );
@@ -2910,7 +3061,9 @@ function exportOBJ(){
 
 
   const result =
-    exporter.parse(group);
+    exporter.parse(
+      group
+    );
 
 
   download(
@@ -2923,118 +3076,20 @@ function exportOBJ(){
 
 
 /* =========================================================
-   GLB EXPORT
+   EXPORT BUTTONS
 ========================================================= */
-
-function exportGLB(){
-
-  const group =
-    new THREE.Group();
-
-
-  group.name =
-    "EffectProject";
-
-
-  state.parts.forEach(
-    p=>{
-
-      const clone =
-        p.object.clone(true);
-
-
-      clone.position.copy(
-        p.object.position
-      );
-
-
-      clone.scale.copy(
-        p.object.scale
-      );
-
-
-      group.add(clone);
-
-    }
-  );
-
-
-  const exporter =
-    new GLTFExporter();
-
-
-  exporter.parse(
-
-    group,
-
-    result=>{
-
-      const blob =
-        new Blob(
-          [result],
-          {
-            type:
-              "model/gltf-binary"
-          }
-        );
-
-
-      const url =
-        URL.createObjectURL(
-          blob
-        );
-
-
-      const a =
-        document.createElement(
-          "a"
-        );
-
-
-      a.href=url;
-
-      a.download =
-        "effect-project.glb";
-
-      a.click();
-
-
-      setTimeout(
-        ()=>{
-          URL.revokeObjectURL(
-            url
-          );
-        },
-        1000
-      );
-
-    },
-
-    error=>{
-      console.error(error);
-      alert(
-        "Không thể export GLB."
-      );
-    },
-
-    {
-      binary:true,
-      animations:[]
-    }
-
-  );
-
-}
-
 
 $("exportOBJ").onclick =
   exportOBJ;
 
+
 $("exportOBJ2").onclick =
   exportOBJ;
 
+
 $("exportGLB").onclick =
   exportGLB;
+
 
 $("exportGLB2").onclick =
   exportGLB;
@@ -3059,7 +3114,11 @@ function saveJSON(){
 
           name:p.name,
 
-          size:p.size,
+          size:{
+            x:p.size.x,
+            y:p.size.y,
+            z:p.size.z
+          },
 
           visible:p.visible,
 
@@ -3067,7 +3126,54 @@ function saveJSON(){
             p.effects.map(
               e=>({
 
-                ...e,
+                id:e.id,
+
+                name:e.name,
+
+                partId:e.partId,
+
+                textureData:e.textureData,
+
+                enabled:e.enabled,
+
+                rate:e.rate,
+
+                lifeMin:e.lifeMin,
+
+                lifeMax:e.lifeMax,
+
+                speedMin:e.speedMin,
+
+                speedMax:e.speedMax,
+
+                color:e.color,
+
+                emission:e.emission,
+
+                rotMin:e.rotMin,
+
+                rotMax:e.rotMax,
+
+                rotSpeed:e.rotSpeed,
+
+                spreadX:e.spreadX,
+
+                spreadY:e.spreadY,
+
+                direction:e.direction,
+
+                shape:e.shape,
+
+                locked:e.locked,
+
+                offset:{
+                  x:e.offset.x,
+                  y:e.offset.y,
+                  z:e.offset.z
+                },
+
+                keys:
+                  e.keys||[],
 
                 particles:[]
 
@@ -3110,170 +3216,227 @@ $("loadEffect").onclick =
 
 
 $("jsonInput").onchange =
-ev=>{
+  ev=>{
 
-  const file =
-    ev.target.files[0];
+    const file =
+      ev.target.files[0];
 
-  if(!file)return;
-
-
-  const reader =
-    new FileReader();
+    if(!file)return;
 
 
-  reader.onload=()=>{
-
-    try{
-
-      const data =
-        JSON.parse(
-          reader.result
-        );
+    const reader =
+      new FileReader();
 
 
-      state.parts.forEach(
-        p=>{
+    reader.onload=()=>{
 
-          p.effects.forEach(
-            e=>
-              e.particles.forEach(
-                x=>scene.remove(x)
-              )
+      try{
+
+        const data =
+          JSON.parse(
+            reader.result
           );
 
-          scene.remove(
-            p.object
-          );
 
-        }
-      );
+        /*
+          CLEAR
+        */
 
+        state.parts.forEach(
+          p=>{
 
-      state.parts=[];
-
-      state.selectedPart=null;
-
-      state.selectedEffect=null;
-
-
-      if(data.duration)
-        state.duration =
-          data.duration;
-
-
-      for(
-        const pd
-        of data.parts||[]
-      ){
-
-        const p =
-          makePart();
-
-
-        p.id =
-          pd.id ||
-          p.id;
-
-
-        p.name =
-          pd.name ||
-          "Part";
-
-
-        p.size =
-          pd.size ||
-          p.size;
-
-
-        p.visible =
-          pd.visible!==false;
-
-
-        p.object.scale.set(
-
-          p.size.x/2,
-
-          p.size.y/2,
-
-          p.size.z/.4
-
-        );
-
-
-        p.object.position.y =
-          p.size.y/2;
-
-
-        p.object.visible =
-          p.visible;
-
-
-        p.effects=[];
-
-
-        for(
-          const ed
-          of pd.effects||[]
-        ){
-
-          const e =
-            Object.assign(
-              {
-                particles:[],
-                runtime:0,
-                keys:[]
-              },
-              ed
+            p.effects.forEach(
+              e=>
+                e.particles.forEach(
+                  x=>
+                    scene.remove(x)
+                )
             );
 
 
-          p.effects.push(e);
+            scene.remove(
+              p.object
+            );
 
-          rebuildEffectVisual(e);
+          }
+        );
+
+
+        state.parts=[];
+
+        state.selectedPart=null;
+
+        state.selectedEffect=null;
+
+
+        if(
+          typeof data.duration==="number"
+        ){
+
+          state.duration =
+            data.duration;
 
         }
 
+
+        /*
+          LOAD PARTS
+        */
+
+        for(
+          const pd of
+          data.parts||[]
+        ){
+
+          const p =
+            makePart();
+
+
+          p.id =
+            pd.id||
+            p.id;
+
+
+          p.name =
+            pd.name||
+            "Part";
+
+
+          p.size =
+            pd.size||
+            p.size;
+
+
+          p.visible =
+            pd.visible!==false;
+
+
+          p.object.scale.set(
+
+            p.size.x/2,
+
+            p.size.y/2,
+
+            p.size.z/.4
+
+          );
+
+
+          p.object.position.y =
+            p.size.y/2;
+
+
+          p.object.visible =
+            p.visible;
+
+
+          p.effects=[];
+
+
+          /*
+            LOAD EFFECTS
+          */
+
+          for(
+            const ed of
+            pd.effects||[]
+          ){
+
+            const e =
+              Object.assign(
+
+                {
+
+                  particles:[],
+
+                  runtime:0,
+
+                  keys:[],
+
+                  offset:{
+                    x:0,
+                    y:0,
+                    z:.25
+                  }
+
+                },
+
+                ed
+
+              );
+
+
+            /*
+              Backward compatibility.
+            */
+
+            if(!e.offset){
+
+              e.offset={
+                x:0,
+                y:0,
+                z:.25
+              };
+
+            }
+
+
+            if(!e.keys)
+              e.keys=[];
+
+
+            p.effects.push(e);
+
+
+            rebuildEffectVisual(e);
+
+          }
+
+        }
+
+
+        state.selectedPart =
+          state.parts[0]||
+          null;
+
+
+        state.selectedEffect =
+          state.selectedPart &&
+          state.selectedPart.effects[0]||
+          null;
+
+
+        renderTree();
+
+        renderLibrary();
+
+        syncInspector();
+
+        renderTimeline();
+
+        updateTimeline();
+
+
+      }
+      catch(err){
+
+        console.error(
+          err
+        );
+
+
+        alert(
+          "JSON không hợp lệ."
+        );
+
       }
 
-
-      state.selectedPart =
-        state.parts[0] ||
-        null;
+    };
 
 
-      state.selectedEffect =
-        state.selectedPart &&
-        state.selectedPart.effects[0] ||
-        null;
-
-
-      renderTree();
-
-      renderLibrary();
-
-      syncInspector();
-
-      renderTimeline();
-
-    }
-
-    catch(err){
-
-      console.error(err);
-
-      alert(
-        "JSON không hợp lệ."
-      );
-
-    }
+    reader.readAsText(file);
 
   };
-
-
-  reader.readAsText(file);
-
-};
 
 
 /* =========================================================
@@ -3309,14 +3472,17 @@ function download(
 
   a.download=filename;
 
+
+  document.body.appendChild(a);
+
   a.click();
+
+  a.remove();
 
 
   setTimeout(
     ()=>{
-      URL.revokeObjectURL(
-        url
-      );
+      URL.revokeObjectURL(url);
     },
     1000
   );
@@ -3343,6 +3509,7 @@ $("backToStudio").onclick=()=>{
 const raycaster =
   new THREE.Raycaster();
 
+
 const mouse =
   new THREE.Vector2();
 
@@ -3358,14 +3525,14 @@ renderer.domElement.addEventListener(
 
     mouse.x =
       (
-        (ev.clientX-rect.left) /
+        (ev.clientX-rect.left)/
         rect.width
       )*2-1;
 
 
     mouse.y =
       -(
-        (ev.clientY-rect.top) /
+        (ev.clientY-rect.top)/
         rect.height
       )*2+1;
 
@@ -3388,8 +3555,8 @@ renderer.domElement.addEventListener(
 
       const p =
         state.parts.find(
-          x =>
-            x.object ===
+          x=>
+            x.object===
             hits[0].object
         );
 
@@ -3414,6 +3581,13 @@ function resize(){
     .getBoundingClientRect();
 
 
+  if(
+    rect.width<=0||
+    rect.height<=0
+  )
+    return;
+
+
   renderer.setSize(
     rect.width,
     rect.height,
@@ -3422,7 +3596,7 @@ function resize(){
 
 
   camera.aspect =
-    rect.width /
+    rect.width/
     rect.height;
 
 
@@ -3453,7 +3627,10 @@ function animate(){
 
 
   const dt =
-    clock.getDelta();
+    Math.min(
+      .05,
+      clock.getDelta()
+    );
 
 
   if(
@@ -3465,7 +3642,7 @@ function animate(){
 
 
     if(
-      state.time >=
+      state.time>=
       state.duration
     ){
 
@@ -3479,10 +3656,14 @@ function animate(){
   }
 
 
+  /*
+    Runtime simulation.
+  */
+
   state.parts.forEach(
-    p =>
+    p=>
       p.effects.forEach(
-        e =>
+        e=>
           simulateEffect(
             e,
             dt
@@ -3493,12 +3674,29 @@ function animate(){
 
   controls.update();
 
+
   renderer.render(
     scene,
     camera
   );
 
 }
+
+
+/* =========================================================
+   TOP BUTTONS
+========================================================= */
+
+$("addPart").onclick =
+  ()=>makePart();
+
+
+$("addEffect").onclick =
+  ()=>makeEffect();
+
+
+$("deleteSelected").onclick =
+  removeSelected;
 
 
 /* =========================================================
@@ -3524,6 +3722,3 @@ resize();
 animate();
 
 </script>
-
-</body>
-</html>
