@@ -16,67 +16,6 @@
 </script>
 
 <style>
-#crackMode.active { background:#7f1d1d; border-color:#ef4444; color:#fff; }
-.crackLibraryHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px 4px;font-size:10px;letter-spacing:.7px;font-weight:800;color:#b9c6d8;}
-.crackLibraryHint{font-size:9px;color:#687587;font-weight:500;letter-spacing:0;text-transform:none;}
-.crackLibraryHead b{color:#6fa0ff;margin-left:3px;font-weight:700;}
-.crackPresetCard{display:flex;align-items:center;gap:8px;width:100%;min-height:60px;margin-bottom:5px;padding:6px;border:1px solid #303640;border-radius:6px;background:#171b21;cursor:pointer;overflow:hidden;}
-.crackPresetCard:hover{background:#20262e;border-color:#4b5664;}
-.crackPresetCard.active{border-color:#648fe3;background:#1a2536;box-shadow:0 0 0 1px rgba(100,143,227,.15) inset;}
-.crackPresetCard img{width:54px;height:54px;flex:0 0 54px;border-radius:5px;background:#0d1014;border:1px solid #343b46;object-fit:cover;}
-.crackPresetMeta{min-width:0;display:flex;flex-direction:column;gap:3px;}
-.crackPresetMeta strong{font-size:10px;color:#eef3f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.crackPresetMeta small{font-size:8px;color:#7b8797;line-height:1.25;}
-
-/* CRACK LIBRARY PRO */
-.crackCategories{display:flex;flex-wrap:wrap;gap:5px;padding:0 9px 8px}
-.crackCategories button{min-height:24px;padding:4px 7px;border-radius:5px;font-size:9px;letter-spacing:.2px}
-.crackCategories button.active{background:#254f9b;border-color:#5d8ff0;color:#fff}
-.textureList.crack-library-active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:6px;padding:6px 7px 10px;overflow-y:auto}
-.textureList.crack-library-active .crackPresetCard{min-width:0;min-height:0;height:auto;margin:0;padding:5px;display:flex;flex-direction:column;align-items:stretch;gap:5px;border-radius:7px;transition:transform .12s ease,border-color .12s ease,background .12s ease,box-shadow .12s ease}
-.textureList.crack-library-active .crackPresetCard:hover{transform:translateY(-1px)}
-.textureList.crack-library-active .crackPresetCard.active{border-color:#4e8cff;box-shadow:0 0 0 1px rgba(78,140,255,.18) inset,0 0 12px rgba(58,122,255,.12)}
-.textureList.crack-library-active .crackPresetCard img{width:100%;height:auto;aspect-ratio:1/1;flex:0 0 auto;object-fit:cover;border-radius:6px;background:#0a0d12}
-.textureList.crack-library-active .crackPresetMeta{padding:0 2px 2px;gap:2px}
-.textureList.crack-library-active .crackPresetMeta strong{font-size:9px}
-.textureList.crack-library-active .crackPresetMeta small{font-size:7.5px;min-height:18px}
-.crackInspector{border-color:#263b64;background:#111722}
-.crackControlRow{display:grid;grid-template-columns:54px minmax(0,1fr) 34px;align-items:center;gap:7px;margin-bottom:8px;color:#aeb9c8;font-size:9px}
-.crackControlRow input{width:100%}
-.crackControlRow b{font-size:9px;text-align:right;color:#76a5ff;font-family:Consolas,monospace}
-.crackInspectorButtons{display:grid;grid-template-columns:36px 36px minmax(0,1fr);gap:5px}
-.crackInspectorButtons button{min-height:30px;padding:4px 6px}
-
-/* ===== SEPARATE PARTS TOOL ===== */
-.separateBtn{border-color:#3f6cae;background:#18243a}
-.separateBtn:hover{background:#203456;border-color:#5b8fe5}
-.separateBtn.busy{opacity:.6;pointer-events:none}
-#separateStatus{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1200;padding:8px 12px;border:1px solid #3e536f;border-radius:7px;background:rgba(13,18,25,.94);color:#b8c8dc;font-size:10px;box-shadow:0 10px 28px rgba(0,0,0,.35);pointer-events:none}
-#separateStatus.show{display:block}
-
-/* ===== MODEL PARTS PICKER ===== */
-.partsBtn{border-color:#4c5563;background:#1a2028}
-.partsBtn:hover{background:#232b35;border-color:#6a7788}
-.partsPanel{display:none;position:fixed;top:62px;right:310px;width:300px;max-width:calc(100vw - 330px);height:min(70vh,560px);z-index:1100;padding:10px;background:#11161d;border:1px solid #344154;border-radius:9px;box-shadow:0 18px 45px rgba(0,0,0,.45);overflow:hidden;flex-direction:column}
-.partsPanel.active{display:flex}
-.partsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;color:#e8edf3;font-size:11px;letter-spacing:.7px}
-.partsHead button{width:28px;min-height:26px;padding:0}
-.partsSearch{width:100%;padding:8px 9px;border:1px solid #34404f;border-radius:6px;background:#0b0f14;color:#edf2f7;outline:none;font:inherit;font-size:10px}
-.partsList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;margin-top:8px;padding-right:3px}
-.partsList::-webkit-scrollbar{width:6px}.partsList::-webkit-scrollbar-thumb{background:#394350;border-radius:6px}
-.partRow{display:flex;align-items:center;gap:6px;width:100%;margin-bottom:5px;padding:6px 7px;border:1px solid #2e3742;border-radius:5px;background:#171c23;color:#c9d2dd;cursor:pointer;text-align:left}
-.partRow:hover{background:#202730;border-color:#536172}.partRow.active{border-color:#4b83db;background:#1b2a40}
-.partIcon{flex:0 0 auto;color:#7596ca;font-size:10px}.partName{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
-.partMeta{flex:0 0 auto;color:#677384;font-size:8px}
-@media(max-width:900px){.partsPanel{left:10px;right:10px;width:auto;max-width:none}}
-
-/* ===== LIBRARY PERFORMANCE ===== */
-.categories{max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#39414d transparent;}
-.categories::-webkit-scrollbar{width:5px}.categories::-webkit-scrollbar-thumb{background:#39414d;border-radius:6px}
-.textureList.library-virtual{position:relative;overflow-y:auto;overflow-x:hidden;contain:strict;overscroll-behavior:contain;}
-.library-virtual-spacer{position:relative;width:100%;pointer-events:none;}
-.library-virtual-card{position:absolute;left:0;right:0;height:74px;}
-.library-virtual-card .textureCard{height:69px;margin:0;}
 
 /* ===== PRO TOOLS ===== */
 .effectStudioBtn{border-color:#5f5bd8;background:#211f3d;color:#e9e7ff;font-weight:800}.effectStudioBtn:hover{background:#2c2852;border-color:#827df0}.effectStudioBtn:active{transform:translateY(1px)}
@@ -92,6 +31,7 @@
 </head>
 
 <body>
+<!-- Crack tool removed; Texture Library and Effect Studio preserved. -->
 
 <header class="topbar">
     <div class="logo">TEXTURE<span>STUDIO</span></div>
@@ -101,7 +41,6 @@
         <button id="uploadTexture">＋ Texture</button>
         <button id="separateBtn" class="separateBtn" title="Tách mesh thành các phần độc lập">⇱ Separate</button>
         <button id="partsBtn" class="partsBtn" title="Chọn từng phần của model">☷ Parts</button>
-        <button id="crackMode" title="Bật chế độ tạo và kéo vết nứt">＋ Crack</button>
         <button id="effectStudioBtn" class="effectStudioBtn" title="Mở Effect Studio">✦ Effect Studio</button>
         <button id="undoBtn">↶</button>
         <button id="redoBtn">↷</button>
@@ -163,30 +102,14 @@
             <button data-cat="clay">CLAY</button>
             <button data-cat="carpet">CARPET</button>
             <button data-cat="paper">PAPER</button></div>
-
-        <div id="crackCategories" class="crackCategories" hidden>
-            <button data-crack-cat="all" class="active">ALL</button>
-            <button data-crack-cat="stone">STONE</button>
-            <button data-crack-cat="impact">IMPACT</button>
-            <button data-crack-cat="metal">METAL</button>
-            <button data-crack-cat="magic">MAGIC</button>
-            <button data-crack-cat="ice">ICE</button>
-            <button data-crack-cat="glass">GLASS</button>
-        </div>
-
-        <div id="crackLibraryHead" class="crackLibraryHead" hidden>
-            <span>CRACK LIBRARY <b id="crackCount">24</b></span>
-            <span class="crackLibraryHint">Chọn mẫu rồi click model</span>
-        </div>
-
-        <div id="textureList" class="textureList">
+<div id="textureList" class="textureList">
             <div class="loading">Loading Poly Haven...</div>
         </div>
 
         <div class="credit">
             Powered by
             <a href="https://polyhaven.com" target="_blank">Poly Haven</a><br>
-            Includes local Human Skin preset.
+            Includes local Human Skin preset. Effect Studio available from the toolbar.
         </div>
     </aside>
 
@@ -304,33 +227,7 @@
             <div id="proStatus" class="proStatus">Ready</div>
         </div>
 
-        <div id="crackInspector" class="section crackInspector" hidden>
-            <label>CRACK PROPERTIES <b id="crackPresetName">NONE</b></label>
 
-            <div class="crackControlRow">
-                <span>Opacity</span>
-                <input id="crackOpacity" type="range" min="0.05" max="1" step="0.01" value="0.9">
-                <b id="crackOpacityValue">0.90</b>
-            </div>
-
-            <div class="crackControlRow">
-                <span>Size</span>
-                <input id="crackSize" type="range" min="0.35" max="2.4" step="0.01" value="1">
-                <b id="crackSizeValue">1.00</b>
-            </div>
-
-            <div class="crackControlRow">
-                <span>Rotation</span>
-                <input id="crackRotation" type="range" min="-180" max="180" step="1" value="0">
-                <b id="crackRotationValue">0°</b>
-            </div>
-
-            <div class="crackInspectorButtons">
-                <button id="crackRotateLeft">↶</button>
-                <button id="crackRotateRight">↷</button>
-                <button id="removeCrack" class="danger">Delete Crack</button>
-            </div>
-        </div>
 
     </aside>
 
@@ -341,7 +238,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
-import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 
 const API = "https://api.polyhaven.com";
 const ASSET_CACHE_KEY = "textureStudio_polyhaven_assets_v3";
@@ -497,7 +393,6 @@ function init() {
     document.getElementById("redoBtn").onclick = redo;
     document.getElementById("saveProject").onclick = saveProject;
     document.getElementById("exportGLB").onclick = exportGLB;
-    document.getElementById("crackMode").onclick = toggleCrackMode;
     document.getElementById("newLayer").onclick = addLayer;
     bindCrackControls();
 
@@ -739,8 +634,7 @@ function getFilteredLibraryItems(){
 
 function renderLibrary(){
     const list=document.getElementById("textureList");
-    if(crackMode) return renderCrackLibrary();
-    const items=getFilteredLibraryItems();
+        const items=getFilteredLibraryItems();
     libraryVirtualState.items=items;
     libraryVirtualState.token++;
     list.classList.add("library-virtual");
@@ -785,7 +679,7 @@ function makeLibraryCard(asset,index){
 
 function renderVisibleLibraryCards(){
     const list=document.getElementById("textureList");
-    if(!list||crackMode||!list.classList.contains("library-virtual")) return;
+    if(!list||!list.classList.contains("library-virtual")) return;
     const items=libraryVirtualState.items;
     const h=libraryVirtualState.cardHeight;
     const top=list.scrollTop;
@@ -1331,7 +1225,7 @@ function loadModel(event) {
             selectedMesh = null;
             selectedMaterialIndex = 0;
             crackMode = false;
-            document.getElementById("crackMode").classList.remove("active");
+
             renderer.domElement.style.cursor = "default";
             textureApplyToken++;
             scene.add(model);
