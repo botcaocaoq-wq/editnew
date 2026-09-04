@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Roblox Effect Designer to Blender</title>
+<title>Viva Studio — Texture Designer</title>
 
 <script type="importmap">
 {
@@ -15,540 +16,1125 @@
 </script>
 
 <style>
-*{box-sizing:border-box}
-html,body{
-  margin:0;width:100%;height:100%;overflow:hidden;
-  background:#0b0f14;color:#e7edf5;
-  font-family:Inter,system-ui,Arial
+*{
+  box-sizing:border-box;
 }
-button,input,select{font:inherit}
-button{
-  border:1px solid #303947;
-  background:#171d26;color:#dfe7f0;
-  border-radius:4px;padding:5px 8px;cursor:pointer
+
+body{
+  margin:0;
+  overflow:hidden;
+  background:#111318;
+  color:#e9e9ed;
+  font-family:Inter,Arial,sans-serif;
 }
-button:hover{background:#232b36;border-color:#516078}
-button.active{background:#2453a6;border-color:#5e91ee}
-.primary{background:#245fb8;border-color:#4d89e5}
-.danger{background:#4e2028;border-color:#93404d}
 
 #app{
+  width:100vw;
   height:100vh;
-  display:grid;
-  grid-template-rows:40px minmax(0,1fr)
+  display:flex;
+  flex-direction:column;
 }
 
-#topbar{
-  display:flex;align-items:center;gap:8px;
-  padding:5px 12px;background:#1b222c;
-  border-bottom:1px solid #2a3545;z-index:4
+.topbar{
+  height:54px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:0 16px;
+  background:#191b21;
+  border-bottom:1px solid #2c2f38;
 }
+
 .logo{
-  font-weight:900;font-size:13px;
-  letter-spacing:.5px;color:#fff
+  font-size:18px;
+  font-weight:800;
+  color:white;
 }
-.logo span{color:#ff5555;font-style:italic}
-.toolbar{
-  display:flex;gap:6px;align-items:center;flex:1
-}
-.spacer{flex:1}
-.toolbar button{font-size:11px}
 
-#workspace{
+.logo span{
+  color:#8c7cff;
+}
+
+button,
+select,
+input{
+  font:inherit;
+}
+
+button{
+  border:1px solid #363943;
+  background:#242730;
+  color:#eee;
+  border-radius:7px;
+  padding:8px 11px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#30333d;
+}
+
+.workspace{
+  flex:1;
+  min-height:0;
   display:grid;
-  grid-template-columns:250px minmax(0,1fr) 320px;
-  min-height:0
+  grid-template-columns:280px 1fr 285px;
 }
 
-#left,#right{
-  min-width:0;min-height:0;
-  background:#141921;
-  display:flex;flex-direction:column;
-  border-right:1px solid #222b37
-}
-#right{
-  border-right:none;
-  border-left:1px solid #222b37
+.panel{
+  background:#181a20;
+  min-height:0;
+  overflow:auto;
 }
 
-.panelTitle{
-  padding:8px 12px;
-  background:#1b222c;
-  border-bottom:1px solid #222b37;
-  font-size:11px;font-weight:700;
-  color:#9eb1c9;
-  display:flex;justify-content:between;align-items:center
+.left{
+  border-right:1px solid #2c2f38;
 }
 
-#sceneTree{
-  padding:6px;overflow:auto;
-  flex:1
+.right{
+  border-left:1px solid #2c2f38;
 }
 
-.treeRow{
-  display:flex;align-items:center;gap:6px;
-  padding:5px 6px;border-radius:4px;
-  color:#bfc9d7;font-size:11px;cursor:pointer;
-  user-select:none
-}
-.treeRow:hover{background:#1e2733}
-.treeRow.active{
-  background:#1a3254;color:#fff;font-weight:600
-}
-.treeIndent{width:14px;display:inline-block}
-
-#center{
-  position:relative;min-width:0;min-height:0;
-  background:#0c0f14
+.panel-title{
+  padding:15px;
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+  border-bottom:1px solid #292c34;
 }
 
-#viewer{
-  position:absolute;inset:0
+.search{
+  margin:12px;
 }
 
-.viewLabel,.viewHint{
-  position:absolute;top:10px;
-  padding:4px 8px;font-size:10px;
-  color:#a0b2c6;
-  background:rgba(20,25,33,0.85);
-  border:1px solid #2e3b4e;
-  border-radius:4px;
-  pointer-events:none
+.search input{
+  width:100%;
+  padding:10px;
+  background:#101217;
+  border:1px solid #333640;
+  color:white;
+  border-radius:7px;
+  outline:none;
 }
-.viewLabel{left:12px;font-weight:bold;color:#ffdd66}
-.viewHint{right:12px}
 
-.inspectorScroll{overflow:auto;flex:1}
+.categories{
+  display:flex;
+  gap:6px;
+  padding:0 12px 12px;
+  overflow-x:auto;
+}
+
+.category{
+  white-space:nowrap;
+  font-size:11px;
+  padding:6px 9px;
+}
+
+.category.active{
+  background:#6558d8;
+  border-color:#7568ec;
+}
+
+.library{
+  padding:0 12px 15px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.texture-card{
+  background:#22252d;
+  border:1px solid #333640;
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.texture-card:hover{
+  border-color:#8074ed;
+  transform:translateY(-1px);
+}
+
+.texture-image{
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  display:block;
+  background:#30333b;
+}
+
+.texture-name{
+  padding:7px;
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.viewport{
+  position:relative;
+  min-width:0;
+  min-height:0;
+  background:#101116;
+}
+
+#canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.viewport-info{
+  position:absolute;
+  top:12px;
+  left:12px;
+  background:#181a20dd;
+  border:1px solid #343741;
+  border-radius:7px;
+  padding:8px 10px;
+  font-size:11px;
+  pointer-events:none;
+}
+
+.drop{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  opacity:.35;
+}
+
+.drop-box{
+  border:1px dashed #727683;
+  border-radius:10px;
+  padding:25px;
+  text-align:center;
+}
 
 .section{
-  padding:12px;
-  border-bottom:1px solid #222b37
+  padding:14px;
+  border-bottom:1px solid #292c34;
 }
+
 .section h3{
-  margin:0 0 10px;
-  color:#9eb1c9;
+  margin:0 0 12px;
+  font-size:12px;
+}
+
+.field{
+  margin:10px 0;
+}
+
+.field label{
+  display:flex;
+  justify-content:space-between;
   font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.5px
+  color:#aeb1bb;
+  margin-bottom:6px;
 }
 
-.row{
-  display:grid;
-  grid-template-columns:100px minmax(0,1fr) 50px;
-  gap:8px;align-items:center;
-  margin:8px 0;font-size:11px;color:#a0b2c6
-}
-.row input[type=range]{width:100%;margin:0}
-.row input[type=text], .row input[type=number], .row select{
-  width:100%;background:#0b0e14;border:1px solid #2d3a4f;
-  color:#fff;padding:3px 6px;border-radius:3px;font-size:11px
+.field input[type="range"]{
+  width:100%;
 }
 
-.val{
-  font-family:monospace;
-  color:#abbecf;text-align:right
+.field input[type="number"]{
+  width:100%;
+  background:#101217;
+  color:white;
+  border:1px solid #333640;
+  border-radius:6px;
+  padding:7px;
 }
-.note{
-  font-size:10px;line-height:1.4;color:#6d7f96;margin:6px 0 0
+
+.upload{
+  width:100%;
+  margin-top:5px;
+}
+
+.mesh-list{
+  max-height:260px;
+  overflow:auto;
+}
+
+.mesh-item{
+  width:100%;
+  text-align:left;
+  margin-bottom:5px;
+  font-size:11px;
+}
+
+.mesh-item.selected{
+  background:#5d51ce;
+  border-color:#7669ed;
+}
+
+.status{
+  position:absolute;
+  bottom:12px;
+  left:12px;
+  background:#181a20dd;
+  border:1px solid #343741;
+  padding:7px 10px;
+  border-radius:6px;
+  font-size:11px;
+}
+
+.empty{
+  color:#777b87;
+  font-size:11px;
+  padding:12px;
+  line-height:1.5;
+}
+
+@media(max-width:900px){
+  .workspace{
+    grid-template-columns:220px 1fr;
+  }
+
+  .right{
+    display:none;
+  }
 }
 </style>
 </head>
+
 <body>
-
 <div id="app">
-  <header id="topbar">
-    <div class="logo">ROBLOX <span>STUDIO</span> (EFFECT)</div>
-    <div class="toolbar">
-      <button id="btnPart" class="primary">＋ Part</button>
-      <button id="btnAttachment">＋ Attachment</button>
-      <button id="btnParticle">＋ ParticleEmitter</button>
-      <div class="spacer"></div>
-      <button id="btnPlay" class="active">▶ Run</button>
-      <button id="btnStop">■ Stop</button>
-      <button id="btnExport" class="primary" style="background:#0284c7;border-color:#38bdf8">📥 Export GLB to Blender</button>
-    </div>
-  </header>
 
-  <section id="workspace">
-    <!-- LEFT PANEL: EXPLORER -->
-    <aside id="left">
-      <div class="panelTitle">Explorer</div>
-      <div id="sceneTree">
-        <div class="treeRow" id="nodeWorkspace">📂 Workspace</div>
+  <div class="topbar">
+    <div class="logo">Viva <span>Studio</span></div>
+
+    <button id="loadModelBtn">📦 Load Model</button>
+    <input id="modelInput" type="file" accept=".glb,.gltf" hidden>
+
+    <button id="uploadTextureBtn">🖼 Upload Texture</button>
+    <input id="textureInput" type="file" accept="image/*" hidden>
+
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <div class="workspace">
+
+    <!-- LIBRARY -->
+    <aside class="panel left">
+
+      <div class="panel-title">Texture Library</div>
+
+      <div class="search">
+        <input id="search" placeholder="Tìm texture...">
       </div>
+
+      <div class="categories">
+        <button class="category active" data-cat="all">All</button>
+        <button class="category" data-cat="wood">Wood</button>
+        <button class="category" data-cat="metal">Metal</button>
+        <button class="category" data-cat="stone">Stone</button>
+        <button class="category" data-cat="concrete">Concrete</button>
+        <button class="category" data-cat="ground">Ground</button>
+      </div>
+
+      <div id="library" class="library"></div>
+
     </aside>
 
-    <!-- CENTER PANEL: VIEWPORT -->
-    <main id="center">
-      <div id="viewer"></div>
-      <div class="viewLabel">Roblox Engine Viewport</div>
-      <div class="viewHint">Xoay camera: Chuột phải / Cuộn chuột để Phóng to</div>
+    <!-- VIEWPORT -->
+    <main class="viewport">
+      <canvas id="canvas"></canvas>
+
+      <div class="viewport-info">
+        🖱 Kéo = xoay &nbsp; • &nbsp;
+        Wheel = zoom &nbsp; • &nbsp;
+        Click mesh = chọn
+      </div>
+
+      <div class="drop">
+        <div class="drop-box">
+          <b>3D VIEWPORT</b><br>
+          Load .GLB / .GLTF để bắt đầu
+        </div>
+      </div>
+
+      <div id="status" class="status">
+        Chưa có model
+      </div>
     </main>
 
-    <!-- RIGHT PANEL: PROPERTIES -->
-    <aside id="right">
-      <div class="panelTitle">Properties - <span id="propTarget">None</span></div>
-      <div class="inspectorScroll" id="propertiesPanel" style="display:none;">
-        
-        <!-- CẤU HÌNH CHO PART -->
-        <div id="propsPart" style="display:none;">
-          <div class="section">
-            <h3>Appearance</h3>
-            <div class="row">
-              <label>Color</label>
-              <input type="text" id="partColor" value="#ffffff">
-            </div>
-            <div class="row">
-              <label>Transparency</label>
-              <input type="range" id="partTrans" min="0" max="1" step="0.1" value="0">
-              <span class="val" id="partTransVal">0.0</span>
-            </div>
-          </div>
-          <div class="section">
-            <h3>Data</h3>
-            <div class="row">
-              <label>Shape</label>
-              <select id="partShape">
-                <option value="Block">Block</option>
-                <option value="Cylinder">Cylinder</option>
-                <option value="Ball">Ball</option>
-              </select>
-            </div>
-          </div>
+    <!-- PROPERTIES -->
+    <aside class="panel right">
+
+      <div class="panel-title">Properties</div>
+
+      <div class="section">
+        <h3>Selected Mesh</h3>
+        <div id="selectedMesh" class="empty">
+          Chưa chọn mesh
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Mesh List</h3>
+        <div id="meshList" class="mesh-list">
+          <div class="empty">Chưa có model</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Material</h3>
+
+        <div class="field">
+          <label>
+            Texture Scale
+            <span id="scaleValue">1.00</span>
+          </label>
+          <input id="scale" type="range"
+                 min="0.1" max="20" step="0.1" value="1">
         </div>
 
-        <!-- CẤU HÌNH CHO PARTICLE EMITTER -->
-        <div id="propsParticle" style="display:none;">
-          <div class="section">
-            <h3>Data</h3>
-            <div class="row">
-              <label>Rate (Mật độ)</label>
-              <input type="number" id="pRate" value="20" min="1" max="100">
-            </div>
-            <div class="row">
-              <label>Speed (Tốc độ)</label>
-              <input type="range" id="pSpeed" min="0.1" max="10" step="0.1" value="2">
-              <span class="val" id="pSpeedVal">2.0</span>
-            </div>
-            <div class="row">
-              <label>Lifetime</label>
-              <input type="range" id="pLifetime" min="0.5" max="5" step="0.1" value="2">
-              <span class="val" id="pLifetimeVal">2.0</span>
-            </div>
-            <div class="row">
-              <label>SpreadAngle</label>
-              <input type="range" id="pSpread" min="0" max="180" step="5" value="45">
-              <span class="val" id="pSpreadVal">45°</span>
-            </div>
-          </div>
-          <div class="section">
-            <h3>Blender Baking Options</h3>
-            <p class="note">* Hệ thống sẽ tự động chuyển đổi quỹ đạo bay của toàn bộ luồng hạt này thành Animation keyframes tương thích chuẩn với Timeline của Blender khi xuất file.</p>
-          </div>
+        <div class="field">
+          <label>
+            Roughness
+            <span id="roughnessValue">0.50</span>
+          </label>
+          <input id="roughness" type="range"
+                 min="0" max="1" step="0.01" value="0.5">
+        </div>
+
+        <div class="field">
+          <label>
+            Metalness
+            <span id="metalnessValue">0.00</span>
+          </label>
+          <input id="metalness" type="range"
+                 min="0" max="1" step="0.01" value="0">
+        </div>
+
+        <div class="field">
+          <label>
+            Normal Strength
+            <span id="normalValue">1.00</span>
+          </label>
+          <input id="normal" type="range"
+                 min="0" max="3" step="0.05" value="1">
         </div>
 
       </div>
+
     </aside>
-  </section>
+
+  </div>
 </div>
 
 <script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
-// Setup Core Engine
-const container = document.getElementById('viewer');
+import * as THREE from "three";
+
+import { OrbitControls }
+from "three/addons/controls/OrbitControls.js";
+
+import { GLTFLoader }
+from "three/addons/loaders/GLTFLoader.js";
+
+
+/* =========================================================
+   THREE
+========================================================= */
+
+const canvas = document.getElementById("canvas");
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias:true
+});
+
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#0c0f14');
 
-const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-camera.position.set(5, 5, 8);
+scene.background = new THREE.Color(0x101116);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-container.appendChild(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(
+  45,
+  canvas.clientWidth / canvas.clientHeight,
+  0.01,
+  1000
+);
 
-const controls = new OrbitControls(camera, renderer.domElement);
+camera.position.set(3,2,5);
+
+const controls = new OrbitControls(camera,canvas);
+
 controls.enableDamping = true;
-controls.mouseButtons = { LEFT: THREE.MOUSE.NONE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 
-// Lights (Mô phỏng ánh sáng Roblox)
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const skyLight = new THREE.DirectionalLight(0xffffff, 0.8);
-skyLight.position.set(10, 20, 10);
-scene.add(skyLight);
+const hemi = new THREE.HemisphereLight(
+  0xffffff,
+  0x333333,
+  2
+);
 
-// Roblox Hierarchy Management State
-let rbWorkspace = new THREE.Group();
-rbWorkspace.name = "Workspace";
-scene.add(rbWorkspace);
+scene.add(hemi);
 
-let selectedNode = null;
-let activePart = null;
-let activeParticleEmitter = null;
-let isRunning = true;
-let clock = new THREE.Clock();
+const keyLight = new THREE.DirectionalLight(
+  0xffffff,
+  3
+);
 
-// Mảng chứa các hạt động để mô phỏng trên web
-let activeParticlesArray = [];
+keyLight.position.set(5,8,5);
 
-// Khởi tạo một mẫu Part mặc định ban đầu
-function createDefaultPart() {
-  const geo = new THREE.BoxGeometry(2, 1, 1);
-  const mat = new THREE.MeshStandardMaterial({ color: 0x3a4f6e, roughness: 0.4 });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.name = "Part";
-  rbWorkspace.add(mesh);
-  activePart = mesh;
-  
-  refreshExplorer();
-  selectNode(mesh);
-}
+scene.add(keyLight);
 
-function refreshExplorer() {
-  const tree = document.getElementById('sceneTree');
-  tree.innerHTML = '<div class="treeRow" id="nodeWorkspace">📂 Workspace</div>';
-  
-  rbWorkspace.children.forEach(child => {
-    const row = document.createElement('div');
-    row.className = 'treeRow';
-    if(selectedNode === child) row.className += ' active';
-    row.innerHTML = `<span class="treeIndent"></span>🟥 ${child.name}`;
-    row.onclick = (e) => { e.stopPropagation(); selectNode(child); };
-    tree.appendChild(row);
-    
-    child.children.forEach(sub => {
-      const subRow = document.createElement('div');
-      subRow.className = 'treeRow';
-      if(selectedNode === sub) subRow.className += ' active';
-      subRow.innerHTML = `<span class="treeIndent"></span><span class="treeIndent"></span>✨ ${sub.name}`;
-      subRow.onclick = (e) => { e.stopPropagation(); selectNode(sub); };
-      tree.appendChild(subRow);
-    });
-  });
-}
+const grid = new THREE.GridHelper(
+  20,
+  20,
+  0x333640,
+  0x22252d
+);
 
-function selectNode(node) {
-  selectedNode = node;
-  document.getElementById('propTarget').innerText = node ? node.name : "None";
-  document.getElementById('propertiesPanel').style.display = node ? 'block' : 'none';
-  
-  document.getElementById('propsPart').style.display = 'none';
-  document.getElementById('propsParticle').style.display = 'none';
-  
-  if (node && node.name === "Part") {
-    document.getElementById('propsPart').style.display = 'block';
-  } else if (node && node.name === "ParticleEmitter") {
-    document.getElementById('propsParticle').style.display = 'block';
-    activeParticleEmitter = node;
-  }
-  refreshExplorer();
-}
+scene.add(grid);
 
-// Logic Tạo thực thể từ Giao diện
-document.getElementById('btnPart').onclick = () => {
-  const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-  const mat = new THREE.MeshStandardMaterial({ color: 0x556a8a });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.name = "Part";
-  rbWorkspace.add(mesh);
-  selectNode(mesh);
-};
 
-document.getElementById('btnParticle').onclick = () => {
-  if (!selectedNode || selectedNode.name !== "Part") {
-    alert("Vui lòng chọn một 'Part' trong Explorer trước khi thêm ParticleEmitter!");
-    return;
-  }
-  const emitterData = {
-    name: "ParticleEmitter",
-    rate: 25,
-    speed: 2.5,
-    lifetime: 2.0,
-    spreadAngle: 45
-  };
-  selectedNode.add(emitterData); // Lưu cấu hình ảo vào tree
-  selectNode(emitterData);
-};
+/* =========================================================
+   MODEL
+========================================================= */
 
-// Đồng bộ bộ lọc thuộc tính tương tác
-document.getElementById('partColor').oninput = (e) => {
-  if(selectedNode && selectedNode.isMesh) {
-    selectedNode.material.color.set(e.target.value);
-  }
-};
-document.getElementById('partTrans').oninput = (e) => {
-  const val = parseFloat(e.target.value);
-  document.getElementById('partTransVal').innerText = val.toFixed(1);
-  if(selectedNode && selectedNode.isMesh) {
-    selectedNode.material.transparent = val > 0;
-    selectedNode.material.opacity = 1 - val;
-  }
-};
+let currentModel = null;
+let selectedMesh = null;
 
-// Simulation Realtime Particles Engine 
-function spawnLiveParticle(emitter, parentMesh) {
-  const pGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-  const pMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.9 });
-  const pMesh = new THREE.Mesh(pGeo, pMat);
-  
-  pMesh.position.copy(parentMesh.position);
-  
-  // Tính toán vector vận tốc dựa trên Spread Angle
-  const spreadRad = (emitter.spreadAngle * Math.PI) / 180;
-  const angle = (Math.random() - 0.5) * spreadRad;
-  const velocity = new THREE.Vector3(Math.sin(angle), 1, Math.cos(angle)).normalize().multiplyScalar(emitter.speed);
-  
-  scene.add(pMesh);
-  activeParticlesArray.push({
-    mesh: pMesh,
-    velocity: velocity,
-    age: 0,
-    maxAge: emitter.lifetime
-  });
-}
+const loader = new GLTFLoader();
 
-// Bộ xuất file GLB tối ưu cho Blender (Nướng chuyển động và cấu trúc hạt)
-document.getElementById('btnExport').onclick = () => {
-  const exporter = new GLTFExporter();
-  
-  // Nhóm tạm thời chứa tất cả dữ liệu thực thể đông cứng để nướng
-  const bakeGroup = new THREE.Group();
-  bakeGroup.name = "Roblox_Baked_Effect";
-  
-  // Clone các Mesh nền
-  rbWorkspace.children.forEach(child => {
-    if(child.isMesh) {
-      const meshClone = child.clone();
-      bakeGroup.add(meshClone);
-      
-      // Kiểm tra xem cấu trúc có ParticleEmitter không để nướng hạt
-      child.children.forEach(sub => {
-        if(sub.name === "ParticleEmitter") {
-          // Tạo một Group đại diện cho luồng hạt chuẩn hóa hình khối trong Blender
-          const gltfParticlesGroup = new THREE.Group();
-          gltfParticlesGroup.name = "Baked_Particles_Stream";
-          meshClone.add(gltfParticlesGroup);
-          
-          // Nướng 20 vị trí hạt động độc lập thành cấu trúc Keyframe chuyển động thực tế
-          for(let i = 0; i < 20; i++) {
-            const particleMesh = new THREE.Mesh(
-              new THREE.BoxGeometry(0.15, 0.15, 0.15),
-              new THREE.MeshBasicMaterial({ color: 0xff6600 })
-            );
-            particleMesh.name = `BakedParticle_${i}`;
-            gltfParticlesGroup.add(particleMesh);
-            
-            // Tính toán chuyển động thẳng đều của hạt chuẩn Roblox để chuyển đổi thành Keyframe track
-            const spreadRad = (sub.spreadAngle * Math.PI) / 180;
-            const angle = ((i / 20) - 0.5) * spreadRad;
-            const dir = new THREE.Vector3(Math.sin(angle), 1, Math.cos(angle)).normalize().multiplyScalar(sub.speed);
-            
-            // Viết tọa độ đường đi theo thời gian sống (Bake 3 mốc: Sinh ra -> Giữa -> Chết)
-            const times = [0, sub.lifetime * 0.5, sub.lifetime];
-            const values = [
-              0, 0, 0,
-              dir.x * sub.lifetime * 0.5, dir.y * sub.lifetime * 0.5, dir.z * sub.lifetime * 0.5,
-              dir.x * sub.lifetime, dir.y * sub.lifetime, dir.z * sub.lifetime
-            ];
-            
-            // Đóng gói chuyển động tịnh tiến này vào danh mục Track của phần tử con
-            const track = new THREE.Vector3KeyframeTrack(`${particleMesh.name}.position`, times, values);
-            if(!bakeGroup.userData.tracks) bakeGroup.userData.tracks = [];
-            bakeGroup.userData.tracks.push(track);
-          }
-        }
-      });
-    }
-  });
 
-  scene.add(bakeGroup);
+function loadModel(file){
 
-  // Thiết lập file đóng gói hoàn chỉnh
-  let animationClips = [];
-  if(bakeGroup.userData.tracks) {
-    const mainClip = new THREE.AnimationClip('Roblox_Particle_Action', -1, bakeGroup.userData.tracks);
-    animationClips.push(mainClip);
-  }
+  const url = URL.createObjectURL(file);
 
-  exporter.parse(
-    bakeGroup,
-    function (gltf) {
-      scene.remove(bakeGroup); // Xóa bản clone sau khi nướng xong
-      const blob = new Blob([gltf], { type: 'application/octet-stream' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'Roblox_Effect_To_Blender.glb';
-      link.click();
-    },
-    function (error) { console.error(error); },
-    { binary: true, animations: animationClips }
-  );
-};
+  loader.load(
+    url,
 
-// Loop Simulation Controls
-document.getElementById('btnPlay').onclick = () => { isRunning = true; toggleActiveBtn('btnPlay'); };
-document.getElementById('btnStop').onclick = () => { isRunning = false; toggleActiveBtn('btnStop'); };
+    gltf => {
 
-function toggleActiveBtn(id) {
-  document.getElementById('btnPlay').className = '';
-  document.getElementById('btnStop').className = '';
-  document.getElementById(id).className = 'active';
-}
-
-let spawnTimer = 0;
-createDefaultPart();
-
-// Main Loop Runtime Engine
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  
-  if (isRunning) {
-    // Quét cây phân cấp tìm Particle Emitter hoạt động để mô phỏng hạt thời gian thực trên Web
-    rbWorkspace.children.forEach(part => {
-      part.children.forEach(emitter => {
-        if(emitter.name === "ParticleEmitter") {
-          spawnTimer += delta;
-          const spawnInterval = 1 / emitter.rate;
-          if(spawnTimer >= spawnInterval) {
-            spawnLiveParticle(emitter, part);
-            spawnTimer = 0;
-          }
-        }
-      });
-    });
-
-    // Cập nhật vị trí hạt động trên màn hình Preview
-    for (let i = activeParticlesArray.length - 1; i >= 0; i--) {
-      const p = activeParticlesArray[i];
-      p.mesh.position.addScaledVector(p.velocity, delta);
-      p.age += delta;
-      
-      // Hiệu ứng mờ dần
-      p.mesh.material.opacity = 1 - (p.age / p.maxAge);
-      
-      if (p.age >= p.maxAge) {
-        scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
-        p.mesh.material.dispose();
-        activeParticlesArray.splice(i, 1);
+      if(currentModel){
+        scene.remove(currentModel);
       }
+
+      currentModel = gltf.scene;
+
+      scene.add(currentModel);
+
+      buildMeshList();
+
+      centerModel(currentModel);
+
+      document.getElementById("status").textContent =
+        "Model: " + file.name;
+
+      URL.revokeObjectURL(url);
+    },
+
+    undefined,
+
+    error => {
+      console.error(error);
+      alert("Không thể load model.");
     }
-  }
+  );
+}
+
+
+function centerModel(model){
+
+  const box = new THREE.Box3().setFromObject(model);
+
+  const center = box.getCenter(new THREE.Vector3());
+
+  const size = box.getSize(new THREE.Vector3());
+
+  model.position.sub(center);
+
+  const maxSize = Math.max(
+    size.x,
+    size.y,
+    size.z
+  );
+
+  const distance = maxSize * 1.8;
+
+  camera.position.set(
+    distance,
+    distance * .7,
+    distance
+  );
+
+  controls.target.set(0,0,0);
 
   controls.update();
-  renderer.render(scene, camera);
 }
+
+
+/* =========================================================
+   MESH LIST
+========================================================= */
+
+const meshList = document.getElementById("meshList");
+
+function buildMeshList(){
+
+  meshList.innerHTML = "";
+
+  if(!currentModel){
+    meshList.innerHTML =
+      '<div class="empty">Chưa có model</div>';
+    return;
+  }
+
+  currentModel.traverse(obj => {
+
+    if(!obj.isMesh) return;
+
+    const button = document.createElement("button");
+
+    button.className = "mesh-item";
+
+    button.textContent =
+      obj.name || "Mesh";
+
+    button.onclick = () => selectMesh(obj);
+
+    obj.userData.meshButton = button;
+
+    meshList.appendChild(button);
+  });
+}
+
+
+function selectMesh(mesh){
+
+  selectedMesh = mesh;
+
+  document
+    .querySelectorAll(".mesh-item")
+    .forEach(x =>
+      x.classList.remove("selected")
+    );
+
+  if(mesh.userData.meshButton){
+    mesh.userData.meshButton.classList.add("selected");
+  }
+
+  document.getElementById("selectedMesh").textContent =
+    mesh.name || "Unnamed Mesh";
+
+  readMaterialSettings();
+}
+
+
+/* =========================================================
+   TEXTURE LIBRARY
+=========================================================
+
+   Đây là cấu trúc Library.
+
+   Khi kết nối nguồn texture thật, chỉ cần thay URL
+   trong danh sách này hoặc dùng API/backend để lấy
+   danh sách texture động.
+========================================================= */
+
+const textures = [
+
+  {
+    name:"Wood Oak",
+    category:"wood",
+    url:"https://cdn.jsdelivr.net/gh/mrdoob/three.js@r180/examples/textures/hardwood2_diffuse.jpg"
+  },
+
+  {
+    name:"Brick",
+    category:"stone",
+    url:"https://threejs.org/examples/textures/brick_diffuse.jpg"
+  },
+
+  {
+    name:"Concrete",
+    category:"concrete",
+    url:"https://threejs.org/examples/textures/terrain/grasslight-big.jpg"
+  },
+
+  {
+    name:"Metal",
+    category:"metal",
+    url:"https://threejs.org/examples/textures/metal.jpg"
+  }
+
+];
+
+
+const library =
+  document.getElementById("library");
+
+
+let currentCategory = "all";
+
+
+function renderLibrary(){
+
+  library.innerHTML = "";
+
+  const search =
+    document.getElementById("search")
+      .value
+      .toLowerCase();
+
+  textures
+    .filter(texture => {
+
+      const categoryOK =
+        currentCategory === "all" ||
+        texture.category === currentCategory;
+
+      const searchOK =
+        texture.name
+          .toLowerCase()
+          .includes(search);
+
+      return categoryOK && searchOK;
+
+    })
+    .forEach(texture => {
+
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "texture-card";
+
+      card.innerHTML = `
+        <img class="texture-image"
+             src="${texture.url}"
+             loading="lazy">
+
+        <div class="texture-name">
+          ${texture.name}
+        </div>
+      `;
+
+      card.onclick =
+        () => applyTexture(texture.url);
+
+      library.appendChild(card);
+
+    });
+}
+
+
+renderLibrary();
+
+
+/* =========================================================
+   APPLY TEXTURE
+========================================================= */
+
+const textureLoader =
+  new THREE.TextureLoader();
+
+
+function applyTexture(url){
+
+  if(!selectedMesh){
+
+    alert("Hãy chọn một mesh trước.");
+
+    return;
+  }
+
+  textureLoader.load(
+
+    url,
+
+    texture => {
+
+      texture.colorSpace =
+        THREE.SRGBColorSpace;
+
+      texture.wrapS =
+        THREE.RepeatWrapping;
+
+      texture.wrapT =
+        THREE.RepeatWrapping;
+
+      texture.repeat.set(
+        Number(document.getElementById("scale").value),
+        Number(document.getElementById("scale").value)
+      );
+
+      let material =
+        selectedMesh.material;
+
+      if(Array.isArray(material)){
+        material = material[0];
+      }
+
+      if(!(material instanceof THREE.MeshStandardMaterial)){
+
+        material =
+          new THREE.MeshStandardMaterial();
+
+        selectedMesh.material =
+          material;
+      }
+
+      material.map = texture;
+
+      material.needsUpdate = true;
+
+      readMaterialSettings();
+
+    },
+
+    undefined,
+
+    error => {
+      console.error(error);
+      alert("Không tải được texture.");
+    }
+  );
+}
+
+
+/* =========================================================
+   UPLOAD CUSTOM TEXTURE
+========================================================= */
+
+document
+  .getElementById("textureInput")
+  .addEventListener("change",event => {
+
+    const file =
+      event.target.files[0];
+
+    if(!file) return;
+
+    const url =
+      URL.createObjectURL(file);
+
+    applyTexture(url);
+
+  });
+
+
+/* =========================================================
+   MATERIAL SETTINGS
+========================================================= */
+
+const scale =
+  document.getElementById("scale");
+
+const roughness =
+  document.getElementById("roughness");
+
+const metalness =
+  document.getElementById("metalness");
+
+const normal =
+  document.getElementById("normal");
+
+
+function getMaterial(){
+
+  if(!selectedMesh) return null;
+
+  let material =
+    selectedMesh.material;
+
+  if(Array.isArray(material)){
+    material = material[0];
+  }
+
+  return material;
+}
+
+
+function readMaterialSettings(){
+
+  const material =
+    getMaterial();
+
+  if(!material) return;
+
+  roughness.value =
+    material.roughness ?? .5;
+
+  metalness.value =
+    material.metalness ?? 0;
+
+  roughnessValue.textContent =
+    Number(roughness.value).toFixed(2);
+
+  metalnessValue.textContent =
+    Number(metalness.value).toFixed(2);
+}
+
+
+function updateMaterial(){
+
+  const material =
+    getMaterial();
+
+  if(!material) return;
+
+  material.roughness =
+    Number(roughness.value);
+
+  material.metalness =
+    Number(metalness.value);
+
+  if(material.map){
+
+    material.map.repeat.set(
+      Number(scale.value),
+      Number(scale.value)
+    );
+
+  }
+
+  material.needsUpdate = true;
+
+  scaleValue.textContent =
+    Number(scale.value).toFixed(2);
+
+  roughnessValue.textContent =
+    Number(roughness.value).toFixed(2);
+
+  metalnessValue.textContent =
+    Number(metalness.value).toFixed(2);
+
+  normalValue.textContent =
+    Number(normal.value).toFixed(2);
+}
+
+
+[
+  scale,
+  roughness,
+  metalness,
+  normal
+].forEach(input => {
+
+  input.addEventListener(
+    "input",
+    updateMaterial
+  );
+
+});
+
+
+const scaleValue =
+  document.getElementById("scaleValue");
+
+const roughnessValue =
+  document.getElementById("roughnessValue");
+
+const metalnessValue =
+  document.getElementById("metalnessValue");
+
+const normalValue =
+  document.getElementById("normalValue");
+
+
+/* =========================================================
+   UPLOAD MODEL
+========================================================= */
+
+document
+  .getElementById("loadModelBtn")
+  .onclick = () =>
+    document
+      .getElementById("modelInput")
+      .click();
+
+
+document
+  .getElementById("modelInput")
+  .addEventListener("change",event => {
+
+    const file =
+      event.target.files[0];
+
+    if(file){
+      loadModel(file);
+    }
+
+  });
+
+
+document
+  .getElementById("uploadTextureBtn")
+  .onclick = () =>
+    document
+      .getElementById("textureInput")
+      .click();
+
+
+/* =========================================================
+   SEARCH / CATEGORY
+========================================================= */
+
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    renderLibrary
+  );
+
+
+document
+  .querySelectorAll(".category")
+  .forEach(button => {
+
+    button.onclick = () => {
+
+      document
+        .querySelectorAll(".category")
+        .forEach(x =>
+          x.classList.remove("active")
+        );
+
+      button.classList.add("active");
+
+      currentCategory =
+        button.dataset.cat;
+
+      renderLibrary();
+
+    };
+
+  });
+
+
+/* =========================================================
+   CLICK MESH IN VIEWPORT
+========================================================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const mouse =
+  new THREE.Vector2();
+
+
+canvas.addEventListener(
+  "pointerdown",
+  event => {
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    mouse.x =
+      ((event.clientX - rect.left) /
+      rect.width) * 2 - 1;
+
+    mouse.y =
+      -((event.clientY - rect.top) /
+      rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(
+      mouse,
+      camera
+    );
+
+    if(!currentModel) return;
+
+    const hits =
+      raycaster.intersectObject(
+        currentModel,
+        true
+      );
+
+    if(hits.length){
+
+      selectMesh(hits[0].object);
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+document
+  .getElementById("resetBtn")
+  .onclick = () => {
+
+    if(!selectedMesh) return;
+
+    selectedMesh.material =
+      selectedMesh.userData.originalMaterial ||
+      selectedMesh.material;
+
+    selectedMesh.material.needsUpdate = true;
+
+  };
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+function resize(){
+
+  const width =
+    canvas.clientWidth;
+
+  const height =
+    canvas.clientHeight;
+
+  camera.aspect =
+    width / height;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    width,
+    height,
+    false
+  );
+
+}
+
+window.addEventListener(
+  "resize",
+  resize
+);
+
+resize();
+
+
+/* =========================================================
+   LOOP
+========================================================= */
+
+function animate(){
+
+  requestAnimationFrame(animate);
+
+  controls.update();
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
 animate();
 
-window.addEventListener('resize', () => {
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
-});
 </script>
+
 </body>
 </html>
+```
