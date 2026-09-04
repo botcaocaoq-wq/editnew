@@ -125,6 +125,14 @@
             <button data-cat="concrete">CONCRETE</button>
             <button data-cat="ground">GROUND</button>
             <button data-cat="human">HUMAN</button>
+            <button data-cat="glass">GLASS</button>
+            <button data-cat="fabric">FABRIC</button>
+            <button data-cat="leather">LEATHER</button>
+            <button data-cat="ceramic">CERAMIC</button>
+            <button data-cat="marble">MARBLE</button>
+            <button data-cat="brick">BRICK</button>
+            <button data-cat="rubber">RUBBER</button>
+            <button data-cat="water">WATER</button>
         </div>
 
         <div id="crackCategories" class="crackCategories" hidden>
@@ -343,9 +351,6 @@ let crackPreviewCache = new Map();
 const viewer = document.getElementById("viewer");
 const textureList = document.getElementById("textureList");
 
-init();
-loadPolyHavenFast();
-
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x101216);
@@ -526,10 +531,72 @@ function createHumanSkinPreview() {
     return canvas.toDataURL("image/png");
 }
 
-const localLibraryPresets = [{
-    id:"local-human-skin", name:"Human Skin", category:"human", tags:["human","skin","face","flesh"], thumbnail_url:"", local:true
-}];
-localLibraryPresets[0].thumbnail_url = createHumanSkinPreview();
+function makeLocalMaterialPreview(kind){
+    const canvas=document.createElement("canvas");
+    canvas.width=220; canvas.height=220;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    const img=ctx.createImageData(220,220);
+    let seed=0x12345678+kind.length*997;
+    const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+    const palettes={
+        glass:[[165,205,230],[235,250,255]], fabric:[[90,100,114],[165,175,188]],
+        leather:[[75,43,25],[156,92,48]], ceramic:[[195,195,188],[242,242,235]],
+        marble:[[170,170,166],[238,238,232]], brick:[[122,57,39],[198,108,73]],
+        rubber:[[28,30,32],[74,77,81]], water:[[38,103,135],[112,200,230]]
+    };
+    const pal=palettes[kind]||palettes.ceramic;
+    for(let y=0;y<220;y++) for(let x=0;x<220;x++){
+        const u=x/220,v=y/220;
+        const n=.55+.45*(.5+.5*Math.sin(u*17+Math.sin(v*9)*2));
+        let r=pal[0][0]*(.8+.22*n),g=pal[0][1]*(.8+.22*n),b=pal[0][2]*(.8+.22*n);
+        if(kind==="glass"){
+            const s=Math.max(0,Math.sin(u*30+v*8+n*4)); r+=pal[1][0]*.12*s; g+=pal[1][1]*.14*s; b+=pal[1][2]*.16*s;
+        } else if(kind==="fabric"){
+            const w=(Math.sin(x*.95)*.5+.5)*(Math.sin(y*.95)*.5+.5); r+=36*w;g+=38*w;b+=42*w;
+        } else if(kind==="leather"){
+            const q=Math.sin(u*58+n*11)*Math.sin(v*47+n*7);r+=16*q;g+=11*q;b+=7*q;
+        } else if(kind==="ceramic"){
+            const q=Math.sin(u*12+v*8)*7;r+=q;g+=q;b+=q;
+        } else if(kind==="marble"){
+            const q=Math.max(0,Math.sin(u*12+v*17+Math.sin(v*13)*3))*34;r-=q*.62;g-=q*.65;b-=q*.68;
+        } else if(kind==="brick"){
+            const row=Math.floor(v*13),off=row%2?.08:0;const mortar=Math.abs(((u+off)%0.24)-.12)<.008||Math.abs((v*13%1)-.98)<.018;if(mortar){r*=.62;g*=.62;b*=.62;}
+        } else if(kind==="rubber"){
+            const q=Math.sin(u*75+v*15)*3.5;r+=q;g+=q;b+=q;
+        } else if(kind==="water"){
+            const q=Math.sin(u*25+v*11)*12+Math.sin(v*33-u*8)*7;r+=q*.15;g+=q*.55;b+=q*.8;
+        }
+        const i=(y*220+x)*4;img.data[i]=Math.max(0,Math.min(255,Math.round(r)));img.data[i+1]=Math.max(0,Math.min(255,Math.round(g)));img.data[i+2]=Math.max(0,Math.min(255,Math.round(b)));img.data[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    if(kind==="marble"||kind==="glass"){
+        ctx.globalAlpha=.14;ctx.strokeStyle=kind==="glass"?"#fff":"#666";ctx.lineWidth=1.1;
+        for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(rnd()*220,0);for(let y=20;y<=220;y+=20)ctx.lineTo(35+rnd()*150,y);ctx.stroke();}
+    }
+    if(kind==="fabric"){
+        ctx.globalAlpha=.07;ctx.strokeStyle="#fff";for(let i=0;i<220;i+=5){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,220);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(220,i);ctx.stroke();}
+    }
+    return canvas.toDataURL("image/png");
+}
+
+const localLibraryPresets=[
+    {id:"local-human-skin",name:"Human Skin",category:"human",tags:["human","skin","face","flesh"],thumbnail_url:"",local:true,roughness:.58},
+    {id:"local-glass",name:"Clear Glass",category:"glass",tags:["glass","clear"],thumbnail_url:"",local:true,roughness:.08},
+    {id:"local-fabric",name:"Soft Fabric",category:"fabric",tags:["fabric","cloth","textile"],thumbnail_url:"",local:true,roughness:.88},
+    {id:"local-leather",name:"Leather",category:"leather",tags:["leather","hide"],thumbnail_url:"",local:true,roughness:.72},
+    {id:"local-ceramic",name:"Ceramic",category:"ceramic",tags:["ceramic","pottery"],thumbnail_url:"",local:true,roughness:.24},
+    {id:"local-marble",name:"White Marble",category:"marble",tags:["marble","stone"],thumbnail_url:"",local:true,roughness:.30},
+    {id:"local-brick",name:"Red Brick",category:"brick",tags:["brick","wall"],thumbnail_url:"",local:true,roughness:.78},
+    {id:"local-rubber",name:"Rubber",category:"rubber",tags:["rubber","matte"],thumbnail_url:"",local:true,roughness:.92},
+    {id:"local-water",name:"Water Surface",category:"water",tags:["water","wet"],thumbnail_url:"",local:true,roughness:.06}
+];
+localLibraryPresets[0].thumbnail_url=createHumanSkinPreview();
+for(const preset of localLibraryPresets){if(!preset.thumbnail_url)preset.thumbnail_url=makeLocalMaterialPreview(preset.category);}
+
+// Start the app only after the local library preset is initialized.
+// This prevents a Temporal Dead Zone error during the first renderLibrary() call.
+init();
+loadPolyHavenFast();
 
 async function applyLocalLibraryMaterial(asset) {
     if (!selectedMesh) { alert("Hãy click vào một mesh trước."); return; }
@@ -545,8 +612,11 @@ async function applyLocalLibraryMaterial(asset) {
     tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
     tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
     material.map = tex;
-    material.roughness = .58;
+    material.roughness = asset.roughness ?? .58;
     material.metalness = 0;
+    material.transparent = asset.category === "glass";
+    material.opacity = asset.category === "glass" ? .55 : 1;
+    material.depthWrite = asset.category !== "glass";
     material.needsUpdate = true;
     updateSelectionUI();
 }
