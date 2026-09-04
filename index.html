@@ -14,6 +14,10 @@
   }
 }
 </script>
+
+<style>
+#crackMode.active { background:#7f1d1d; border-color:#ef4444; color:#fff; }
+</style>
 </head>
 
 <body>
@@ -24,6 +28,7 @@
     <div class="toolbar">
         <button id="uploadModel">＋ Model</button>
         <button id="uploadTexture">＋ Texture</button>
+        <button id="crackMode" title="Bật chế độ tạo và kéo vết nứt">＋ Crack</button>
         <button id="undoBtn">↶</button>
         <button id="redoBtn">↷</button>
         <button id="saveProject">Save</button>
@@ -188,6 +193,10 @@ let historyIndex = -1;
 let wireframe = false;
 let gridVisible = true;
 let textureApplyToken = 0;
+let crackMode = false;
+let activeCrack = null;
+let crackDrag = null;
+const crackItems = new Set();
 
 const viewer = document.getElementById("viewer");
 const textureList = document.getElementById("textureList");
@@ -256,6 +265,7 @@ function init() {
     document.getElementById("redoBtn").onclick = redo;
     document.getElementById("saveProject").onclick = saveProject;
     document.getElementById("exportGLB").onclick = exportGLB;
+    document.getElementById("crackMode").onclick = toggleCrackMode;
     document.getElementById("newLayer").onclick = addLayer;
 
     renderLibrary();
@@ -572,6 +582,22 @@ function getSelectedMaterial() {
     return selectedMesh.material;
 }
 
+function clearCracks() {
+    for (const crack of crackItems) {
+        crack.traverse(obj => {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                const maps = [obj.material.map];
+                maps.forEach(tex => tex?.dispose());
+                obj.material.dispose();
+            }
+        });
+        scene.remove(crack);
+    }
+    crackItems.clear();
+    activeCrack = null;
+}
+
 function loadModel(event) {
     const file = event.target.files[0];
     event.target.value = "";
@@ -583,10 +609,14 @@ function loadModel(event) {
     loader.load(
         url,
         gltf => {
+            clearCracks();
             disposeModel(model);
             model = gltf.scene;
             selectedMesh = null;
             selectedMaterialIndex = 0;
+            crackMode = false;
+            document.getElementById("crackMode").classList.remove("active");
+            renderer.domElement.style.cursor = "default";
             textureApplyToken++;
             scene.add(model);
 
@@ -645,20 +675,191 @@ function centerModel() {
 
 function selectObject(event) {
     if (!model) return;
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    // In crack mode, existing cracks can be grabbed and moved.
+    if (crackMode) {
+        const crackHits = raycaster.intersectObjects([...crackItems], true);
+        if (crackHits.length) {
+            const crack = crackHits[0].object.userData.crackRoot || crackHits[0].object;
+            beginCrackDrag(crack, event);
+            return;
+        }
+
+        const hits = raycaster.intersectObject(model, true);
+        if (!hits.length) return;
+
+        const hit = hits[0];
+        if (hit.object.isMesh) {
+            selectedMesh = hit.object;
+            selectedMaterialIndex = hit.face?.materialIndex ?? 0;
+            updateSelectionUI();
+            createCrackAtHit(hit);
+        }
+        return;
+    }
+
+    const hits = raycaster.intersectObject(model, true);
+    if (!hits.length) return;
+
+    const hit = hits[0];
+    if (hit.object.isMesh) {
+        selectedMesh = hit.object;
+        selectedMaterialIndex = hit.face?.materialIndex ?? 0;
+        updateSelectionUI();
+    }
+}
+
+function toggleCrackMode() {
+    crackMode = !crackMode;
+    const btn = document.getElementById("crackMode");
+    btn.classList.toggle("active", crackMode);
+    renderer.domElement.style.cursor = crackMode ? "crosshair" : "default";
+    if (!crackMode) {
+        activeCrack = null;
+        crackDrag = null;
+    }
+}
+
+function makeCrackTexture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 256, 256);
+    ctx.strokeStyle = "rgba(20,20,20,0.95)";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    const drawBranch = (points, width = 7) => {
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+        ctx.stroke();
+    };
+
+    drawBranch([[126,128],[108,110],[112,84],[95,61],[100,35]], 8);
+    drawBranch([[110,111],[84,106],[62,90],[39,94]], 6);
+    drawBranch([[112,85],[138,72],[156,49],[183,42]], 6);
+    drawBranch([[96,61],[79,48],[57,44]], 5);
+    drawBranch([[138,72],[145,94],[172,111],[190,129]], 5);
+    drawBranch([[145,94],[134,121],[149,145],[164,164]], 5);
+    drawBranch([[62,90],[56,113],[36,128]], 4);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+    return tex;
+}
+
+function createCrackAtHit(hit) {
+    const crack = new THREE.Group();
+    const worldNormal = getHitWorldNormal(hit);
+    crack.name = "Crack";
+    crack.userData.crackRoot = crack;
+    crack.userData.meshUuid = hit.object.uuid;
+    crack.userData.normal = worldNormal.clone();
+
+    const size = 0.22;
+    const geom = new THREE.PlaneGeometry(size, size);
+    const mat = new THREE.MeshBasicMaterial({
+        map: makeCrackTexture(),
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        side: THREE.DoubleSide,
+        toneMapped: false
+    });
+    const plane = new THREE.Mesh(geom, mat);
+    plane.userData.crackRoot = crack;
+    crack.add(plane);
+
+    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.002));
+    orientCrackToNormal(crack, worldNormal);
+    scene.add(crack);
+    crackItems.add(crack);
+    activeCrack = crack;
+}
+
+function getHitWorldNormal(hit) {
+    const localNormal = hit.face?.normal ? hit.face.normal.clone() : new THREE.Vector3(0, 1, 0);
+    const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
+    return localNormal.applyMatrix3(normalMatrix).normalize();
+}
+
+function orientCrackToNormal(crack, normal) {
+    const n = normal.clone().normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    crack.quaternion.copy(q);
+}
+
+function beginCrackDrag(crack, event) {
+    if (!crack || !model) return;
+    activeCrack = crack;
+    crackDrag = { crack, pointerId: event.pointerId };
+    renderer.domElement.setPointerCapture?.(event.pointerId);
+    controls.enabled = false;
+}
+
+function moveCrack(event) {
+    if (!crackDrag) return;
+
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
+
     const hits = raycaster.intersectObject(model, true);
     if (!hits.length) return;
 
     const hit = hits[0];
     if (!hit.object.isMesh) return;
-    selectedMesh = hit.object;
-    selectedMaterialIndex = hit.face?.materialIndex ?? 0;
-    textureApplyToken++;
-    updateSelectionUI();
+
+    const crack = crackDrag.crack;
+    const worldNormal = getHitWorldNormal(hit);
+    crack.userData.meshUuid = hit.object.uuid;
+    crack.userData.normal = worldNormal.clone();
+    crack.position.copy(hit.point).add(worldNormal.clone().multiplyScalar(0.002));
+    orientCrackToNormal(crack, worldNormal);
 }
+
+function endCrackDrag() {
+    if (!crackDrag) return;
+    const pointerId = crackDrag.pointerId;
+    crackDrag = null;
+    controls.enabled = true;
+    if (pointerId != null) {
+        try { renderer.domElement.releasePointerCapture(pointerId); } catch (_) {}
+    }
+}
+
+renderer?.domElement?.addEventListener?.("pointermove", moveCrack);
+renderer?.domElement?.addEventListener?.("pointerup", endCrackDrag);
+renderer?.domElement?.addEventListener?.("pointercancel", endCrackDrag);
+
+window.addEventListener("keydown", event => {
+    if (event.key !== "Delete" || !activeCrack) return;
+    const crack = activeCrack;
+    crackItems.delete(crack);
+    crack.traverse(obj => {
+        obj.geometry?.dispose();
+        if (obj.material) {
+            obj.material.map?.dispose();
+            obj.material.dispose();
+        }
+    });
+    scene.remove(crack);
+    activeCrack = null;
+});
 
 function updateSelectionUI() {
     if (!selectedMesh) return;
