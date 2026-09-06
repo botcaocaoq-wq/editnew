@@ -2,117 +2,95 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Rhythm Game - Kho Nhạc Zing MP3</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rhythm Game - Zing MP3</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
-
-html,body{
-    margin:0;
-    padding:0;
-    width:100%;
-    min-height:100%;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#071012;
-    color:white;
-}
+*{box-sizing:border-box}
 
 body{
-    overflow-x:hidden;
+    margin:0;
+    background:#060b0d;
+    color:#fff;
+    font-family:Arial,sans-serif;
 }
 
 .container{
     width:min(1250px,96%);
     margin:auto;
-    padding:25px 0 50px;
+    padding:20px 0 40px;
 }
 
-.header{
+header{
     text-align:center;
-    margin-bottom:25px;
+    margin-bottom:20px;
 }
 
-.logo{
-    font-size:42px;
-    font-weight:bold;
+header h1{
     color:#1ed760;
-    text-shadow:0 0 20px #1ed76055;
+    margin:0;
+    font-size:36px;
 }
 
-.header p{
-    color:#899296;
-    margin-top:7px;
+header p{
+    color:#777;
 }
 
 .layout{
     display:grid;
-    grid-template-columns:390px 1fr;
+    grid-template-columns:380px 1fr;
     gap:20px;
 }
 
 .panel{
     background:#101719;
     border:1px solid #303a3e;
-    border-radius:16px;
-    padding:20px;
-    box-shadow:0 10px 30px #00000033;
+    border-radius:15px;
+    padding:18px;
 }
 
 h2{
-    margin:0 0 15px;
+    margin:0 0 14px;
 }
 
-/* =========================
-   LINK ZING
-========================= */
-
-.inputBox{
+.input{
     display:flex;
-    gap:8px;
+    gap:7px;
 }
 
-.inputBox input{
+.input input{
     flex:1;
     min-width:0;
-    padding:13px;
-    border-radius:9px;
-    border:1px solid #3c474b;
     background:#080d0f;
-    color:white;
+    border:1px solid #404b4f;
+    color:#fff;
+    padding:12px;
+    border-radius:8px;
     outline:none;
-    font-size:14px;
 }
 
-.inputBox input:focus{
+.input input:focus{
     border-color:#1ed760;
 }
 
-.btn{
-    border:0;
-    border-radius:9px;
-    padding:12px 15px;
+button{
     cursor:pointer;
+}
+
+.addBtn{
+    background:#1db954;
+    color:#fff;
+    border:0;
+    border-radius:8px;
+    padding:0 15px;
     font-weight:bold;
 }
 
-.btnAdd{
-    background:#1db954;
-    color:white;
-}
-
-.btnAdd:hover{
-    background:#20d663;
-}
-
 .hint{
-    margin-top:10px;
-    color:#747e82;
+    color:#737d80;
     font-size:12px;
     line-height:1.5;
+    margin-top:10px;
 }
 
 .example{
@@ -120,56 +98,46 @@ h2{
     word-break:break-all;
 }
 
-/* =========================
-   LIBRARY
-========================= */
-
-.libraryHeader{
+.libraryHead{
+    margin-top:25px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-top:28px;
-    margin-bottom:10px;
 }
 
-.libraryCount{
+.count{
     color:#777;
     font-size:12px;
 }
 
-.btnClear{
+.clear{
     color:#ff5252;
     background:transparent;
-    border:1px solid #553034;
-    padding:7px 10px;
+    border:1px solid #4c292d;
+    padding:7px 9px;
     border-radius:7px;
-    cursor:pointer;
 }
 
 .song{
     display:flex;
     align-items:center;
-    gap:10px;
-    padding:10px;
+    gap:9px;
+    padding:9px;
     margin-top:8px;
     background:#151d20;
-    border:1px solid #2c373b;
-    border-radius:10px;
-}
-
-.song:hover{
-    border-color:#1db954;
+    border:1px solid #2d373b;
+    border-radius:9px;
 }
 
 .songIcon{
-    width:48px;
-    height:48px;
-    border-radius:8px;
-    background:#20292d;
+    width:45px;
+    height:45px;
+    background:#202a2d;
+    border-radius:7px;
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:24px;
+    font-size:22px;
     flex-shrink:0;
 }
 
@@ -180,117 +148,103 @@ h2{
 
 .songTitle{
     font-weight:bold;
-    overflow:hidden;
     white-space:nowrap;
+    overflow:hidden;
     text-overflow:ellipsis;
 }
 
 .songUrl{
     color:#687276;
-    font-size:11px;
-    margin-top:5px;
-    overflow:hidden;
+    font-size:10px;
     white-space:nowrap;
+    overflow:hidden;
     text-overflow:ellipsis;
+    margin-top:4px;
 }
 
-.songActions{
+.songButtons{
     display:flex;
-    gap:5px;
+    gap:4px;
 }
 
-.openBtn{
+.open{
     background:#1db954;
-    color:white;
+    color:#fff;
     border:0;
     border-radius:7px;
     padding:8px;
-    cursor:pointer;
 }
 
-.deleteBtn{
+.del{
     background:transparent;
     color:#ff5252;
     border:0;
     padding:8px;
-    cursor:pointer;
 }
 
 .empty{
-    border:1px dashed #394347;
-    border-radius:10px;
     text-align:center;
-    color:#727d80;
-    padding:25px 10px;
+    color:#727c80;
+    padding:25px 5px;
+    border:1px dashed #384145;
+    border-radius:10px;
     margin-top:10px;
 }
 
 .emptyIcon{
-    font-size:40px;
-    margin-bottom:8px;
+    font-size:38px;
 }
 
-/* =========================
-   GAME
-========================= */
+/* GAME */
 
 .stats{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:8px;
-    margin-bottom:10px;
+    gap:7px;
 }
 
 .stat{
     background:#080d0f;
     border:1px solid #303a3e;
-    border-radius:9px;
-    padding:10px;
+    border-radius:8px;
+    padding:9px;
     text-align:center;
 }
 
 .stat small{
-    color:#6e797d;
     display:block;
+    color:#727d80;
     font-size:10px;
 }
 
 .stat strong{
+    display:block;
     color:#1ed760;
     font-size:22px;
-    display:block;
-    margin-top:4px;
+    margin-top:3px;
 }
 
-.currentSong{
+.current{
     text-align:center;
-    min-height:30px;
-    color:#899497;
-    margin:5px 0 5px;
+    color:#888;
+    min-height:25px;
+    margin:8px 0;
 }
 
-.currentSong b{
-    color:white;
+.current b{
+    color:#fff;
 }
 
-.message{
+#message{
     height:30px;
     text-align:center;
-    font-size:20px;
     font-weight:bold;
+    font-size:20px;
 }
 
-.perfect{
-    color:#00ff88;
-}
-
-.good{
-    color:#00e5ff;
-}
-
-.miss{
-    color:#ff5252;
-}
+.perfect{color:#00ff88}
+.good{color:#00e5ff}
+.miss{color:#ff5252}
 
 canvas{
     display:block;
@@ -298,36 +252,29 @@ canvas{
     max-width:700px;
     height:auto;
     margin:auto;
-    border:2px solid #303a3e;
-    border-radius:13px;
     background:#05090a;
+    border:2px solid #303a3e;
+    border-radius:12px;
 }
 
-.gameControls{
+.controls{
     display:flex;
     justify-content:center;
     flex-wrap:wrap;
-    gap:8px;
+    gap:7px;
     margin-top:12px;
 }
 
 .control{
     background:#20292d;
+    color:#fff;
     border:1px solid #3b464a;
-    color:white;
-    padding:10px 15px;
     border-radius:8px;
-    cursor:pointer;
+    padding:10px 14px;
 }
 
 .control:hover{
     border-color:#1db954;
-}
-
-.help{
-    text-align:center;
-    color:#717c80;
-    margin-top:15px;
 }
 
 .keys{
@@ -340,76 +287,42 @@ canvas{
 .key{
     width:55px;
     height:45px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     border:2px solid #555f63;
     border-radius:9px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
     font-weight:bold;
+    font-size:18px;
+    user-select:none;
 }
 
 .key.active{
-    color:#1ed760;
-    border-color:#1ed760;
-    box-shadow:0 0 20px #1ed76055;
-    background:#1ed76010;
+    border-color:#1db954;
+    color:#1db954;
+    background:#1db95418;
+    box-shadow:0 0 20px #1db95466;
 }
 
-.status{
+.soundStatus{
     text-align:center;
-    color:#737d81;
+    color:#777;
     font-size:12px;
-    padding:8px;
+    margin-top:8px;
 }
-
-/* =========================
-   RESPONSIVE
-========================= */
 
 @media(max-width:850px){
-
     .layout{
         grid-template-columns:1fr;
     }
-
 }
 
 @media(max-width:500px){
-
-    .container{
-        width:94%;
-        padding-top:15px;
-    }
-
-    .logo{
-        font-size:30px;
-    }
-
-    .panel{
-        padding:13px;
-    }
-
-    .stats{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .inputBox{
-        flex-direction:column;
-    }
-
-    .btnAdd{
-        width:100%;
-    }
-
-    .song{
-        align-items:flex-start;
-    }
-
-    .songActions{
-        flex-direction:column;
-    }
-
+    header h1{font-size:28px}
+    .panel{padding:12px}
+    .input{flex-direction:column}
+    .addBtn{height:43px}
+    .stats{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -418,47 +331,32 @@ canvas{
 
 <div class="container">
 
-<!-- =========================
-     HEADER
-========================= -->
-
-<div class="header">
-
-    <div class="logo">
-        🎵 RHYTHM GAME
-    </div>
-
-    <p>
-        Kho nhạc của tôi • Zing MP3 • Rhythm Game
-    </p>
-
-</div>
-
+<header>
+    <h1>🎵 RHYTHM GAME</h1>
+    <p>Kho nhạc Zing MP3 • Rhythm Game • Sound Effects</p>
+</header>
 
 <div class="layout">
 
-<!-- =====================================================
-     LEFT
-===================================================== -->
+<!-- ================= KHO NHẠC ================= -->
 
 <div class="panel">
 
-<h2>🔗 Thêm bài từ Zing MP3</h2>
+<h2>🔗 Thêm link Zing MP3</h2>
 
-<div class="inputBox">
+<div class="input">
 
-    <input
-        id="zingLink"
-        type="text"
-        placeholder="Dán link Zing MP3 vào đây..."
-    >
+<input
+    id="zingLink"
+    placeholder="Dán link Zing MP3..."
+>
 
-    <button
-        class="btn btnAdd"
-        onclick="addZingLink()"
-    >
-        ➕ Thêm
-    </button>
+<button
+    class="addBtn"
+    onclick="addZingLink()"
+>
+    ➕ Thêm
+</button>
 
 </div>
 
@@ -474,32 +372,26 @@ https://zingmp3.vn/bai-hat/Dang-Thap-Yeu-Quan/zo4meXbhyeYe.html
 
 <br><br>
 
-Bạn chỉ cần copy link bài hát trên Zing MP3
-rồi dán vào đây.
+Copy link bài hát từ Zing MP3 rồi dán vào đây.
+Bài hát sẽ được lưu trong trình duyệt.
 
 </div>
 
+<div class="libraryHead">
 
-<!-- =========================
-     LIBRARY
-========================= -->
+<div>
+<h2>❤️ Kho nhạc của tôi</h2>
+<div class="count">
+    <span id="count">0</span> bài
+</div>
+</div>
 
-<div class="libraryHeader">
-
-    <div>
-        <h2>❤️ Kho nhạc của tôi</h2>
-
-        <div class="libraryCount">
-            <span id="count">0</span> bài hát
-        </div>
-    </div>
-
-    <button
-        class="btnClear"
-        onclick="clearLibrary()"
-    >
-        🗑 Xóa hết
-    </button>
+<button
+    class="clear"
+    onclick="clearLibrary()"
+>
+🗑 Xóa hết
+</button>
 
 </div>
 
@@ -508,100 +400,98 @@ rồi dán vào đây.
 </div>
 
 
-<!-- =====================================================
-     RIGHT GAME
-===================================================== -->
+<!-- ================= GAME ================= -->
 
 <div class="panel">
 
 <div class="stats">
 
-    <div class="stat">
-        <small>ĐIỂM</small>
-        <strong id="score">0</strong>
-    </div>
+<div class="stat">
+<small>ĐIỂM</small>
+<strong id="score">0</strong>
+</div>
 
-    <div class="stat">
-        <small>COMBO</small>
-        <strong id="combo">0</strong>
-    </div>
+<div class="stat">
+<small>COMBO</small>
+<strong id="combo">0</strong>
+</div>
 
-    <div class="stat">
-        <small>BEST</small>
-        <strong id="best">0</strong>
-    </div>
+<div class="stat">
+<small>BEST</small>
+<strong id="best">0</strong>
+</div>
 
-    <div class="stat">
-        <small>MISS</small>
-        <strong id="miss">0</strong>
-    </div>
+<div class="stat">
+<small>MISS</small>
+<strong id="miss">0</strong>
+</div>
 
 </div>
 
-
 <div
-    id="currentSong"
-    class="currentSong"
+    id="current"
+    class="current"
 >
-    Chưa chọn bài
+Chưa chọn bài
 </div>
 
-
-<div
-    id="message"
-    class="message"
-></div>
-
+<div id="message"></div>
 
 <canvas
-    id="gameCanvas"
+    id="canvas"
     width="700"
     height="600"
 ></canvas>
 
+<div
+    id="soundStatus"
+    class="soundStatus"
+>
+🔇 Âm thanh chưa kích hoạt — bấm Bắt đầu
+</div>
 
-<div class="gameControls">
+<div class="controls">
 
-    <button
-        class="control"
-        onclick="startGame()"
-    >
-        ▶ Bắt đầu
-    </button>
+<button
+    class="control"
+    onclick="startGame()"
+>
+▶ Bắt đầu
+</button>
 
-    <button
-        class="control"
-        onclick="pauseGame()"
-    >
-        ⏸ Tạm dừng
-    </button>
+<button
+    class="control"
+    onclick="pauseGame()"
+>
+⏸ Tạm dừng
+</button>
 
-    <button
-        class="control"
-        onclick="resetGame()"
-    >
-        🔄 Chơi lại
-    </button>
+<button
+    class="control"
+    onclick="restartGame()"
+>
+🔄 Chơi lại
+</button>
+
+<button
+    class="control"
+    onclick="toggleSound()"
+>
+🔊 Âm thanh
+</button>
 
 </div>
 
+<div style="text-align:center;color:#777;margin-top:12px">
+    Dùng A / S / D / F để đánh nốt
+</div>
 
-<div class="help">
+<div class="keys">
 
-    Dùng bàn phím:
-
-    <div class="keys">
-
-        <div id="keyA" class="key">A</div>
-        <div id="keyS" class="key">S</div>
-        <div id="keyD" class="key">D</div>
-        <div id="keyF" class="key">F</div>
-
-    </div>
-
-    <div class="status">
-        Đưa nốt màu xuống vòng tròn rồi bấm đúng phím.
-    </div>
+<div id="keyA" class="key">A</div>
+<div id="keyS" class="key">S</div>
+<div id="keyD" class="key">D</div>
+<div id="keyF" class="key">F</div>
 
 </div>
 
@@ -615,112 +505,94 @@ rồi dán vào đây.
 <script>
 
 /* =========================================================
-   KHO NHẠC
+   LIBRARY
 ========================================================= */
 
 let library =
     JSON.parse(
         localStorage.getItem(
-            "zingRhythmLibrary"
+            "rhythmZingLibrary"
         ) || "[]"
     );
 
 
+function saveLibrary(){
+
+    localStorage.setItem(
+        "rhythmZingLibrary",
+        JSON.stringify(library)
+    );
+
+}
+
+
 /* =========================================================
-   LẤY ID ZING TỪ LINK
+   ZING LINK
 ========================================================= */
 
 function parseZingLink(url){
 
     url = url.trim();
 
-    /*
-       Hỗ trợ:
-
-       https://zingmp3.vn/bai-hat/Ten-Bai/abc123.html
-
-       hoặc
-
-       https://zingmp3.vn/album/...
-    */
-
-    const match =
-        url.match(
-            /\/([^\/?#]+)\/([^\/?#]+)\.html(?:[?#].*)?$/
-        );
-
-
-    if(!match){
+    if(
+        !/^https?:\/\/(www\.)?zingmp3\.vn\//i
+            .test(url)
+    ){
 
         return null;
 
     }
 
+    const clean =
+        url.split("?")[0]
+           .split("#")[0];
 
-    const path =
-        url.split("/");
+
+    const parts =
+        clean.split("/");
 
 
-    const htmlPart =
-        path[path.length - 1]
-            .split("?")[0]
-            .split("#")[0];
+    if(parts.length < 2)
+        return null;
+
+
+    const last =
+        parts[parts.length-1];
+
+
+    if(!last.endsWith(".html"))
+        return null;
 
 
     const id =
-        htmlPart
-            .replace(".html","");
+        last.replace(".html","");
 
 
     const slug =
-        path[path.length - 2];
-
-
-    if(!id){
-
-        return null;
-
-    }
+        parts[parts.length-2] || "Bai-hat";
 
 
     return {
-
         id:id,
-
         slug:slug,
-
         url:url
-
     };
 
 }
 
 
-/* =========================================================
-   TÊN BÀI TỪ SLUG
-========================================================= */
-
-function titleFromSlug(slug){
-
-    if(!slug){
-
-        return "Bài hát Zing MP3";
-
-    }
-
+function slugToTitle(slug){
 
     return slug
         .replace(/-/g," ")
-        .replace(/\b\w/g,
-            c => c.toUpperCase()
+        .replace(/\s+/g," ")
+        .trim()
+        .replace(/\b\w/g,c =>
+            c.toUpperCase()
         );
 
 }
 
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
 
 function escapeHTML(text){
 
@@ -735,7 +607,7 @@ function escapeHTML(text){
 
 
 /* =========================================================
-   THÊM LINK
+   ADD
 ========================================================= */
 
 function addZingLink(){
@@ -746,14 +618,14 @@ function addZingLink(){
         );
 
 
-    const value =
+    const url =
         input.value.trim();
 
 
-    if(!value){
+    if(!url){
 
         alert(
-            "Hãy dán link Zing MP3 trước!"
+            "Hãy dán link Zing MP3!"
         );
 
         return;
@@ -762,13 +634,13 @@ function addZingLink(){
 
 
     const parsed =
-        parseZingLink(value);
+        parseZingLink(url);
 
 
     if(!parsed){
 
         alert(
-            "Link không đúng định dạng Zing MP3.\n\n" +
+            "Link Zing MP3 không hợp lệ!\n\n" +
             "Ví dụ:\n" +
             "https://zingmp3.vn/bai-hat/Dang-Thap-Yeu-Quan/zo4meXbhyeYe.html"
         );
@@ -778,28 +650,9 @@ function addZingLink(){
     }
 
 
-    /*
-       Chỉ nhận link zingmp3.vn
-    */
-
-    if(
-        !value.includes(
-            "zingmp3.vn"
-        )
-    ){
-
-        alert(
-            "Đây không phải link Zing MP3!"
-        );
-
-        return;
-
-    }
-
-
     if(
         library.some(
-            x => x.id === parsed.id
+            song => song.id === parsed.id
         )
     ){
 
@@ -812,41 +665,30 @@ function addZingLink(){
     }
 
 
-    const song = {
+    library.push({
 
-        id:
-            parsed.id,
+        id:parsed.id,
 
         title:
-            titleFromSlug(
+            slugToTitle(
                 parsed.slug
             ),
 
-        artist:
-            "Zing MP3",
+        url:parsed.url
 
-        url:
-            parsed.url,
-
-        added:
-            Date.now()
-
-    };
-
-
-    library.push(song);
+    });
 
 
     saveLibrary();
 
     renderLibrary();
 
-
     input.value = "";
 
+    activateAudio();
 
     showMessage(
-        "❤️ Đã thêm bài vào kho!",
+        "❤️ Đã thêm bài!",
         "good"
     );
 
@@ -854,21 +696,7 @@ function addZingLink(){
 
 
 /* =========================================================
-   SAVE
-========================================================= */
-
-function saveLibrary(){
-
-    localStorage.setItem(
-        "zingRhythmLibrary",
-        JSON.stringify(library)
-    );
-
-}
-
-
-/* =========================================================
-   RENDER LIBRARY
+   LIBRARY UI
 ========================================================= */
 
 function renderLibrary(){
@@ -888,24 +716,22 @@ function renderLibrary(){
     box.innerHTML = "";
 
 
-    if(library.length === 0){
+    if(!library.length){
 
         box.innerHTML = `
 
-            <div class="empty">
+        <div class="empty">
 
-                <div class="emptyIcon">
-                    🎵
-                </div>
+            <div class="emptyIcon">🎵</div>
 
-                <b>Kho nhạc đang trống</b>
+            <b>Kho nhạc đang trống</b>
 
-                <br><br>
+            <br><br>
 
-                Copy link bài hát Zing MP3
-                rồi dán vào ô phía trên.
+            Dán link Zing MP3 ở phía trên
+            để thêm bài hát.
 
-            </div>
+        </div>
 
         `;
 
@@ -917,9 +743,7 @@ function renderLibrary(){
     library.forEach(song => {
 
         const div =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
 
         div.className =
@@ -928,59 +752,49 @@ function renderLibrary(){
 
         div.innerHTML = `
 
-            <div class="songIcon">
-                🎵
+        <div class="songIcon">
+            🎵
+        </div>
+
+        <div class="songInfo">
+
+            <div class="songTitle">
+                ${escapeHTML(song.title)}
             </div>
 
-            <div class="songInfo">
-
-                <div class="songTitle">
-                    ${escapeHTML(
-                        song.title
-                    )}
-                </div>
-
-                <div class="songUrl">
-                    ${escapeHTML(
-                        song.url
-                    )}
-                </div>
-
+            <div class="songUrl">
+                ${escapeHTML(song.url)}
             </div>
 
-            <div class="songActions">
+        </div>
 
-                <button
-                    class="openBtn"
-                    title="Mở Zing MP3"
-                >
-                    ▶
-                </button>
+        <div class="songButtons">
 
-                <button
-                    class="deleteBtn"
-                    title="Xóa"
-                >
-                    🗑
-                </button>
+            <button
+                class="open"
+                title="Mở Zing MP3"
+            >
+                ▶
+            </button>
 
-            </div>
+            <button
+                class="del"
+                title="Xóa"
+            >
+                🗑
+            </button>
+
+        </div>
 
         `;
 
 
-        div
-            .querySelector(
-                ".openBtn"
-            )
+        div.querySelector(".open")
             .onclick =
             () => openZing(song);
 
 
-        div
-            .querySelector(
-                ".deleteBtn"
-            )
+        div.querySelector(".del")
             .onclick =
             () => deleteSong(song.id);
 
@@ -992,24 +806,16 @@ function renderLibrary(){
 }
 
 
-/* =========================================================
-   OPEN ZING
-========================================================= */
-
 function openZing(song){
 
     window.open(
         song.url,
         "_blank",
-        "noopener"
+        "noopener,noreferrer"
     );
 
 }
 
-
-/* =========================================================
-   DELETE
-========================================================= */
 
 function deleteSong(id){
 
@@ -1026,30 +832,18 @@ function deleteSong(id){
 }
 
 
-/* =========================================================
-   CLEAR
-========================================================= */
-
 function clearLibrary(){
 
-    if(
-        library.length === 0
-    ){
-
+    if(!library.length)
         return;
-
-    }
 
 
     if(
         !confirm(
-            "Bạn có chắc muốn xóa toàn bộ kho nhạc?"
+            "Xóa toàn bộ kho nhạc?"
         )
-    ){
-
+    )
         return;
-
-    }
 
 
     library = [];
@@ -1062,12 +856,251 @@ function clearLibrary(){
 
 
 /* =========================================================
-   GAME VARIABLES
+   WEB AUDIO
+========================================================= */
+
+let audioContext = null;
+
+let masterGain = null;
+
+let soundEnabled = true;
+
+
+function activateAudio(){
+
+    if(!audioContext){
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+        masterGain =
+            audioContext.createGain();
+
+        masterGain.gain.value = 0.18;
+
+        masterGain.connect(
+            audioContext.destination
+        );
+
+    }
+
+
+    if(
+        audioContext.state ===
+        "suspended"
+    ){
+
+        audioContext.resume();
+
+    }
+
+
+    document.getElementById(
+        "soundStatus"
+    ).textContent =
+        soundEnabled
+        ? "🔊 Âm thanh đang bật"
+        : "🔇 Âm thanh đang tắt";
+
+}
+
+
+/* =========================================================
+   TẠO TIẾNG
+========================================================= */
+
+function tone(
+    frequency,
+    duration,
+    type="sine",
+    volume=0.25,
+    delay=0
+){
+
+    if(!soundEnabled)
+        return;
+
+
+    activateAudio();
+
+
+    const now =
+        audioContext.currentTime +
+        delay;
+
+
+    const osc =
+        audioContext.createOscillator();
+
+
+    const gain =
+        audioContext.createGain();
+
+
+    osc.type =
+        type;
+
+
+    osc.frequency.setValueAtTime(
+        frequency,
+        now
+    );
+
+
+    gain.gain.setValueAtTime(
+        0.0001,
+        now
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        now + 0.008
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + duration
+    );
+
+
+    osc.connect(gain);
+
+    gain.connect(masterGain);
+
+
+    osc.start(now);
+
+    osc.stop(
+        now + duration + 0.03
+    );
+
+}
+
+
+/* =========================================================
+   ÂM PERFECT
+========================================================= */
+
+function soundPerfect(){
+
+    tone(
+        880,
+        .12,
+        "sine",
+        .28
+    );
+
+    tone(
+        1320,
+        .18,
+        "sine",
+        .20,
+        .06
+    );
+
+}
+
+
+/* =========================================================
+   ÂM GOOD
+========================================================= */
+
+function soundGood(){
+
+    tone(
+        620,
+        .13,
+        "sine",
+        .22
+    );
+
+}
+
+
+/* =========================================================
+   ÂM MISS
+========================================================= */
+
+function soundMiss(){
+
+    tone(
+        160,
+        .18,
+        "sawtooth",
+        .18
+    );
+
+    tone(
+        100,
+        .22,
+        "sawtooth",
+        .12,
+        .06
+    );
+
+}
+
+
+/* =========================================================
+   ÂM COMBO
+========================================================= */
+
+function soundCombo(combo){
+
+    if(combo < 5)
+        return;
+
+
+    const base =
+        500 +
+        Math.min(combo,30)*20;
+
+
+    tone(
+        base,
+        .10,
+        "triangle",
+        .15
+    );
+
+}
+
+
+/* =========================================================
+   TOGGLE SOUND
+========================================================= */
+
+function toggleSound(){
+
+    soundEnabled =
+        !soundEnabled;
+
+
+    activateAudio();
+
+
+    document.getElementById(
+        "soundStatus"
+    ).textContent =
+        soundEnabled
+        ? "🔊 Âm thanh đang bật"
+        : "🔇 Âm thanh đang tắt";
+
+}
+
+
+/* =========================================================
+   GAME
 ========================================================= */
 
 const canvas =
     document.getElementById(
-        "gameCanvas"
+        "canvas"
     );
 
 const ctx =
@@ -1082,7 +1115,7 @@ const laneX = [
 ];
 
 
-const keyCodes = [
+const keys = [
     "KeyA",
     "KeyS",
     "KeyD",
@@ -1090,7 +1123,7 @@ const keyCodes = [
 ];
 
 
-const keyLabels = [
+const labels = [
     "A",
     "S",
     "D",
@@ -1117,13 +1150,13 @@ let score = 0;
 
 let combo = 0;
 
-let bestCombo = 0;
+let best = 0;
 
 let misses = 0;
 
-let gameRunning = false;
+let running = false;
 
-let gamePaused = false;
+let paused = false;
 
 
 let keyState = {
@@ -1137,33 +1170,30 @@ let keyState = {
 
 
 /* =========================================================
-   START GAME
+   START
 ========================================================= */
 
 function startGame(){
 
-    if(
-        gameRunning &&
-        !gamePaused
-    ){
+    activateAudio();
+
+
+    if(running && !paused)
+        return;
+
+
+    if(paused){
+
+        paused = false;
 
         return;
 
     }
 
 
-    if(gamePaused){
+    running = true;
 
-        gamePaused = false;
-
-        return;
-
-    }
-
-
-    gameRunning = true;
-
-    gamePaused = false;
+    paused = false;
 
 }
 
@@ -1174,39 +1204,40 @@ function startGame(){
 
 function pauseGame(){
 
-    if(!gameRunning){
-
+    if(!running)
         return;
 
-    }
+
+    activateAudio();
 
 
-    gamePaused =
-        !gamePaused;
+    paused =
+        !paused;
 
 }
 
 
 /* =========================================================
-   RESET GAME
+   RESTART
 ========================================================= */
 
-function resetGame(){
+function restartGame(){
+
+    activateAudio();
 
     score = 0;
 
     combo = 0;
 
-    bestCombo = 0;
+    best = 0;
 
     misses = 0;
 
     notes = [];
 
-    gameRunning = true;
+    running = true;
 
-    gamePaused = false;
-
+    paused = false;
 
     updateStats();
 
@@ -1234,7 +1265,7 @@ function updateStats(){
     document.getElementById(
         "best"
     ).textContent =
-        bestCombo;
+        best;
 
 
     document.getElementById(
@@ -1249,12 +1280,12 @@ function updateStats(){
    MESSAGE
 ========================================================= */
 
-let messageTimer;
+let msgTimer;
 
 
 function showMessage(
     text,
-    type
+    type=""
 ){
 
     const el =
@@ -1268,156 +1299,48 @@ function showMessage(
 
 
     el.className =
-        "message " +
-        (type || "");
+        type;
 
 
     clearTimeout(
-        messageTimer
+        msgTimer
     );
 
 
-    messageTimer =
+    msgTimer =
         setTimeout(
             () => {
-
-                el.textContent =
-                    "";
-
+                el.textContent = "";
             },
-            650
+            600
         );
 
 }
 
 
 /* =========================================================
-   KEY DOWN
-========================================================= */
-
-window.addEventListener(
-    "keydown",
-    function(e){
-
-        if(
-            !keyCodes.includes(
-                e.code
-            )
-        ){
-
-            return;
-
-        }
-
-
-        e.preventDefault();
-
-
-        keyState[e.code] =
-            true;
-
-
-        const name =
-            e.code.replace(
-                "Key",
-                ""
-            );
-
-
-        const visual =
-            document.getElementById(
-                "key" + name
-            );
-
-
-        if(visual){
-
-            visual.classList.add(
-                "active"
-            );
-
-        }
-
-
-        hitNote(e.code);
-
-    }
-);
-
-
-/* =========================================================
-   KEY UP
-========================================================= */
-
-window.addEventListener(
-    "keyup",
-    function(e){
-
-        if(
-            !keyCodes.includes(
-                e.code
-            )
-        ){
-
-            return;
-
-        }
-
-
-        keyState[e.code] =
-            false;
-
-
-        const name =
-            e.code.replace(
-                "Key",
-                ""
-            );
-
-
-        const visual =
-            document.getElementById(
-                "key" + name
-            );
-
-
-        if(visual){
-
-            visual.classList.remove(
-                "active"
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================================
    HIT
 ========================================================= */
 
-function hitNote(code){
+function hit(code){
+
+    activateAudio();
+
 
     if(
-        !gameRunning ||
-        gamePaused
-    ){
-
+        !running ||
+        paused
+    )
         return;
-
-    }
 
 
     const lane =
-        keyCodes.indexOf(
-            code
-        );
+        keys.indexOf(code);
 
 
-    let closest = -1;
+    let index = -1;
 
-    let distance =
+    let closest =
         Infinity;
 
 
@@ -1429,11 +1352,8 @@ function hitNote(code){
 
         if(
             notes[i].lane !== lane
-        ){
-
+        )
             continue;
-
-        }
 
 
         const d =
@@ -1443,24 +1363,20 @@ function hitNote(code){
             );
 
 
-        if(d < distance){
+        if(d < closest){
 
-            distance = d;
+            closest = d;
 
-            closest = i;
+            index = i;
 
         }
 
     }
 
 
-    /*
-       Không có nốt
-    */
-
     if(
-        closest === -1 ||
-        distance > 65
+        index === -1 ||
+        closest > 65
     ){
 
         combo = 0;
@@ -1468,6 +1384,8 @@ function hitNote(code){
         misses++;
 
         updateStats();
+
+        soundMiss();
 
         showMessage(
             "MISS",
@@ -1480,12 +1398,12 @@ function hitNote(code){
 
 
     notes.splice(
-        closest,
+        index,
         1
     );
 
 
-    if(distance <= 20){
+    if(closest <= 20){
 
         score +=
             100 +
@@ -1493,6 +1411,9 @@ function hitNote(code){
 
         combo++;
 
+        soundPerfect();
+
+        soundCombo(combo);
 
         showMessage(
             "PERFECT ✨",
@@ -1500,7 +1421,7 @@ function hitNote(code){
         );
 
     }
-    else if(distance <= 43){
+    else if(closest <= 43){
 
         score +=
             50 +
@@ -1508,6 +1429,9 @@ function hitNote(code){
 
         combo++;
 
+        soundGood();
+
+        soundCombo(combo);
 
         showMessage(
             "GOOD 👍",
@@ -1521,6 +1445,7 @@ function hitNote(code){
 
         combo++;
 
+        soundGood();
 
         showMessage(
             "OK",
@@ -1532,11 +1457,10 @@ function hitNote(code){
 
     if(
         combo >
-        bestCombo
+        best
     ){
 
-        bestCombo =
-            combo;
+        best = combo;
 
     }
 
@@ -1547,20 +1471,163 @@ function hitNote(code){
 
 
 /* =========================================================
-   SPAWN
+   KEYBOARD
+========================================================= */
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        if(
+            !keys.includes(
+                e.code
+            )
+        )
+            return;
+
+
+        e.preventDefault();
+
+
+        keyState[e.code] =
+            true;
+
+
+        const el =
+            document.getElementById(
+                "key" +
+                e.code.replace(
+                    "Key",
+                    ""
+                )
+            );
+
+
+        if(el)
+            el.classList.add(
+                "active"
+            );
+
+
+        hit(e.code);
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        if(
+            !keys.includes(
+                e.code
+            )
+        )
+            return;
+
+
+        keyState[e.code] =
+            false;
+
+
+        const el =
+            document.getElementById(
+                "key" +
+                e.code.replace(
+                    "Key",
+                    ""
+                )
+            );
+
+
+        if(el)
+            el.classList.remove(
+                "active"
+            );
+
+    }
+);
+
+
+/* =========================================================
+   MOBILE BUTTON
+========================================================= */
+
+document
+    .querySelectorAll(".key")
+    .forEach(
+        (button,index) => {
+
+            const code =
+                keys[index];
+
+
+            function press(){
+
+                keyState[code] =
+                    true;
+
+                button.classList.add(
+                    "active"
+                );
+
+                hit(code);
+
+            }
+
+
+            function release(){
+
+                keyState[code] =
+                    false;
+
+                button.classList.remove(
+                    "active"
+                );
+
+            }
+
+
+            button.addEventListener(
+                "pointerdown",
+                e => {
+
+                    e.preventDefault();
+
+                    press();
+
+                }
+            );
+
+
+            button.addEventListener(
+                "pointerup",
+                release
+            );
+
+
+            button.addEventListener(
+                "pointerleave",
+                release
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   SPAWN NOTE
 ========================================================= */
 
 setInterval(
-    function(){
+    () => {
 
         if(
-            !gameRunning ||
-            gamePaused
-        ){
-
+            !running ||
+            paused
+        )
             return;
-
-        }
 
 
         notes.push({
@@ -1573,8 +1640,8 @@ setInterval(
             y:-35,
 
             speed:
-                4.2 +
-                Math.random()*1.4
+                4.3 +
+                Math.random()*1.5
 
         });
 
@@ -1601,7 +1668,7 @@ function draw(){
        Background
     */
 
-    const bg =
+    const gradient =
         ctx.createLinearGradient(
             0,
             0,
@@ -1610,20 +1677,20 @@ function draw(){
         );
 
 
-    bg.addColorStop(
+    gradient.addColorStop(
         0,
-        "#05090a"
+        "#030708"
     );
 
 
-    bg.addColorStop(
+    gradient.addColorStop(
         1,
-        "#10191c"
+        "#111a1d"
     );
 
 
     ctx.fillStyle =
-        bg;
+        gradient;
 
 
     ctx.fillRect(
@@ -1635,7 +1702,7 @@ function draw(){
 
 
     /*
-       Lanes
+       Lane backgrounds
     */
 
     for(
@@ -1644,28 +1711,28 @@ function draw(){
         i++
     ){
 
-        let left =
-            i === 0
-                ? 0
-                : (
-                    laneX[i-1] +
-                    laneX[i]
-                ) / 2;
+        const left =
+            i===0
+            ? 0
+            : (
+                laneX[i-1]+
+                laneX[i]
+            )/2;
 
 
-        let right =
-            i === 3
-                ? canvas.width
-                : (
-                    laneX[i] +
-                    laneX[i+1]
-                ) / 2;
+        const right =
+            i===3
+            ? canvas.width
+            : (
+                laneX[i]+
+                laneX[i+1]
+            )/2;
 
 
         ctx.fillStyle =
-            i % 2 === 0
-                ? "#ffffff04"
-                : "#ffffff08";
+            i%2===0
+            ? "#ffffff04"
+            : "#ffffff08";
 
 
         ctx.fillRect(
@@ -1683,7 +1750,7 @@ function draw(){
     */
 
     ctx.strokeStyle =
-        "#303b3f";
+        "#303a3e";
 
     ctx.lineWidth = 2;
 
@@ -1716,7 +1783,7 @@ function draw(){
     */
 
     ctx.fillStyle =
-        "#1db95410";
+        "#1db95412";
 
 
     ctx.fillRect(
@@ -1728,7 +1795,7 @@ function draw(){
 
 
     /*
-       Target circles
+       Targets
     */
 
     for(
@@ -1739,20 +1806,20 @@ function draw(){
 
         const active =
             keyState[
-                keyCodes[i]
+                keys[i]
             ];
 
 
         ctx.strokeStyle =
             active
-                ? "#1db954"
-                : "#626c70";
+            ? "#1db954"
+            : "#5d676b";
 
 
         ctx.lineWidth =
             active
-                ? 5
-                : 2;
+            ? 5
+            : 2;
 
 
         ctx.beginPath();
@@ -1770,20 +1837,19 @@ function draw(){
 
         ctx.fillStyle =
             active
-                ? "#1db954"
-                : "#899296";
+            ? "#1db954"
+            : "#aab1b3";
 
 
         ctx.font =
             "bold 17px Arial";
-
 
         ctx.textAlign =
             "center";
 
 
         ctx.fillText(
-            keyLabels[i],
+            labels[i],
             laneX[i],
             targetY+6
         );
@@ -1796,8 +1862,8 @@ function draw(){
     */
 
     if(
-        gameRunning &&
-        !gamePaused
+        running &&
+        !paused
     ){
 
         for(
@@ -1806,31 +1872,34 @@ function draw(){
             i--
         ){
 
-            const n =
+            const note =
                 notes[i];
 
 
-            n.y +=
-                n.speed;
+            note.y +=
+                note.speed;
 
 
             ctx.shadowColor =
-                colors[n.lane];
+                colors[
+                    note.lane
+                ];
 
 
-            ctx.shadowBlur =
-                18;
+            ctx.shadowBlur = 18;
 
 
             ctx.fillStyle =
-                colors[n.lane];
+                colors[
+                    note.lane
+                ];
 
 
             ctx.beginPath();
 
             ctx.arc(
-                laneX[n.lane],
-                n.y,
+                laneX[note.lane],
+                note.y,
                 noteRadius-3,
                 0,
                 Math.PI*2
@@ -1843,7 +1912,7 @@ function draw(){
 
 
             /*
-               Highlight
+               Shine
             */
 
             ctx.fillStyle =
@@ -1853,8 +1922,8 @@ function draw(){
             ctx.beginPath();
 
             ctx.arc(
-                laneX[n.lane]-7,
-                n.y-7,
+                laneX[note.lane]-7,
+                note.y-7,
                 6,
                 0,
                 Math.PI*2
@@ -1868,7 +1937,7 @@ function draw(){
             */
 
             if(
-                n.y >
+                note.y >
                 canvas.height+40
             ){
 
@@ -1884,6 +1953,7 @@ function draw(){
 
                 updateStats();
 
+                soundMiss();
 
                 showMessage(
                     "MISS",
@@ -1898,10 +1968,10 @@ function draw(){
 
 
     /*
-       Pause
+       Pause screen
     */
 
-    if(gamePaused){
+    if(paused){
 
         ctx.fillStyle =
             "#000000aa";
@@ -1916,7 +1986,7 @@ function draw(){
 
 
         ctx.fillStyle =
-            "white";
+            "#fff";
 
 
         ctx.font =
@@ -1944,7 +2014,7 @@ function draw(){
 
 
 /* =========================================================
-   INPUT LINK ENTER
+   LINK INPUT ENTER
 ========================================================= */
 
 document
@@ -1953,7 +2023,7 @@ document
     )
     .addEventListener(
         "keydown",
-        function(e){
+        e => {
 
             if(e.key === "Enter"){
 
@@ -1963,6 +2033,69 @@ document
 
         }
     );
+
+
+/* =========================================================
+   CURRENT SONG
+========================================================= */
+
+function selectSong(song){
+
+    document.getElementById(
+        "current"
+    ).innerHTML =
+        "🎵 Đang chọn: <b>" +
+        escapeHTML(song.title) +
+        "</b>";
+
+}
+
+
+/* =========================================================
+   CLICK SONG
+========================================================= */
+
+document.addEventListener(
+    "click",
+    e => {
+
+        const song =
+            e.target.closest(
+                ".song"
+            );
+
+
+        if(!song)
+            return;
+
+
+        const buttons =
+            e.target.closest(
+                "button"
+            );
+
+
+        if(buttons)
+            return;
+
+
+        const index =
+            [...song.parentElement.children]
+                .indexOf(song);
+
+
+        if(
+            library[index]
+        ){
+
+            selectSong(
+                library[index]
+            );
+
+        }
+
+    }
+);
 
 
 /* =========================================================
