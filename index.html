@@ -1,534 +1,508 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Game - Kho Nhạc Của Tôi</title>
 
-    <title>Rhythm Game - Kho Nhạc Trực Tuyến</title>
+<style>
+*{box-sizing:border-box}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+body{
+    margin:0;
+    background:
+        radial-gradient(circle at top,#17272c 0%,#090d0f 50%,#030405 100%);
+    color:#fff;
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
+}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at top, #18252b 0%, #0b0f12 45%, #050607 100%);
-            color: white;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+.container{
+    width:min(1200px,94%);
+    margin:auto;
+    padding:25px 0 40px;
+}
 
-        button,
-        input {
-            font-family: inherit;
-        }
+header{
+    text-align:center;
+    margin-bottom:20px;
+}
 
-        .container {
-            width: min(1200px, 95%);
-            margin: auto;
-            padding: 25px 0 40px;
-        }
+header h1{
+    margin:0;
+    color:#1ed760;
+    font-size:34px;
+    text-shadow:0 0 20px rgba(30,215,96,.3);
+}
 
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+header p{
+    color:#999;
+    margin:8px 0 0;
+}
 
-        header h1 {
-            margin: 0;
-            font-size: 34px;
-            color: #1ed760;
-            text-shadow: 0 0 20px rgba(30, 215, 96, .3);
-        }
+.layout{
+    display:grid;
+    grid-template-columns:350px 1fr;
+    gap:20px;
+}
 
-        header p {
-            color: #aaa;
-            margin-top: 8px;
-        }
+.panel{
+    background:rgba(18,23,26,.96);
+    border:1px solid #30383d;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+}
 
-        .layout {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-        }
+.panel h2{
+    margin:0 0 15px;
+    font-size:20px;
+}
 
-        .panel {
-            background: rgba(20, 25, 28, .95);
-            border: 1px solid #30383d;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,.35);
-        }
+/* SEARCH */
 
-        .panel h2 {
-            margin-top: 0;
-            font-size: 20px;
-        }
+.search-box{
+    display:flex;
+    gap:8px;
+}
 
-        /* SEARCH */
+#search-input{
+    flex:1;
+    min-width:0;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #444;
+    background:#0d1113;
+    color:white;
+    outline:none;
+}
 
-        .search-box {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
+#search-input:focus{
+    border-color:#1db954;
+}
 
-        #search-input {
-            flex: 1;
-            min-width: 0;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #111;
-            color: white;
-            outline: none;
-        }
+.btn{
+    border:0;
+    border-radius:8px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-weight:bold;
+}
 
-        #search-input:focus {
-            border-color: #1db954;
-        }
+.btn-search{
+    background:#1db954;
+    color:white;
+}
 
-        .btn {
-            border: 0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: .2s;
-        }
+.song-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid #292f32;
+}
 
-        .btn:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.1);
-        }
+.song-info{
+    flex:1;
+    min-width:0;
+}
 
-        .btn-search {
-            background: #1db954;
-            color: white;
-        }
+.song-info strong{
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
 
-        .song-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 0;
-            border-bottom: 1px solid #292d30;
-        }
+.song-info small{
+    color:#888;
+}
 
-        .song-info {
-            flex: 1;
-            min-width: 0;
-        }
+.btn-add{
+    background:#20282b;
+    color:#1ed760;
+    white-space:nowrap;
+}
 
-        .song-info strong {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+.empty{
+    color:#777;
+    text-align:center;
+    padding:18px 5px;
+    font-size:13px;
+}
 
-        .song-info small {
-            color: #999;
-        }
+/* LIBRARY */
 
-        .btn-add {
-            background: #252b2f;
-            color: #1ed760;
-            white-space: nowrap;
-        }
+.library{
+    margin-top:25px;
+}
 
-        .library {
-            margin-top: 25px;
-        }
+.library-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+}
 
-        .empty {
-            color: #777;
-            text-align: center;
-            padding: 15px 5px;
-            font-size: 14px;
-        }
+.library-header h2{
+    margin:0;
+}
 
-        .btn-play {
-            width: 100%;
-            border: 1px solid #30383d;
-            background: #171c1f;
-            color: white;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            text-align: left;
-        }
+.library-count{
+    color:#777;
+    font-size:12px;
+    margin-top:4px;
+}
 
-        .btn-play:hover {
-            background: #20282c;
-        }
+.clear-library{
+    border:1px solid #4a2929;
+    background:transparent;
+    color:#ff5252;
+    padding:7px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:12px;
+}
 
-        .btn-play.active-song {
-            border-color: #1db954;
-            background: rgba(29,185,84,.12);
-        }
+.library-song{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#121719;
+    border:1px solid #2b3337;
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:8px;
+    transition:.2s;
+}
 
-        .btn-delete {
-            background: transparent;
-            color: #ff5252;
-            border: 0;
-            cursor: pointer;
-            font-size: 15px;
-        }
+.library-song:hover{
+    border-color:#1db954;
+}
 
-        /* GAME */
+.library-song.active-song{
+    border-color:#1db954;
+    background:rgba(29,185,84,.12);
+    box-shadow:0 0 14px rgba(29,185,84,.1);
+}
 
-        .game-top {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+.song-cover{
+    width:42px;
+    height:42px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    background:linear-gradient(135deg,#1db954,#08652e);
+    font-size:20px;
+}
 
-        .stat {
-            background: #111619;
-            border: 1px solid #30383d;
-            border-radius: 10px;
-            text-align: center;
-            padding: 12px;
-        }
+.library-song-info{
+    flex:1;
+    min-width:0;
+}
 
-        .stat span {
-            display: block;
-            color: #888;
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
+.library-song-title{
+    font-weight:bold;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
 
-        .stat strong {
-            font-size: 22px;
-            color: #1ed760;
-        }
+.library-song-artist{
+    color:#888;
+    font-size:12px;
+    margin-top:3px;
+}
 
-        .game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin: auto;
-        }
+.library-actions{
+    display:flex;
+    gap:4px;
+}
 
-        #game-canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            background: linear-gradient(
-                to bottom,
-                #080b0d,
-                #101619
-            );
-            border: 2px solid #30383d;
-            border-radius: 12px;
-        }
+.library-play{
+    border:0;
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    background:#1db954;
+    color:white;
+    cursor:pointer;
+}
 
-        .audio-status {
-            text-align: center;
-            min-height: 22px;
-            color: #888;
-            margin: 12px 0;
-            font-size: 14px;
-        }
+.library-delete{
+    border:0;
+    width:32px;
+    height:32px;
+    background:transparent;
+    color:#ff5252;
+    cursor:pointer;
+}
 
-        .audio-status.playing {
-            color: #69f0ae;
-        }
+.empty-library{
+    text-align:center;
+    color:#777;
+    padding:25px 10px;
+    border:1px dashed #30383d;
+    border-radius:10px;
+}
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
+.empty-icon{
+    font-size:35px;
+    margin-bottom:8px;
+}
 
-        .control-btn {
-            background: #20272b;
-            color: white;
-            border: 1px solid #394247;
-            padding: 10px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+.empty-library b{
+    color:#aaa;
+}
 
-        .control-btn:hover {
-            background: #293238;
-        }
+/* GAME */
 
-        .help {
-            margin-top: 18px;
-            background: #0d1113;
-            border: 1px solid #292f33;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            color: #aaa;
-        }
+.game-top{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:15px;
+}
 
-        .keys {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 8px;
-        }
+.stat{
+    background:#0e1315;
+    border:1px solid #30383d;
+    border-radius:10px;
+    text-align:center;
+    padding:11px;
+}
 
-        .key {
-            width: 50px;
-            height: 40px;
-            border: 2px solid #555;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-        }
+.stat span{
+    display:block;
+    color:#777;
+    font-size:11px;
+    margin-bottom:4px;
+}
 
-        .key.active {
-            border-color: #1db954;
-            color: #1db954;
-            box-shadow: 0 0 15px rgba(29,185,84,.5);
-        }
+.stat strong{
+    color:#1ed760;
+    font-size:22px;
+}
 
-        #message {
-            text-align: center;
-            min-height: 30px;
-            margin: 10px 0;
-            font-size: 20px;
-            font-weight: bold;
-        }
+#message{
+    height:30px;
+    text-align:center;
+    font-weight:bold;
+    font-size:20px;
+}
 
-        .perfect {
-            color: #00ff88;
-        }
+.perfect{color:#00ff88}
+.good{color:#00e5ff}
+.miss{color:#ff5252}
 
-        .good {
-            color: #00e5ff;
-        }
+.game-wrapper{
+    width:100%;
+}
 
-        .miss {
-            color: #ff5252;
-        }
+#game-canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    background:#080b0d;
+    border:2px solid #30383d;
+    border-radius:12px;
+}
 
-        @media (max-width: 850px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
+.audio-status{
+    text-align:center;
+    color:#777;
+    min-height:22px;
+    margin:12px 0;
+    font-size:14px;
+}
 
-            .panel:first-child {
-                order: 2;
-            }
+.audio-status.playing{
+    color:#69f0ae;
+}
 
-            .panel:last-child {
-                order: 1;
-            }
-        }
+.controls{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
 
-        @media (max-width: 500px) {
-            .container {
-                width: 94%;
-                padding-top: 15px;
-            }
+.control-btn{
+    border:1px solid #394247;
+    background:#20272b;
+    color:white;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
 
-            header h1 {
-                font-size: 26px;
-            }
+.control-btn:hover{
+    background:#2c363b;
+}
 
-            .game-top {
-                grid-template-columns: repeat(3, 1fr);
-            }
+.help{
+    margin-top:15px;
+    background:#0d1113;
+    border:1px solid #292f33;
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+    color:#888;
+}
 
-            .stat {
-                padding: 8px;
-            }
+.keys{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+}
 
-            .stat strong {
-                font-size: 18px;
-            }
+.key{
+    width:48px;
+    height:40px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border:2px solid #555;
+    border-radius:8px;
+    font-weight:bold;
+}
 
-            .keys {
-                gap: 6px;
-            }
+.key.active{
+    border-color:#1db954;
+    color:#1db954;
+    box-shadow:0 0 15px rgba(29,185,84,.5);
+}
 
-            .key {
-                width: 43px;
-            }
-        }
-    </style>
+/* MOBILE */
+
+@media(max-width:850px){
+    .layout{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:500px){
+    .container{
+        width:95%;
+        padding-top:15px;
+    }
+
+    header h1{
+        font-size:27px;
+    }
+
+    .panel{
+        padding:14px;
+    }
+
+    .library-header{
+        align-items:flex-start;
+    }
+
+    .game-top{
+        gap:5px;
+    }
+
+    .stat{
+        padding:8px 3px;
+    }
+
+    .stat strong{
+        font-size:18px;
+    }
+
+    .keys{
+        gap:6px;
+    }
+
+    .key{
+        width:43px;
+    }
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <header>
-        <h1>🎵 Rhythm Game</h1>
-        <p>Kho nhạc trực tuyến • Chọn bài hát và bắt nhịp!</p>
-    </header>
+<header>
+    <h1>🎵 Rhythm Game</h1>
+    <p>Kho nhạc của tôi • Chọn bài và bắt nhịp</p>
+</header>
 
-    <div class="layout">
+<div class="layout">
 
-        <!-- =========================
-             KHO NHẠC
-        ========================== -->
-        <div class="panel">
+<!-- ================= KHO NHẠC ================= -->
 
-            <h2>🔎 Tìm bài hát</h2>
+<div class="panel">
 
-            <div class="search-box">
-                <input
-                    id="search-input"
-                    type="text"
-                    placeholder="Tên bài hát hoặc ca sĩ..."
-                    autocomplete="off"
-                >
+    <h2>🔎 Tìm bài hát</h2>
 
-                <button
-                    class="btn btn-search"
-                    onclick="searchSongs()"
-                >
-                    Tìm
-                </button>
-            </div>
+    <div class="search-box">
+        <input
+            id="search-input"
+            type="text"
+            placeholder="Tên bài hát hoặc ca sĩ..."
+        >
 
-            <div id="search-results">
-                <div class="empty">
-                    Nhập tên bài hát để tìm kiếm.
+        <button
+            class="btn btn-search"
+            onclick="searchSongs()"
+        >
+            Tìm
+        </button>
+    </div>
+
+    <div id="search-results">
+        <div class="empty">
+            Nhập tên bài hát để tìm.
+        </div>
+    </div>
+
+
+    <div class="library">
+
+        <div class="library-header">
+
+            <div>
+                <h2>❤️ Kho nhạc của tôi</h2>
+
+                <div class="library-count">
+                    <span id="library-count">0</span>
+                    bài hát
                 </div>
             </div>
 
-            <div class="library">
-
-                <h2>❤️ Kho yêu thích</h2>
-
-                <div id="my-library">
-                    <div
-                        id="empty-hint"
-                        class="empty"
-                    >
-                        Chưa có bài hát nào.<br>
-                        Hãy thêm bài hát từ kết quả tìm kiếm.
-                    </div>
-                </div>
-
-            </div>
+            <button
+                class="clear-library"
+                onclick="clearLibrary()"
+            >
+                🗑 Xóa hết
+            </button>
 
         </div>
 
 
-        <!-- =========================
-             GAME
-        ========================== -->
-        <div class="panel">
+        <div id="my-library">
 
-            <div class="game-top">
+            <div class="empty-library">
 
-                <div class="stat">
-                    <span>ĐIỂM</span>
-                    <strong id="score">0</strong>
+                <div class="empty-icon">
+                    🎵
                 </div>
 
-                <div class="stat">
-                    <span>COMBO</span>
-                    <strong id="combo">0</strong>
-                </div>
+                <b>Kho nhạc đang trống</b>
 
-                <div class="stat">
-                    <span>BEST</span>
-                    <strong id="best">0</strong>
-                </div>
-
-            </div>
-
-            <div id="message"></div>
-
-            <div class="game-wrapper">
-
-                <canvas
-                    id="game-canvas"
-                    width="700"
-                    height="600"
-                ></canvas>
-
-            </div>
-
-            <div
-                id="audio-state"
-                class="audio-status"
-            >
-                🎧 Hãy chọn một bài hát trong kho nhạc.
-            </div>
-
-            <div class="controls">
-
-                <button
-                    class="control-btn"
-                    onclick="togglePause()"
-                >
-                    ⏸️ Tạm dừng
-                </button>
-
-                <button
-                    class="control-btn"
-                    onclick="restartGame()"
-                >
-                    🔄 Chơi lại
-                </button>
-
-                <button
-                    class="control-btn"
-                    onclick="stopSong()"
-                >
-                    ⏹️ Dừng
-                </button>
-
-            </div>
-
-            <div class="help">
-
-                🎮 Điều khiển bằng bàn phím
-
-                <div class="keys">
-
-                    <div
-                        id="key-KeyA"
-                        class="key"
-                    >
-                        A
-                    </div>
-
-                    <div
-                        id="key-KeyS"
-                        class="key"
-                    >
-                        S
-                    </div>
-
-                    <div
-                        id="key-KeyD"
-                        class="key"
-                    >
-                        D
-                    </div>
-
-                    <div
-                        id="key-KeyF"
-                        class="key"
-                    >
-                        F
-                    </div>
-
-                </div>
+                <p>
+                    Tìm bài hát phía trên<br>
+                    rồi thêm vào kho của bạn.
+                </p>
 
             </div>
 
@@ -539,1486 +513,1617 @@
 </div>
 
 
+<!-- ================= GAME ================= -->
+
+<div class="panel">
+
+    <div class="game-top">
+
+        <div class="stat">
+            <span>ĐIỂM</span>
+            <strong id="score">0</strong>
+        </div>
+
+        <div class="stat">
+            <span>COMBO</span>
+            <strong id="combo">0</strong>
+        </div>
+
+        <div class="stat">
+            <span>BEST</span>
+            <strong id="best">0</strong>
+        </div>
+
+    </div>
+
+
+    <div id="message"></div>
+
+
+    <canvas
+        id="game-canvas"
+        width="700"
+        height="600"
+    ></canvas>
+
+
+    <div
+        id="audio-state"
+        class="audio-status"
+    >
+        🎧 Hãy thêm/chọn một bài hát.
+    </div>
+
+
+    <div class="controls">
+
+        <button
+            class="control-btn"
+            onclick="togglePause()"
+        >
+            ⏸ Tạm dừng
+        </button>
+
+        <button
+            class="control-btn"
+            onclick="restartGame()"
+        >
+            🔄 Chơi lại
+        </button>
+
+        <button
+            class="control-btn"
+            onclick="stopSong()"
+        >
+            ⏹ Dừng
+        </button>
+
+    </div>
+
+
+    <div class="help">
+
+        🎮 Điều khiển bằng bàn phím
+
+        <div class="keys">
+
+            <div id="key-KeyA" class="key">
+                A
+            </div>
+
+            <div id="key-KeyS" class="key">
+                S
+            </div>
+
+            <div id="key-KeyD" class="key">
+                D
+            </div>
+
+            <div id="key-KeyF" class="key">
+                F
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+</div>
+
+
 <script>
 
-    /* =====================================================
-       DATABASE
-    ===================================================== */
+/* =========================================================
+   KHO NHẠC MẪU
+   ========================================================= */
 
-    const ONLINE_DATABASE = [
+const ONLINE_DATABASE = [
 
-        {
-            id: "1",
-            title: "Ngôi Sao Cô Đơn",
-            artist: "Jack-J97",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-        },
+    {
+        id:"1",
+        title:"Ngôi Sao Cô Đơn",
+        artist:"Jack-J97",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    },
 
-        {
-            id: "2",
-            title: "Chờ Ngày Mưa Tan",
-            artist: "Noo Phước Thịnh",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-        },
+    {
+        id:"2",
+        title:"Chờ Ngày Mưa Tan",
+        artist:"Noo Phước Thịnh",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    },
 
-        {
-            id: "3",
-            title: "Cắt Đôi Nỗi Sầu",
-            artist: "Tăng Duy Tân",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-        },
+    {
+        id:"3",
+        title:"Cắt Đôi Nỗi Sầu",
+        artist:"Tăng Duy Tân",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    },
 
-        {
-            id: "4",
-            title: "Lạc Trôi",
-            artist: "Sơn Tùng M-TP",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
-        },
+    {
+        id:"4",
+        title:"Lạc Trôi",
+        artist:"Sơn Tùng M-TP",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+    },
 
-        {
-            id: "5",
-            title: "Making My Way",
-            artist: "Sơn Tùng M-TP",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
-        },
+    {
+        id:"5",
+        title:"Making My Way",
+        artist:"Sơn Tùng M-TP",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    },
 
-        {
-            id: "6",
-            title: "Em Của Ngày Hôm Qua",
-            artist: "Sơn Tùng M-TP",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
-        }
+    {
+        id:"6",
+        title:"Em Của Ngày Hôm Qua",
+        artist:"Sơn Tùng M-TP",
+        url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+    }
 
-    ];
-
-
-    /* =====================================================
-       VARIABLES
-    ===================================================== */
-
-    let myLibrary = [];
-
-    let currentAudio = null;
-
-    let currentSong = null;
-
-    let isPlaying = false;
-
-    let isPaused = false;
-
-    let lastHitTime = 0;
-
-    let score = 0;
-
-    let combo = 0;
-
-    let bestCombo = 0;
-
-    let notes = [];
-
-    let gameStarted = false;
+];
 
 
-    /* =====================================================
-       CANVAS
-    ===================================================== */
+/* =========================================================
+   BIẾN GAME
+   ========================================================= */
 
-    const canvas =
-        document.getElementById("game-canvas");
+let myLibrary = [];
 
-    const ctx =
-        canvas.getContext("2d");
+let currentSong = null;
 
+let currentAudio = null;
 
-    /* =====================================================
-       LANES
-    ===================================================== */
+let isPlaying = false;
 
-    const keys = [
-        "KeyA",
-        "KeyS",
-        "KeyD",
-        "KeyF"
-    ];
+let isPaused = false;
 
-    const laneX = [
-        87.5,
-        262.5,
-        437.5,
-        612.5
-    ];
+let notes = [];
 
-    const targetY = 510;
+let score = 0;
 
-    const noteRadius = 30;
+let combo = 0;
 
-    const colors = [
-        "#ff3366",
-        "#00e5ff",
-        "#ffeb3b",
-        "#e040fb"
-    ];
+let bestCombo = 0;
+
+let lastHitTime = 0;
 
 
-    /* =====================================================
-       KEY STATE
-    ===================================================== */
+/* =========================================================
+   CANVAS
+   ========================================================= */
 
-    let keyState = {
-        KeyA: false,
-        KeyS: false,
-        KeyD: false,
-        KeyF: false
-    };
+const canvas =
+    document.getElementById("game-canvas");
 
-
-    /* =====================================================
-       SEARCH
-    ===================================================== */
-
-    function searchSongs() {
-
-        const query =
-            document
-                .getElementById("search-input")
-                .value
-                .toLowerCase()
-                .trim();
-
-        const container =
-            document.getElementById("search-results");
-
-        container.innerHTML = "";
-
-        if (!query) {
-
-            container.innerHTML = `
-                <div class="empty">
-                    Hãy nhập tên bài hát cần tìm!
-                </div>
-            `;
-
-            return;
-        }
+const ctx =
+    canvas.getContext("2d");
 
 
-        const filtered =
-            ONLINE_DATABASE.filter(song =>
+/* =========================================================
+   LANE
+   ========================================================= */
 
-                song.title
-                    .toLowerCase()
-                    .includes(query)
+const keys = [
+    "KeyA",
+    "KeyS",
+    "KeyD",
+    "KeyF"
+];
 
-                ||
+const laneX = [
+    87.5,
+    262.5,
+    437.5,
+    612.5
+];
 
-                song.artist
-                    .toLowerCase()
-                    .includes(query)
+const targetY = 510;
 
+const noteRadius = 30;
+
+const colors = [
+    "#ff3366",
+    "#00e5ff",
+    "#ffeb3b",
+    "#e040fb"
+];
+
+
+let keyState = {
+    KeyA:false,
+    KeyS:false,
+    KeyD:false,
+    KeyF:false
+};
+
+
+/* =========================================================
+   LOCAL STORAGE
+   ========================================================= */
+
+function saveLibrary(){
+
+    localStorage.setItem(
+        "rhythmGameLibrary",
+        JSON.stringify(myLibrary)
+    );
+
+}
+
+
+function loadLibrary(){
+
+    try{
+
+        const saved =
+            localStorage.getItem(
+                "rhythmGameLibrary"
             );
 
+        if(saved){
 
-        if (filtered.length === 0) {
+            myLibrary =
+                JSON.parse(saved);
 
-            container.innerHTML = `
-                <div class="empty">
-                    Không tìm thấy bài hát nào!
-                </div>
-            `;
-
-            return;
         }
 
+    }catch(error){
 
-        filtered.forEach(song => {
+        console.error(error);
 
-            const item =
-                document.createElement("div");
-
-            item.className = "song-item";
-
-            const exists =
-                myLibrary.some(
-                    s => s.id === song.id
-                );
-
-
-            item.innerHTML = `
-
-                <div class="song-info">
-
-                    <strong>
-                        ${escapeHTML(song.title)}
-                    </strong>
-
-                    <small>
-                        ${escapeHTML(song.artist)}
-                    </small>
-
-                </div>
-
-                <button
-                    class="btn btn-add"
-                    onclick="addToLibrary('${song.id}')"
-                >
-                    ${exists ? "✓ Đã thêm" : "❤️ Thêm"}
-                </button>
-
-            `;
-
-            container.appendChild(item);
-
-        });
+        myLibrary = [];
 
     }
 
+    updateLibraryUI();
 
-    /* =====================================================
-       ENTER SEARCH
-    ===================================================== */
+}
 
-    document
-        .getElementById("search-input")
-        .addEventListener("keydown", function(e) {
 
-            if (e.key === "Enter") {
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+function searchSongs(){
+
+    const input =
+        document.getElementById(
+            "search-input"
+        );
+
+    const query =
+        input.value
+            .toLowerCase()
+            .trim();
+
+    const container =
+        document.getElementById(
+            "search-results"
+        );
+
+    container.innerHTML = "";
+
+
+    if(!query){
+
+        container.innerHTML = `
+            <div class="empty">
+                Hãy nhập tên bài hát cần tìm!
+            </div>
+        `;
+
+        return;
+    }
+
+
+    const results =
+        ONLINE_DATABASE.filter(song =>
+
+            song.title
+                .toLowerCase()
+                .includes(query)
+
+            ||
+
+            song.artist
+                .toLowerCase()
+                .includes(query)
+
+        );
+
+
+    if(results.length === 0){
+
+        container.innerHTML = `
+            <div class="empty">
+                Không tìm thấy bài hát nào.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    results.forEach(song => {
+
+        const exists =
+            myLibrary.some(
+                s => s.id === song.id
+            );
+
+
+        const item =
+            document.createElement(
+                "div"
+            );
+
+        item.className =
+            "song-item";
+
+
+        item.innerHTML = `
+
+            <div class="song-info">
+
+                <strong>
+                    ${escapeHTML(song.title)}
+                </strong>
+
+                <small>
+                    ${escapeHTML(song.artist)}
+                </small>
+
+            </div>
+
+            <button
+                class="btn btn-add"
+                onclick="addToLibrary('${song.id}')"
+            >
+                ${exists ? "✓ Đã thêm" : "❤️ Thêm"}
+            </button>
+
+        `;
+
+
+        container.appendChild(item);
+
+    });
+
+}
+
+
+/* =========================================================
+   ENTER SEARCH
+   ========================================================= */
+
+document
+    .getElementById("search-input")
+    .addEventListener(
+        "keydown",
+        function(e){
+
+            if(e.key === "Enter"){
 
                 searchSongs();
 
             }
 
-        });
-
-
-    /* =====================================================
-       ADD LIBRARY
-    ===================================================== */
-
-    function addToLibrary(songId) {
-
-        if (
-            myLibrary.some(
-                song => song.id === songId
-            )
-        ) {
-
-            showMessage(
-                "Bài hát đã có trong kho ❤️",
-                "good"
-            );
-
-            return;
         }
+    );
 
 
-        const song =
-            ONLINE_DATABASE.find(
-                s => s.id === songId
-            );
+/* =========================================================
+   ADD SONG
+   ========================================================= */
 
+function addToLibrary(songId){
 
-        if (!song) return;
-
-
-        myLibrary.push(song);
-
-        updateLibraryUI();
-
-        searchSongs();
+    if(
+        myLibrary.some(
+            song => song.id === songId
+        )
+    ){
 
         showMessage(
-            "Đã thêm vào kho yêu thích ❤️",
+            "Bài hát đã có trong kho ❤️",
             "good"
         );
 
+        return;
     }
 
 
-    /* =====================================================
-       DELETE LIBRARY
-    ===================================================== */
+    const song =
+        ONLINE_DATABASE.find(
+            s => s.id === songId
+        );
 
-    function removeFromLibrary(songId) {
 
-        myLibrary =
-            myLibrary.filter(
-                song => song.id !== songId
-            );
+    if(!song) return;
 
-        updateLibraryUI();
 
-        searchSongs();
+    myLibrary.push(song);
+
+    saveLibrary();
+
+    updateLibraryUI();
+
+    searchSongs();
+
+
+    showMessage(
+        "❤️ Đã thêm vào kho!",
+        "good"
+    );
+
+}
+
+
+/* =========================================================
+   DELETE SONG
+   ========================================================= */
+
+function removeFromLibrary(songId){
+
+    myLibrary =
+        myLibrary.filter(
+            song => song.id !== songId
+        );
+
+
+    saveLibrary();
+
+    updateLibraryUI();
+
+    searchSongs();
+
+
+    if(
+        currentSong &&
+        currentSong.id === songId
+    ){
+
+        stopSong();
+
+    }
+
+}
+
+
+/* =========================================================
+   CLEAR LIBRARY
+   ========================================================= */
+
+function clearLibrary(){
+
+    if(myLibrary.length === 0){
+
+        return;
 
     }
 
 
-    /* =====================================================
-       LIBRARY UI
-    ===================================================== */
+    if(
+        !confirm(
+            "Bạn có chắc muốn xóa toàn bộ kho nhạc?"
+        )
+    ){
 
-    function updateLibraryUI() {
+        return;
 
-        const container =
-            document.getElementById("my-library");
-
-        container.innerHTML = "";
-
-
-        if (myLibrary.length === 0) {
-
-            container.innerHTML = `
-                <div
-                    id="empty-hint"
-                    class="empty"
-                >
-                    Chưa có bài hát nào.<br>
-                    Hãy thêm bài hát từ kết quả tìm kiếm.
-                </div>
-            `;
-
-            return;
-        }
+    }
 
 
-        myLibrary.forEach(song => {
+    stopSong();
 
-            const row =
-                document.createElement("div");
+    myLibrary = [];
 
-            row.className = "song-item";
+    saveLibrary();
 
+    updateLibraryUI();
 
-            const playButton =
-                document.createElement("button");
+    searchSongs();
 
-            playButton.className =
-                "btn-play";
-
-            playButton.id =
-                `lib-song-${song.id}`;
+}
 
 
-            playButton.innerHTML = `
+/* =========================================================
+   UPDATE LIBRARY
+   ========================================================= */
 
-                <span>
+function updateLibraryUI(){
+
+    const container =
+        document.getElementById(
+            "my-library"
+        );
+
+
+    const count =
+        document.getElementById(
+            "library-count"
+        );
+
+
+    count.textContent =
+        myLibrary.length;
+
+
+    container.innerHTML = "";
+
+
+    if(myLibrary.length === 0){
+
+        container.innerHTML = `
+
+            <div class="empty-library">
+
+                <div class="empty-icon">
                     🎵
-                    <b>${escapeHTML(song.title)}</b>
-                    <br>
-                    <small style="color:#999">
-                        ${escapeHTML(song.artist)}
-                    </small>
-                </span>
+                </div>
 
-                <span style="
-                    color:#1db954;
-                    font-weight:bold;
-                ">
-                    ▶ Chơi
-                </span>
+                <b>Kho nhạc đang trống</b>
 
-            `;
+                <p>
+                    Tìm bài hát phía trên<br>
+                    rồi thêm vào kho của bạn.
+                </p>
 
+            </div>
 
-            playButton.onclick =
-                () => startSong(song);
+        `;
 
-
-            const deleteButton =
-                document.createElement("button");
-
-            deleteButton.className =
-                "btn-delete";
-
-            deleteButton.innerHTML =
-                "🗑️";
-
-
-            deleteButton.title =
-                "Xóa khỏi kho";
-
-
-            deleteButton.onclick =
-                (e) => {
-
-                    e.stopPropagation();
-
-                    removeFromLibrary(song.id);
-
-                };
-
-
-            row.appendChild(playButton);
-
-            row.appendChild(deleteButton);
-
-            container.appendChild(row);
-
-        });
-
+        return;
     }
 
 
-    /* =====================================================
-       START SONG
-    ===================================================== */
+    myLibrary.forEach(song => {
 
-    function startSong(song) {
-
-        currentSong = song;
-
-
-        document
-            .querySelectorAll(".btn-play")
-            .forEach(el => {
-
-                el.classList.remove(
-                    "active-song"
-                );
-
-            });
-
-
-        const currentButton =
-            document.getElementById(
-                `lib-song-${song.id}`
+        const item =
+            document.createElement(
+                "div"
             );
 
 
-        if (currentButton) {
+        item.className =
+            "library-song";
 
-            currentButton.classList.add(
+
+        if(
+            currentSong &&
+            currentSong.id === song.id
+        ){
+
+            item.classList.add(
                 "active-song"
             );
 
         }
 
 
-        stopAudioOnly();
+        item.innerHTML = `
+
+            <div class="song-cover">
+                🎵
+            </div>
+
+            <div class="library-song-info">
+
+                <div class="library-song-title">
+                    ${escapeHTML(song.title)}
+                </div>
+
+                <div class="library-song-artist">
+                    ${escapeHTML(song.artist)}
+                </div>
+
+            </div>
+
+            <div class="library-actions">
+
+                <button
+                    class="library-play"
+                    title="Chơi"
+                >
+                    ▶
+                </button>
+
+                <button
+                    class="library-delete"
+                    title="Xóa"
+                >
+                    🗑
+                </button>
+
+            </div>
+
+        `;
 
 
-        currentAudio =
-            new Audio(song.url);
+        item
+            .querySelector(
+                ".library-play"
+            )
+            .onclick =
+            function(){
 
-        currentAudio.loop = true;
+                startSong(song);
 
-        currentAudio.volume = 0.65;
+            };
 
 
-        currentAudio
-            .play()
-            .catch(() => {
+        item
+            .querySelector(
+                ".library-delete"
+            )
+            .onclick =
+            function(){
 
-                setAudioStatus(
-                    "▶️ Nhấn A/S/D/F để kích hoạt âm thanh.",
-                    false
+                removeFromLibrary(
+                    song.id
                 );
 
-            });
+            };
 
 
-        resetGame();
+        container.appendChild(item);
+
+    });
+
+}
 
 
-        isPlaying = true;
+/* =========================================================
+   START SONG
+   ========================================================= */
 
-        isPaused = false;
+function startSong(song){
 
-        gameStarted = true;
-
-        lastHitTime = Date.now();
-
-
-        setAudioStatus(
-            "🔊 Đang phát: " + song.title,
-            true
-        );
+    stopAudioOnly();
 
 
-        showMessage(
-            "Bắt đầu! 🎵",
-            "good"
-        );
-
-    }
+    currentSong = song;
 
 
-    /* =====================================================
-       STOP AUDIO
-    ===================================================== */
-
-    function stopAudioOnly() {
-
-        if (currentAudio) {
-
-            currentAudio.pause();
-
-            currentAudio.currentTime = 0;
-
-            currentAudio = null;
-
-        }
-
-    }
+    currentAudio =
+        new Audio(song.url);
 
 
-    /* =====================================================
-       STOP SONG
-    ===================================================== */
+    currentAudio.loop = true;
 
-    function stopSong() {
-
-        stopAudioOnly();
-
-        currentSong = null;
-
-        isPlaying = false;
-
-        isPaused = false;
-
-        gameStarted = false;
-
-        notes = [];
-
-        setAudioStatus(
-            "🎧 Đã dừng nhạc.",
-            false
-        );
-
-        showMessage(
-            "",
-            ""
-        );
-
-    }
+    currentAudio.volume = 0.65;
 
 
-    /* =====================================================
-       PAUSE
-    ===================================================== */
-
-    function togglePause() {
-
-        if (!gameStarted) {
-
-            showMessage(
-                "Hãy chọn bài hát trước!",
-                "miss"
-            );
-
-            return;
-        }
-
-
-        if (isPaused) {
-
-            isPaused = false;
-
-            if (currentAudio) {
-
-                currentAudio.play()
-                    .catch(() => {});
-
-            }
+    currentAudio
+        .play()
+        .catch(function(){
 
             setAudioStatus(
-                "🔊 Nhạc đang phát.",
-                true
-            );
-
-        } else {
-
-            isPaused = true;
-
-            if (currentAudio) {
-
-                currentAudio.pause();
-
-            }
-
-            setAudioStatus(
-                "⏸️ Đã tạm dừng.",
+                "▶️ Hãy bấm A/S/D/F để kích hoạt nhạc.",
                 false
             );
 
-        }
-
-    }
+        });
 
 
-    /* =====================================================
-       RESET GAME
-    ===================================================== */
-
-    function resetGame() {
-
-        score = 0;
-
-        combo = 0;
-
-        notes = [];
-
-        lastHitTime = Date.now();
+    resetGame();
 
 
-        document
-            .getElementById("score")
-            .textContent = "0";
+    isPlaying = true;
+
+    isPaused = false;
+
+    lastHitTime = Date.now();
 
 
-        document
-            .getElementById("combo")
-            .textContent = "0";
-
-    }
+    updateLibraryUI();
 
 
-    /* =====================================================
-       RESTART
-    ===================================================== */
-
-    function restartGame() {
-
-        if (!currentSong) {
-
-            showMessage(
-                "Hãy chọn một bài hát trước!",
-                "miss"
-            );
-
-            return;
-        }
-
-
-        startSong(currentSong);
-
-    }
-
-
-    /* =====================================================
-       KEYDOWN
-    ===================================================== */
-
-    window.addEventListener(
-        "keydown",
-        function(e) {
-
-            if (!keys.includes(e.code))
-                return;
-
-
-            e.preventDefault();
-
-
-            keyState[e.code] = true;
-
-
-            const keyElement =
-                document.getElementById(
-                    "key-" + e.code
-                );
-
-
-            if (keyElement) {
-
-                keyElement.classList.add(
-                    "active"
-                );
-
-            }
-
-
-            /*
-             * Nếu trình duyệt chặn autoplay,
-             * bấm phím sẽ kích hoạt audio.
-             */
-
-            if (
-                currentAudio &&
-                currentAudio.paused &&
-                !isPaused
-            ) {
-
-                currentAudio
-                    .play()
-                    .catch(() => {});
-
-            }
-
-
-            checkHit(e.code);
-
-        }
+    setAudioStatus(
+        "🔊 Đang phát: " + song.title,
+        true
     );
 
 
-    /* =====================================================
-       KEYUP
-    ===================================================== */
-
-    window.addEventListener(
-        "keyup",
-        function(e) {
-
-            if (!keys.includes(e.code))
-                return;
-
-
-            keyState[e.code] = false;
-
-
-            const keyElement =
-                document.getElementById(
-                    "key-" + e.code
-                );
-
-
-            if (keyElement) {
-
-                keyElement.classList.remove(
-                    "active"
-                );
-
-            }
-
-        }
+    showMessage(
+        "BẮT ĐẦU! 🎵",
+        "good"
     );
 
+}
 
-    /* =====================================================
-       HIT
-    ===================================================== */
 
-    function checkHit(keyCode) {
+/* =========================================================
+   AUDIO
+   ========================================================= */
 
-        if (!isPlaying || isPaused)
+function stopAudioOnly(){
+
+    if(currentAudio){
+
+        currentAudio.pause();
+
+        currentAudio.currentTime = 0;
+
+        currentAudio = null;
+
+    }
+
+}
+
+
+function stopSong(){
+
+    stopAudioOnly();
+
+    currentSong = null;
+
+    isPlaying = false;
+
+    isPaused = false;
+
+    notes = [];
+
+    resetGame();
+
+    updateLibraryUI();
+
+    setAudioStatus(
+        "🎧 Đã dừng.",
+        false
+    );
+
+}
+
+
+/* =========================================================
+   PAUSE
+   ========================================================= */
+
+function togglePause(){
+
+    if(!currentSong){
+
+        showMessage(
+            "Hãy chọn bài hát trước!",
+            "miss"
+        );
+
+        return;
+    }
+
+
+    if(isPaused){
+
+        isPaused = false;
+
+
+        if(currentAudio){
+
+            currentAudio
+                .play()
+                .catch(()=>{});
+
+        }
+
+
+        setAudioStatus(
+            "🔊 Nhạc đang phát.",
+            true
+        );
+
+    }else{
+
+        isPaused = true;
+
+
+        if(currentAudio){
+
+            currentAudio.pause();
+
+        }
+
+
+        setAudioStatus(
+            "⏸ Đã tạm dừng.",
+            false
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   RESTART
+   ========================================================= */
+
+function restartGame(){
+
+    if(!currentSong){
+
+        showMessage(
+            "Hãy chọn bài hát trước!",
+            "miss"
+        );
+
+        return;
+    }
+
+
+    startSong(currentSong);
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+function resetGame(){
+
+    score = 0;
+
+    combo = 0;
+
+    notes = [];
+
+    lastHitTime = Date.now();
+
+
+    document
+        .getElementById("score")
+        .textContent = "0";
+
+
+    document
+        .getElementById("combo")
+        .textContent = "0";
+
+}
+
+
+/* =========================================================
+   KEY DOWN
+   ========================================================= */
+
+window.addEventListener(
+    "keydown",
+    function(e){
+
+        if(!keys.includes(e.code))
             return;
 
 
-        const laneIndex =
-            keys.indexOf(keyCode);
+        e.preventDefault();
 
 
-        let closestIndex = -1;
-
-        let closestDistance = Infinity;
+        keyState[e.code] = true;
 
 
-        for (
-            let i = 0;
-            i < notes.length;
-            i++
-        ) {
-
-            const note = notes[i];
+        const key =
+            document.getElementById(
+                "key-" + e.code
+            );
 
 
-            if (
-                note.lane !== laneIndex
-            )
-                continue;
+        if(key){
 
-
-            const distance =
-                Math.abs(
-                    note.y - targetY
-                );
-
-
-            if (
-                distance < closestDistance
-            ) {
-
-                closestDistance =
-                    distance;
-
-                closestIndex = i;
-
-            }
+            key.classList.add(
+                "active"
+            );
 
         }
 
 
-        if (
-            closestIndex !== -1 &&
-            closestDistance <= 60
-        ) {
+        if(
+            currentAudio &&
+            currentAudio.paused &&
+            !isPaused
+        ){
 
-            notes.splice(
-                closestIndex,
-                1
+            currentAudio
+                .play()
+                .catch(()=>{});
+
+        }
+
+
+        checkHit(e.code);
+
+    }
+);
+
+
+/* =========================================================
+   KEY UP
+   ========================================================= */
+
+window.addEventListener(
+    "keyup",
+    function(e){
+
+        if(!keys.includes(e.code))
+            return;
+
+
+        keyState[e.code] = false;
+
+
+        const key =
+            document.getElementById(
+                "key-" + e.code
             );
 
 
-            let points = 0;
+        if(key){
 
-            if (
-                closestDistance <= 20
-            ) {
+            key.classList.remove(
+                "active"
+            );
 
-                points = 100;
+        }
 
-                showMessage(
-                    "PERFECT! ✨",
-                    "perfect"
-                );
+    }
+);
 
-            }
 
-            else if (
-                closestDistance <= 40
-            ) {
+/* =========================================================
+   HIT
+   ========================================================= */
 
-                points = 50;
+function checkHit(keyCode){
 
-                showMessage(
-                    "GOOD! 👍",
-                    "good"
-                );
+    if(
+        !isPlaying ||
+        isPaused
+    ){
 
-            }
+        return;
 
-            else {
+    }
 
-                points = 20;
 
-                showMessage(
-                    "OK!",
-                    "good"
-                );
+    const lane =
+        keys.indexOf(keyCode);
 
-            }
 
+    let index = -1;
+
+    let distance =
+        Infinity;
+
+
+    for(
+        let i = 0;
+        i < notes.length;
+        i++
+    ){
+
+        if(
+            notes[i].lane !== lane
+        ){
+
+            continue;
+
+        }
+
+
+        const d =
+            Math.abs(
+                notes[i].y - targetY
+            );
+
+
+        if(d < distance){
+
+            distance = d;
+
+            index = i;
+
+        }
+
+    }
+
+
+    if(
+        index !== -1 &&
+        distance <= 60
+    ){
+
+        notes.splice(
+            index,
+            1
+        );
+
+
+        if(distance <= 20){
 
             score +=
-                points +
-                combo * 2;
-
+                100 + combo * 2;
 
             combo++;
 
-
-            if (
-                combo > bestCombo
-            ) {
-
-                bestCombo =
-                    combo;
-
-            }
-
-
-            lastHitTime =
-                Date.now();
-
-
-            updateStats();
-
-        }
-
-        else {
-
-            combo = 0;
-
-            updateStats();
-
-
             showMessage(
-                "MISS!",
-                "miss"
+                "PERFECT! ✨",
+                "perfect"
             );
 
         }
 
+        else if(distance <= 40){
+
+            score +=
+                50 + combo;
+
+            combo++;
+
+            showMessage(
+                "GOOD! 👍",
+                "good"
+            );
+
+        }
+
+        else{
+
+            score += 20;
+
+            combo++;
+
+            showMessage(
+                "OK!",
+                "good"
+            );
+
+        }
+
+
+        if(
+            combo > bestCombo
+        ){
+
+            bestCombo =
+                combo;
+
+        }
+
+
+        lastHitTime =
+            Date.now();
+
+
+        updateStats();
+
     }
 
+    else{
 
-    /* =====================================================
-       SPAWN NOTES
-    ===================================================== */
+        combo = 0;
 
-    setInterval(
-        function() {
+        updateStats();
 
-            if (
-                !isPlaying ||
-                isPaused
-            )
-                return;
+        showMessage(
+            "MISS!",
+            "miss"
+        );
 
+    }
 
-            const randomLane =
-                Math.floor(
-                    Math.random() * 4
-                );
+}
 
 
-            notes.push({
+/* =========================================================
+   SPAWN NOTES
+   ========================================================= */
 
-                lane: randomLane,
+setInterval(
+    function(){
 
-                y: -30,
+        if(
+            !isPlaying ||
+            isPaused
+        ){
 
-                speed:
-                    4.5 +
-                    Math.random() * 1.5
+            return;
 
-            });
+        }
 
-        },
-        600
+
+        const lane =
+            Math.floor(
+                Math.random() * 4
+            );
+
+
+        notes.push({
+
+            lane:lane,
+
+            y:-30,
+
+            speed:
+                4.5 +
+                Math.random() * 1.5
+
+        });
+
+    },
+    600
+);
+
+
+/* =========================================================
+   UPDATE STATS
+   ========================================================= */
+
+function updateStats(){
+
+    document
+        .getElementById("score")
+        .textContent =
+        score;
+
+
+    document
+        .getElementById("combo")
+        .textContent =
+        combo;
+
+
+    document
+        .getElementById("best")
+        .textContent =
+        bestCombo;
+
+}
+
+
+/* =========================================================
+   AUDIO STATUS
+   ========================================================= */
+
+function setAudioStatus(
+    text,
+    playing
+){
+
+    const element =
+        document.getElementById(
+            "audio-state"
+        );
+
+
+    element.textContent =
+        text;
+
+
+    element.className =
+        playing
+            ? "audio-status playing"
+            : "audio-status";
+
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+let messageTimer;
+
+
+function showMessage(
+    text,
+    type
+){
+
+    const element =
+        document.getElementById(
+            "message"
+        );
+
+
+    element.textContent =
+        text;
+
+
+    element.className =
+        type || "";
+
+
+    clearTimeout(
+        messageTimer
     );
 
 
-    /* =====================================================
-       UPDATE STATS
-    ===================================================== */
+    if(text){
 
-    function updateStats() {
+        messageTimer =
+            setTimeout(
+                function(){
 
-        document
-            .getElementById("score")
-            .textContent =
-            score;
+                    element.textContent =
+                        "";
 
+                    element.className =
+                        "";
 
-        document
-            .getElementById("combo")
-            .textContent =
-            combo;
-
-
-        document
-            .getElementById("best")
-            .textContent =
-            bestCombo;
-
-    }
-
-
-    /* =====================================================
-       AUDIO STATUS
-    ===================================================== */
-
-    function setAudioStatus(
-        text,
-        playing
-    ) {
-
-        const element =
-            document.getElementById(
-                "audio-state"
-            );
-
-
-        element.textContent =
-            text;
-
-
-        if (playing) {
-
-            element.className =
-                "audio-status playing";
-
-        } else {
-
-            element.className =
-                "audio-status";
-
-        }
-
-    }
-
-
-    /* =====================================================
-       MESSAGE
-    ===================================================== */
-
-    let messageTimer = null;
-
-
-    function showMessage(
-        text,
-        type
-    ) {
-
-        const element =
-            document.getElementById(
-                "message"
-            );
-
-
-        element.textContent =
-            text;
-
-
-        element.className =
-            type || "";
-
-
-        clearTimeout(
-            messageTimer
-        );
-
-
-        if (text) {
-
-            messageTimer =
-                setTimeout(
-                    function() {
-
-                        element.textContent =
-                            "";
-
-                        element.className =
-                            "";
-
-                    },
-                    500
-                );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ===================================================== */
-
-    function escapeHTML(text) {
-
-        return String(text)
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
+                },
+                600
             );
 
     }
 
+}
 
-    /* =====================================================
-       DRAW GAME
-    ===================================================== */
 
-    function update() {
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
-        ctx.clearRect(
+function escapeHTML(text){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
+   GAME RENDER
+   ========================================================= */
+
+function update(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* BACKGROUND */
+
+    const gradient =
+        ctx.createLinearGradient(
             0,
             0,
-            canvas.width,
+            0,
             canvas.height
         );
 
 
-        /*
-         * Background
-         */
-
-        const gradient =
-            ctx.createLinearGradient(
-                0,
-                0,
-                0,
-                canvas.height
-            );
+    gradient.addColorStop(
+        0,
+        "#070a0c"
+    );
 
 
-        gradient.addColorStop(
-            0,
-            "#080b0d"
-        );
+    gradient.addColorStop(
+        1,
+        "#121a1e"
+    );
 
 
-        gradient.addColorStop(
-            1,
-            "#131a1e"
-        );
+    ctx.fillStyle =
+        gradient;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* LANES */
+
+    for(
+        let i = 0;
+        i < 4;
+        i++
+    ){
+
+        const left =
+            i === 0
+                ? 0
+                : (
+                    laneX[i-1] +
+                    laneX[i]
+                ) / 2;
+
+
+        const right =
+            i === 3
+                ? canvas.width
+                : (
+                    laneX[i] +
+                    laneX[i+1]
+                ) / 2;
 
 
         ctx.fillStyle =
-            gradient;
+            i % 2 === 0
+                ? "rgba(255,255,255,.015)"
+                : "rgba(255,255,255,.035)";
 
 
         ctx.fillRect(
+            left,
             0,
-            0,
-            canvas.width,
+            right-left,
             canvas.height
         );
 
-
-        /*
-         * Lane backgrounds
-         */
-
-        for (
-            let i = 0;
-            i < 4;
-            i++
-        ) {
-
-            const left =
-                i === 0
-                    ? 0
-                    : (laneX[i - 1] +
-                       laneX[i]) / 2;
-
-            const right =
-                i === 3
-                    ? canvas.width
-                    : (laneX[i] +
-                       laneX[i + 1]) / 2;
+    }
 
 
-            ctx.fillStyle =
-                i % 2 === 0
-                    ? "rgba(255,255,255,.015)"
-                    : "rgba(255,255,255,.03)";
+    /* LANE LINES */
+
+    for(
+        let i = 0;
+        i < 4;
+        i++
+    ){
+
+        ctx.strokeStyle =
+            "#30383d";
+
+        ctx.lineWidth = 2;
 
 
-            ctx.fillRect(
-                left,
-                0,
-                right - left,
-                canvas.height
-            );
+        ctx.beginPath();
 
-        }
-
-
-        /*
-         * Lane lines
-         */
-
-        for (
-            let i = 0;
-            i < 4;
-            i++
-        ) {
-
-            ctx.strokeStyle =
-                "#30383d";
-
-            ctx.lineWidth = 2;
-
-
-            ctx.beginPath();
-
-            ctx.moveTo(
-                laneX[i],
-                0
-            );
-
-            ctx.lineTo(
-                laneX[i],
-                canvas.height
-            );
-
-            ctx.stroke();
-
-        }
-
-
-        /*
-         * Target zone
-         */
-
-        ctx.fillStyle =
-            "rgba(29,185,84,.08)";
-
-
-        ctx.fillRect(
-            0,
-            targetY - 45,
-            canvas.width,
-            90
+        ctx.moveTo(
+            laneX[i],
+            0
         );
 
+        ctx.lineTo(
+            laneX[i],
+            canvas.height
+        );
 
-        /*
-         * Target circles
-         */
+        ctx.stroke();
 
-        for (
-            let i = 0;
-            i < 4;
-            i++
-        ) {
-
-            const active =
-                keyState[keys[i]];
+    }
 
 
-            ctx.strokeStyle =
-                active
-                    ? "#1db954"
-                    : "#666";
+    /* TARGET AREA */
+
+    ctx.fillStyle =
+        "rgba(29,185,84,.08)";
 
 
-            ctx.lineWidth =
-                active
-                    ? 5
-                    : 2;
+    ctx.fillRect(
+        0,
+        targetY - 45,
+        canvas.width,
+        90
+    );
 
 
-            ctx.beginPath();
+    /* TARGET CIRCLES */
+
+    for(
+        let i = 0;
+        i < 4;
+        i++
+    ){
+
+        const active =
+            keyState[keys[i]];
 
 
-            ctx.arc(
-                laneX[i],
-                targetY,
-                noteRadius,
-                0,
-                Math.PI * 2
-            );
+        ctx.strokeStyle =
+            active
+                ? "#1db954"
+                : "#666";
 
 
-            ctx.stroke();
+        ctx.lineWidth =
+            active
+                ? 5
+                : 2;
 
 
-            /*
-             * Inner circle
-             */
+        ctx.beginPath();
 
-            ctx.strokeStyle =
-                active
-                    ? "rgba(29,185,84,.4)"
-                    : "rgba(255,255,255,.1)";
+        ctx.arc(
+            laneX[i],
+            targetY,
+            noteRadius,
+            0,
+            Math.PI * 2
+        );
 
-
-            ctx.lineWidth = 1;
-
-
-            ctx.beginPath();
+        ctx.stroke();
 
 
-            ctx.arc(
-                laneX[i],
-                targetY,
-                noteRadius - 8,
-                0,
-                Math.PI * 2
-            );
+        ctx.fillStyle =
+            active
+                ? "#1db954"
+                : "#aaa";
 
 
-            ctx.stroke();
+        ctx.font =
+            "bold 16px Arial";
 
 
-            /*
-             * Key text
-             */
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            keys[i].replace(
+                "Key",
+                ""
+            ),
+            laneX[i],
+            targetY + 6
+        );
+
+    }
+
+
+    /* NOTES */
+
+    if(
+        isPlaying &&
+        !isPaused
+    ){
+
+        for(
+            let i = notes.length - 1;
+            i >= 0;
+            i--
+        ){
+
+            const note =
+                notes[i];
+
+
+            note.y +=
+                note.speed;
+
+
+            ctx.shadowColor =
+                colors[note.lane];
+
+            ctx.shadowBlur = 18;
+
 
             ctx.fillStyle =
-                active
-                    ? "#1db954"
-                    : "#aaa";
+                colors[note.lane];
 
 
-            ctx.font =
-                "bold 16px Arial";
+            ctx.beginPath();
 
-
-            ctx.textAlign =
-                "center";
-
-
-            ctx.fillText(
-                keys[i]
-                    .replace(
-                        "Key",
-                        ""
-                    ),
-                laneX[i],
-                targetY + 6
+            ctx.arc(
+                laneX[note.lane],
+                note.y,
+                noteRadius - 3,
+                0,
+                Math.PI * 2
             );
 
-        }
+            ctx.fill();
 
 
-        /*
-         * Notes
-         */
-
-        if (
-            isPlaying &&
-            !isPaused
-        ) {
-
-            for (
-                let i = notes.length - 1;
-                i >= 0;
-                i--
-            ) {
-
-                const note =
-                    notes[i];
+            ctx.shadowBlur = 0;
 
 
-                note.y +=
-                    note.speed;
+            /* HIGHLIGHT */
+
+            ctx.fillStyle =
+                "rgba(255,255,255,.5)";
 
 
-                /*
-                 * Glow
-                 */
+            ctx.beginPath();
 
-                ctx.shadowColor =
-                    colors[note.lane];
+            ctx.arc(
+                laneX[note.lane] - 7,
+                note.y - 7,
+                6,
+                0,
+                Math.PI * 2
+            );
 
-                ctx.shadowBlur =
-                    18;
-
-
-                ctx.fillStyle =
-                    colors[note.lane];
+            ctx.fill();
 
 
-                ctx.beginPath();
+            /* MISS */
 
+            if(
+                note.y >
+                canvas.height + 40
+            ){
 
-                ctx.arc(
-                    laneX[note.lane],
-                    note.y,
-                    noteRadius - 3,
-                    0,
-                    Math.PI * 2
+                notes.splice(
+                    i,
+                    1
                 );
 
 
-                ctx.fill();
+                combo = 0;
 
+                updateStats();
 
-                ctx.shadowBlur = 0;
-
-
-                /*
-                 * Highlight
-                 */
-
-                ctx.fillStyle =
-                    "rgba(255,255,255,.5)";
-
-
-                ctx.beginPath();
-
-
-                ctx.arc(
-                    laneX[note.lane] - 7,
-                    note.y - 7,
-                    6,
-                    0,
-                    Math.PI * 2
+                showMessage(
+                    "MISS!",
+                    "miss"
                 );
-
-
-                ctx.fill();
-
-
-                /*
-                 * Miss
-                 */
-
-                if (
-                    note.y >
-                    canvas.height + 40
-                ) {
-
-                    notes.splice(
-                        i,
-                        1
-                    );
-
-
-                    combo = 0;
-
-                    updateStats();
-
-                    showMessage(
-                        "MISS!",
-                        "miss"
-                    );
-
-                }
 
             }
 
         }
 
-
-        /*
-         * Pause overlay
-         */
-
-        if (isPaused) {
-
-            ctx.fillStyle =
-                "rgba(0,0,0,.55)";
+    }
 
 
-            ctx.fillRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+    /* PAUSE */
+
+    if(isPaused){
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.6)";
 
 
-            ctx.fillStyle =
-                "white";
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
 
-            ctx.font =
-                "bold 35px Arial";
+        ctx.fillStyle =
+            "white";
 
 
-            ctx.textAlign =
-                "center";
+        ctx.font =
+            "bold 36px Arial";
 
 
-            ctx.fillText(
-                "⏸️ PAUSED",
-                canvas.width / 2,
-                canvas.height / 2
-            );
-
-        }
+        ctx.textAlign =
+            "center";
 
 
-        requestAnimationFrame(
-            update
+        ctx.fillText(
+            "⏸ PAUSED",
+            canvas.width / 2,
+            canvas.height / 2
         );
 
     }
 
 
-    /* =====================================================
-       START RENDER LOOP
-    ===================================================== */
+    requestAnimationFrame(
+        update
+    );
 
-    update();
+}
 
 
-    /* =====================================================
-       INITIAL SEARCH
-    ===================================================== */
+/* =========================================================
+   START
+   ========================================================= */
 
-    searchSongs();
+loadLibrary();
+
+searchSongs();
+
+update();
 
 </script>
 
